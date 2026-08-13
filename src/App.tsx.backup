@@ -1,0 +1,2190 @@
+import { useState, useEffect } from 'react'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+type Screen =
+  | 'splash'
+  | 'role-select'
+  | 'manager-auth'
+  | 'manager-signup'
+  | 'manager-login'
+  | 'manager-home'
+  | 'qr-share'
+  | 'theme-customizer'
+  | 'font-picker'
+  | 'logo-upload'
+  | 'estate-profile'
+  | 'plan-select'
+  | 'payment'
+  | 'management'
+  | 'tenant-code'
+  | 'tenant-home'
+  | 'tenant-bills'
+  | 'maintenance'
+  | 'emergency'
+  | 'guest'
+  | 'ai-chatbot'
+
+interface EstateConfig {
+  color: string
+  fontFamily: string
+  fontSize: number
+  logoUrl: string
+  bgImageUrl: string
+  estateName: string
+  joinCode: string
+  subscription: 'basic' | 'premium' | 'platinum'
+  logoPosition: 'top-left' | 'top-right' | 'center' | 'bottom-right'
+  enable3D: boolean
+  enableAI: boolean
+  isGoldBlackTheme: boolean
+  monthlyDues: number
+  serviceChargePercent: number
+}
+
+interface Notification {
+  id: string
+  title: string
+  message: string
+  date: string
+  type: 'announcement' | 'payment' | 'maintenance' | 'emergency'
+  read: boolean
+  verified?: boolean
+}
+
+interface PaymentRecord {
+  id: string
+  tenantName: string
+  amount: number
+  date: string
+  status: 'pending' | 'verified' | 'rejected'
+  type: 'estate_dues' | 'app_service'
+  receiptUrl?: string
+}
+
+const DEFAULT_CONFIG: EstateConfig = {
+  color: '#1B873F',
+  fontFamily: "'Plus Jakarta Sans', sans-serif",
+  fontSize: 16,
+  logoUrl: '',
+  bgImageUrl: '',
+  estateName: 'Greenview Estate',
+  joinCode: 'EF-4829-GVE',
+  subscription: 'basic',
+  logoPosition: 'top-left',
+  enable3D: false,
+  enableAI: false,
+  isGoldBlackTheme: false,
+  monthlyDues: 15000,
+  serviceChargePercent: 10,
+}
+
+const DEFAULT_NOTIFICATIONS: Notification[] = [
+  {
+    id: 'n1',
+    title: 'Estate Fumigation — Saturday 19th July',
+    message: 'Estate-wide fumigation is scheduled for Saturday 19 July 2026 at 8:00am. Please vacate your unit by 7:30am and keep all windows shut.',
+    date: 'Jul 14, 2026',
+    type: 'announcement',
+    read: false,
+  },
+  {
+    id: 'n2',
+    title: 'Monthly Residents Meeting',
+    message: 'Monthly residents meeting holds this Sunday 20 July at the estate community hall. Attendance is compulsory for all flat owners.',
+    date: 'Jul 12, 2026',
+    type: 'announcement',
+    read: false,
+  },
+]
+
+const DEFAULT_PAYMENTS: PaymentRecord[] = [
+  {
+    id: 'p1',
+    tenantName: 'Chidi Okafor',
+    amount: 16500,
+    date: 'Jul 28, 2026',
+    status: 'pending',
+    type: 'estate_dues',
+  },
+  {
+    id: 'p2',
+    tenantName: 'Chidi Okafor',
+    amount: 16500,
+    date: 'Jun 28, 2026',
+    status: 'verified',
+    type: 'estate_dues',
+  },
+]
+
+// ─── Static Data ──────────────────────────────────────────────────────────────
+const APT_PHOTO =
+  'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=900&h=1200&fit=crop&auto=format'
+
+const ANNOUNCEMENTS = [
+  {
+    id: 1,
+    title: 'Estate Fumigation — Saturday 19th July',
+    body: 'Estate-wide fumigation is scheduled for Saturday 19 July 2026 at 8:00am. Please vacate your unit by 7:30am and keep all windows shut.',
+    date: 'Jul 14, 2026',
+    img: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&h=280&fit=crop&auto=format',
+  },
+  {
+    id: 2,
+    title: 'Monthly Residents Meeting',
+    body: 'Monthly residents meeting holds this Sunday 20 July at the estate community hall. Attendance is compulsory for all flat owners.',
+    date: 'Jul 12, 2026',
+    img: '',
+  },
+  {
+    id: 3,
+    title: 'Water Supply Disruption — Monday',
+    body: 'Water supply will be disrupted Monday 15 July from 6am–12pm due to scheduled pipe maintenance. Please stock up in advance.',
+    date: 'Jul 11, 2026',
+    img: '',
+  },
+]
+
+const BILLS = [
+  { label: 'Estate Dues — July 2026', amount: '₦15,000', due: 'Jul 31, 2026', status: 'pending' as const },
+  { label: 'Estate Dues — June 2026', amount: '₦15,000', due: 'Jun 30, 2026', status: 'paid' as const },
+  { label: 'App Subscription — July 2026', amount: '₦2,500', due: 'Jul 31, 2026', status: 'pending' as const },
+  { label: 'App Subscription — June 2026', amount: '₦2,500', due: 'Jun 30, 2026', status: 'paid' as const },
+]
+
+const MAINTENANCE_CATS = [
+  { label: 'Plumbing', emoji: '🔧' },
+  { label: 'Electrical', emoji: '⚡' },
+  { label: 'Waste', emoji: '🗑️' },
+  { label: 'Security', emoji: '🔒' },
+  { label: 'Cleaning', emoji: '🧹' },
+  { label: 'Parking', emoji: '🅿️' },
+  { label: 'Water', emoji: '💧' },
+  { label: 'Internet', emoji: '📡' },
+  { label: 'Other', emoji: '⚠️' },
+]
+
+const PLANS = [
+  {
+    id: 'basic',
+    name: 'Basic',
+    monthly: 2500,
+    annual: 25000,
+    color: '#6b7280',
+    features: [
+      'Up to 50 units',
+      '7 simple color layouts',
+      'Basic color combinations',
+      'Standard font (Jakarta Sans)',
+      'Announcements & dues tracking',
+      'Basic QR sharing',
+    ],
+  },
+  {
+    id: 'premium',
+    name: 'Premium',
+    monthly: 5000,
+    annual: 50000,
+    color: '#2563eb',
+    features: [
+      'Up to 200 units',
+      'All Basic features',
+      '12+ color combinations',
+      '5 premium font styles',
+      'Logo positioning control',
+      'Custom background uploads',
+      'Maintenance requests',
+      'Full QR access system',
+    ],
+  },
+  {
+    id: 'platinum',
+    name: 'Platinum',
+    monthly: 12000,
+    annual: 115000,
+    color: '#d97706',
+    features: [
+      'Unlimited units',
+      'All Premium features',
+      'Liquid glass font layouts',
+      'Gold & Black luxury theme',
+      '3D rotating house animation',
+      'AI smart chatbot',
+      'Auto complaint categorization',
+      'Smart service charge (10%)',
+      'Emergency alerts',
+      'Priority 24/7 support',
+    ],
+  },
+]
+
+const CHART_DUES = [
+  { m: 'Jan', paid: 88, unpaid: 32 },
+  { m: 'Feb', paid: 72, unpaid: 48 },
+  { m: 'Mar', paid: 100, unpaid: 20 },
+  { m: 'Apr', paid: 84, unpaid: 36 },
+  { m: 'May', paid: 95, unpaid: 25 },
+  { m: 'Jun', paid: 78, unpaid: 42 },
+  { m: 'Jul', paid: 84, unpaid: 36 },
+]
+
+const CHART_COMPLAINTS = [12, 18, 8, 22, 15, 10, 14]
+const CHART_SPENDING = [450, 380, 520, 290, 610, 440, 380]
+
+const SHARE_APPS = [
+  { name: 'WhatsApp', bg: '#25d366', emoji: '💬' },
+  { name: 'Messages', bg: '#007aff', emoji: '✉️' },
+  { name: 'TikTok', bg: '#111', emoji: '🎵' },
+  { name: 'Email', bg: '#ea4335', emoji: '📧' },
+  { name: 'Copy Link', bg: '#4b5563', emoji: '🔗' },
+  { name: 'More', bg: '#374151', emoji: '⋯' },
+]
+
+const COLOR_SWATCHES = ['#1B873F', '#2563eb', '#dc2626', '#d97706', '#7c3aed', '#0891b2', '#db2777']
+
+const BG_OPTIONS = [
+  { label: 'Default', url: '' },
+  { label: 'City', url: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&h=800&fit=crop&auto=format' },
+  { label: 'Estate', url: APT_PHOTO },
+  { label: 'Modern', url: 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=400&h=800&fit=crop&auto=format' },
+]
+
+const FONT_OPTIONS = [
+  { label: 'Plus Jakarta Sans', value: "'Plus Jakarta Sans', sans-serif" },
+  { label: 'Georgia Serif', value: 'Georgia, serif' },
+  { label: 'Helvetica', value: 'Helvetica, Arial, sans-serif' },
+  { label: 'Trebuchet', value: "'Trebuchet MS', sans-serif" },
+  { label: 'Courier New', value: "'Courier New', monospace" },
+]
+
+// ─── Shared Components ────────────────────────────────────────────────────────
+function SplitBg({ children, bgOverride }: { children: React.ReactNode; bgOverride?: string }) {
+  const bg = bgOverride || APT_PHOTO
+  return (
+    <div className="relative h-full overflow-hidden">
+      <div className="absolute inset-0">
+        <div className="h-1/2" style={{ backgroundColor: '#1B873F' }} />
+        <div
+          className="h-1/2"
+          style={{ backgroundImage: `url(${bg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+        />
+      </div>
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} />
+      <div className="relative z-10 h-full flex flex-col">{children}</div>
+    </div>
+  )
+}
+
+function AuthBtn({
+  children,
+  onClick,
+  className = '',
+  disabled = false,
+}: {
+  children: React.ReactNode
+  onClick?: () => void
+  className?: string
+  disabled?: boolean
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`w-full py-4 px-5 bg-white rounded-xl border-2 border-black font-bold text-black text-base flex items-center justify-center gap-3 transition-transform shadow-sm ${disabled ? 'opacity-50' : 'active:scale-95'} ${className}`}
+    >
+      {children}
+    </button>
+  )
+}
+
+function Field({
+  placeholder,
+  type = 'text',
+  value,
+  onChange,
+}: {
+  placeholder: string
+  type?: string
+  value: string
+  onChange: (v: string) => void
+}) {
+  return (
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full py-4 px-5 bg-white rounded-xl border-2 border-black font-semibold text-black placeholder-gray-400 text-base outline-none focus:border-green-600 transition-colors"
+    />
+  )
+}
+
+function BackChevron({ onClick }: { onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="flex items-center gap-1 text-white font-semibold text-sm active:opacity-70">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+      Back
+    </button>
+  )
+}
+
+function PageBack({ onClick }: { onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="active:opacity-60">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+    </button>
+  )
+}
+
+function HouseIcon({ stroke = 'white', size = 40 }: { stroke?: string; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 90" fill="none" stroke={stroke} strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 46 L50 10 L88 46" />
+      <path d="M20 46 L20 82 L80 82 L80 46" />
+      <path d="M40 82 L40 58 L60 58 L60 82" />
+      <rect x="24" y="54" width="12" height="12" />
+      <rect x="64" y="54" width="12" height="12" />
+    </svg>
+  )
+}
+
+function EstateLogo({ config, size }: { config: EstateConfig; size: number }) {
+  if (config.logoUrl) {
+    return (
+      <img src={config.logoUrl} alt="Estate logo" className="rounded-full object-cover shrink-0"
+        style={{ width: size, height: size }} />
+    )
+  }
+  return (
+    <div className="rounded-full flex items-center justify-center shrink-0"
+      style={{ width: size, height: size, backgroundColor: config.color }}>
+      <HouseIcon stroke="white" size={size * 0.58} />
+    </div>
+  )
+}
+
+function GoogleLogo() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+    </svg>
+  )
+}
+
+// ─── Splash Screen ────────────────────────────────────────────────────────────
+function SplashScreen({ onDone }: { onDone: () => void }) {
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    const steps = [15, 35, 60, 80, 100]
+    let i = 0
+    const tick = () => {
+      if (i < steps.length) { setProgress(steps[i++]); setTimeout(tick, 420) }
+      else setTimeout(onDone, 350)
+    }
+    setTimeout(tick, 300)
+  }, [onDone])
+
+  const paths = [
+    { d: 'M12 46 L50 10 L88 46', len: 98, delay: 0.1 },
+    { d: 'M20 46 L20 82', len: 36, delay: 0.75 },
+    { d: 'M80 46 L80 82', len: 36, delay: 0.8 },
+    { d: 'M20 82 L80 82', len: 60, delay: 1.05 },
+    { d: 'M40 82 L40 58 L60 58 L60 82', len: 64, delay: 1.3 },
+    { d: 'M24 54 L36 54 L36 66 L24 66 Z', len: 48, delay: 1.6 },
+    { d: 'M64 54 L76 54 L76 66 L64 66 Z', len: 48, delay: 1.7 },
+  ]
+
+  return (
+    <div className="flex flex-col items-center justify-center h-full bg-white gap-8">
+      <div className="relative flex items-center justify-center">
+        <div className="absolute w-44 h-44 rounded-full"
+          style={{ backgroundColor: '#1B873F18', animation: 'pulse-ring 2.2s ease-out infinite' }} />
+        <div className="absolute rounded-full"
+          style={{ width: 136, height: 136, backgroundColor: '#1B873F12', animation: 'pulse-ring 2.2s ease-out 0.6s infinite' }} />
+        <div className="w-28 h-28">
+          <svg viewBox="0 0 100 90" fill="none" className="w-full h-full">
+            {paths.map((p, i) => (
+              <path key={i} d={p.d} stroke="#1B873F" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"
+                style={{ strokeDasharray: p.len, strokeDashoffset: p.len, animation: `draw-path 0.55s ease ${p.delay}s forwards` }} />
+            ))}
+          </svg>
+        </div>
+      </div>
+      <div style={{ animation: 'fade-up 0.7s ease 2s both' }} className="flex flex-col items-center gap-1">
+        <h1 className="text-4xl font-black tracking-tight" style={{ color: '#1B873F' }}>EstateFlow</h1>
+        <p className="text-gray-400 text-sm font-medium">Your estate, managed smart</p>
+      </div>
+      <div className="w-48 h-1 bg-gray-100 rounded-full overflow-hidden" style={{ animation: 'fade-up 0.5s ease 2.1s both' }}>
+        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, backgroundColor: '#1B873F' }} />
+      </div>
+    </div>
+  )
+}
+
+// ─── Role Select ──────────────────────────────────────────────────────────────
+function RoleSelectScreen({ go }: { go: (s: Screen) => void }) {
+  return (
+    <SplitBg>
+      <div className="flex flex-col items-center justify-center h-full px-8 gap-6">
+        <div className="flex flex-col items-center gap-3 mb-2" style={{ animation: 'fade-up 0.5s ease 0.1s both' }}>
+          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+            <HouseIcon stroke="white" size={36} />
+          </div>
+          <h1 className="text-4xl font-black text-white tracking-tight">EstateFlow</h1>
+          <p className="text-white/70 text-sm font-medium">Select your role to continue</p>
+        </div>
+        <div className="w-full flex flex-col gap-3" style={{ animation: 'fade-up 0.5s ease 0.25s both' }}>
+          <AuthBtn onClick={() => go('manager-auth')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+            Estate Manager
+          </AuthBtn>
+          <AuthBtn onClick={() => go('tenant-code')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            Tenant
+          </AuthBtn>
+          <AuthBtn onClick={() => {}}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+            About EstateFlow
+          </AuthBtn>
+        </div>
+      </div>
+    </SplitBg>
+  )
+}
+
+// ─── Manager Auth ─────────────────────────────────────────────────────────────
+function ManagerAuthScreen({ go }: { go: (s: Screen) => void }) {
+  return (
+    <SplitBg>
+      <div className="flex flex-col h-full px-8">
+        <div className="pt-14 pb-5"><BackChevron onClick={() => go('role-select')} /></div>
+        <div style={{ animation: 'fade-up 0.4s ease both' }}>
+          <h2 className="text-3xl font-black text-white mb-1">Estate Manager</h2>
+          <p className="text-white/70 text-sm mb-8">Choose how you'd like to continue</p>
+        </div>
+        <div className="flex flex-col gap-3" style={{ animation: 'fade-up 0.4s ease 0.1s both' }}>
+          <AuthBtn onClick={() => go('manager-home')}><GoogleLogo />Sign in with Google</AuthBtn>
+          <AuthBtn onClick={() => go('manager-signup')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <line x1="19" y1="8" x2="19" y2="14" />
+              <line x1="22" y1="11" x2="16" y2="11" />
+            </svg>
+            Sign Up
+          </AuthBtn>
+          <AuthBtn onClick={() => go('manager-login')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4" />
+              <polyline points="10 17 15 12 10 7" />
+              <line x1="15" y1="12" x2="3" y2="12" />
+            </svg>
+            Log In
+          </AuthBtn>
+        </div>
+      </div>
+    </SplitBg>
+  )
+}
+
+// ─── Manager Sign Up ──────────────────────────────────────────────────────────
+function ManagerSignUpScreen({ go }: { go: (s: Screen) => void }) {
+  const [form, setForm] = useState({ name: '', surname: '', phone: '', email: '', password: '' })
+  const set = (k: keyof typeof form) => (v: string) => setForm({ ...form, [k]: v })
+  return (
+    <SplitBg>
+      <div className="flex flex-col h-full px-8">
+        <div className="pt-14 pb-4"><BackChevron onClick={() => go('manager-auth')} /></div>
+        <h2 className="text-3xl font-black text-white mb-1">Create Account</h2>
+        <p className="text-white/70 text-sm mb-6">Fill in your details to get started</p>
+        <div className="flex flex-col gap-3 overflow-y-auto pb-8">
+          <Field placeholder="First Name" value={form.name} onChange={set('name')} />
+          <Field placeholder="Surname" value={form.surname} onChange={set('surname')} />
+          <Field placeholder="Phone Number" type="tel" value={form.phone} onChange={set('phone')} />
+          <Field placeholder="Email Address" type="email" value={form.email} onChange={set('email')} />
+          <Field placeholder="Password" type="password" value={form.password} onChange={set('password')} />
+          <AuthBtn onClick={() => go('manager-home')} className="mt-2">Create Account →</AuthBtn>
+          <p className="text-white/50 text-xs text-center mt-1">
+            By signing up you agree to our Terms &amp; Privacy Policy
+          </p>
+        </div>
+      </div>
+    </SplitBg>
+  )
+}
+
+// ─── Manager Login ────────────────────────────────────────────────────────────
+function ManagerLoginScreen({ go }: { go: (s: Screen) => void }) {
+  const [email, setEmail] = useState('')
+  const [pw, setPw] = useState('')
+  return (
+    <SplitBg>
+      <div className="flex flex-col h-full px-8">
+        <div className="pt-14 pb-4"><BackChevron onClick={() => go('manager-auth')} /></div>
+        <h2 className="text-3xl font-black text-white mb-1">Welcome Back</h2>
+        <p className="text-white/70 text-sm mb-8">Sign in to your estate manager account</p>
+        <div className="flex flex-col gap-3">
+          <Field placeholder="Email Address" type="email" value={email} onChange={setEmail} />
+          <Field placeholder="Password" type="password" value={pw} onChange={setPw} />
+          <button className="text-white/70 text-sm font-semibold text-right -mt-1">Forgot password?</button>
+          <AuthBtn onClick={() => go('manager-home')} className="mt-2">Log In →</AuthBtn>
+          <button onClick={() => go('manager-signup')} className="text-white/70 text-sm text-center font-medium mt-1">
+            No account?{' '}<span className="text-white font-bold">Sign Up</span>
+          </button>
+        </div>
+      </div>
+    </SplitBg>
+  )
+}
+
+// ─── Manager Home ─────────────────────────────────────────────────────────────
+function ManagerHomeScreen({
+  go, config, menuOpen, setMenuOpen,
+}: {
+  go: (s: Screen) => void
+  config: EstateConfig
+  menuOpen: boolean
+  setMenuOpen: (v: boolean) => void
+}) {
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+        <button onClick={() => setMenuOpen(true)} className="flex flex-col gap-[5px] p-1">
+          <span className="block w-6 h-[2.5px] bg-black rounded-full" />
+          <span className="block w-6 h-[2.5px] bg-black rounded-full" />
+          <span className="block w-6 h-[2.5px] bg-black rounded-full" />
+        </button>
+        <div className="flex items-center gap-2">
+          <EstateLogo config={config} size={30} />
+          <span className="font-bold text-base text-gray-900" style={{ fontFamily: config.fontFamily }}>
+            Estate Manager
+          </span>
+        </div>
+        <div className="w-7" />
+      </div>
+      {/* Scrollable body */}
+      <div className="flex-1 overflow-y-auto px-5 py-5 pb-32">
+        {/* Welcome banner */}
+        <div className="rounded-2xl p-5 mb-5 text-white"
+          style={{ background: `linear-gradient(135deg, ${config.color}, ${config.color}bb)` }}>
+          <p className="text-white/80 text-sm font-medium mb-0.5">Good morning</p>
+          <h3 className="text-xl font-black mb-1">{config.estateName}</h3>
+          <p className="text-white/70 text-xs">Lagos Island · 120 Units · ₦15,000/mo dues</p>
+        </div>
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          {[
+            { label: 'Paid', value: '84', c: '#1B873F' },
+            { label: 'Pending', value: '23', c: '#f59e0b' },
+            { label: 'Defaulted', value: '13', c: '#ef4444' },
+          ].map((s) => (
+            <div key={s.label} className="bg-white rounded-2xl p-3 text-center shadow-sm">
+              <p className="text-2xl font-black" style={{ color: s.c }}>{s.value}</p>
+              <p className="text-gray-500 text-xs font-medium mt-0.5">{s.label}</p>
+            </div>
+          ))}
+        </div>
+        {/* Quick actions */}
+        <div className="grid grid-cols-2 gap-3 mb-5">
+          {[
+            { label: 'Management', icon: '📊', s: 'management' as Screen },
+            { label: 'Estate Profile', icon: '🏢', s: 'estate-profile' as Screen },
+            { label: 'QR / Pin', icon: '📱', s: 'qr-share' as Screen },
+            { label: 'Customize', icon: '🎨', s: 'theme-customizer' as Screen },
+          ].map((a) => (
+            <button key={a.label} onClick={() => go(a.s)}
+              className="flex items-center gap-3 bg-white rounded-2xl px-4 py-4 shadow-sm active:scale-95 transition-transform text-left">
+              <span className="text-xl">{a.icon}</span>
+              <span className="font-bold text-gray-800 text-sm">{a.label}</span>
+            </button>
+          ))}
+        </div>
+        {/* Feed */}
+        <p className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-3">Recent Announcements</p>
+        {ANNOUNCEMENTS.map((a) => (
+          <div key={a.id} className="bg-white rounded-2xl shadow-sm mb-3 overflow-hidden">
+            {a.img && <img src={a.img} alt={a.title} className="w-full h-32 object-cover" />}
+            <div className="p-4">
+              <p className="text-xs text-gray-400 font-medium mb-1">{a.date}</p>
+              <h5 className="font-bold text-gray-900 text-sm mb-1">{a.title}</h5>
+              <p className="text-gray-500 text-xs leading-relaxed">{a.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Bottom Nav */}
+      <div className="absolute bottom-0 left-0 right-0 px-3 pb-6">
+        <ManagerBottomNav go={go} config={config} />
+      </div>
+      {/* Left-slide menu */}
+      {menuOpen && <ManagerMenuSheet go={go} config={config} onClose={() => setMenuOpen(false)} />}
+    </div>
+  )
+}
+
+type IconFn = (props: { color: string; size: number }) => React.ReactElement
+
+function ManagerBottomNav({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
+  const items: { label: string; Icon: IconFn; screen: Screen; isCenter?: boolean }[] = [
+    { label: 'Logo', Icon: LogoNavIcon, screen: 'logo-upload' },
+    { label: 'Font', Icon: FontNavIcon, screen: 'font-picker' },
+    { label: 'QR', Icon: QRNavIcon, screen: 'qr-share', isCenter: true },
+    { label: 'Theme', Icon: ThemeNavIcon, screen: 'theme-customizer' },
+    { label: 'More', Icon: GearNavIcon, screen: 'manager-home' },
+  ]
+  return (
+    <div className="flex rounded-2xl overflow-visible shadow-xl" style={{ backgroundColor: config.color }}>
+      {items.map((item, i) => {
+        if (item.isCenter) {
+          return (
+            <button key={i} onClick={() => go(item.screen)}
+              className="flex-1 flex flex-col items-center justify-end pb-2 relative" style={{ marginTop: -18 }}>
+              <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+                style={{ border: `3px solid ${config.color}` }}>
+                <item.Icon color={config.color} size={24} />
+              </div>
+              <span className="text-white/75 text-xs font-semibold mt-1">{item.label}</span>
+            </button>
+          )
+        }
+        return (
+          <button key={i} onClick={() => go(item.screen)}
+            className="flex-1 py-3 flex flex-col items-center gap-1 active:bg-black/10 transition-colors rounded-2xl">
+            <item.Icon color="rgba(255,255,255,0.85)" size={22} />
+            <span className="text-white/80 text-xs font-semibold">{item.label}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function ManagerMenuSheet({ go, config, onClose }: { go: (s: Screen) => void; config: EstateConfig; onClose: () => void }) {
+  return (
+    <div className="absolute inset-0 z-50 flex">
+      <div className="w-3/4 h-full bg-white flex flex-col pt-16 px-6 pb-8 shadow-2xl"
+        style={{ animation: 'slide-in-left 0.3s ease' }}>
+        <div className="flex items-center gap-3 mb-8">
+          <EstateLogo config={config} size={44} />
+          <div>
+            <p className="font-black text-gray-900 text-base">{config.estateName}</p>
+            <p className="text-gray-400 text-xs">Manager Account</p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-1 flex-1">
+          {[
+            { label: 'Estate Profile', icon: '🏢', s: 'estate-profile' as Screen },
+            { label: 'Management', icon: '📊', s: 'management' as Screen },
+            { label: 'About Us', icon: 'ℹ️', s: null as Screen | null },
+          ].map((item) => (
+            <button key={item.label} onClick={() => { onClose(); if (item.s) go(item.s) }}
+              className="flex items-center gap-4 py-4 px-4 rounded-2xl hover:bg-gray-50 active:scale-95 transition-all text-left">
+              <span className="text-2xl">{item.icon}</span>
+              <span className="font-bold text-gray-800 text-base">{item.label}</span>
+              <svg className="ml-auto" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          ))}
+        </div>
+        <button onClick={() => { onClose(); go('role-select') }}
+          className="flex items-center gap-3 py-3 px-4 rounded-xl text-red-500 font-bold mt-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          Sign Out
+        </button>
+      </div>
+      <div className="flex-1 bg-black/40" onClick={onClose} />
+    </div>
+  )
+}
+
+// ─── QR Share ─────────────────────────────────────────────────────────────────
+function QRShareScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
+  const qr = [
+    [1,1,1,1,1,1,1,0,1,0,0,1,0,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,1,0,1,1,0,1,1,0,1,0,0,0,0,1],
+    [1,0,1,1,1,0,1,0,0,1,1,0,0,0,1,0,1,1,0,1],
+    [1,0,1,1,1,0,1,0,1,0,0,1,0,1,1,0,1,1,0,1],
+    [1,0,1,1,1,0,1,0,0,1,1,0,1,0,1,0,1,1,0,1],
+    [1,0,0,0,0,0,1,0,1,1,0,0,1,1,1,0,0,0,0,1],
+    [1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,1,1,1,1,1],
+    [0,0,0,0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,0,0],
+    [1,0,1,1,0,1,1,1,0,0,1,0,1,1,0,1,1,0,1,0],
+    [0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,0,0,1,1,0],
+    [1,1,0,1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,0,1],
+    [0,0,0,1,1,0,0,0,0,1,1,0,0,1,0,0,1,1,0,0],
+    [1,1,1,0,0,1,1,0,1,0,1,1,0,0,1,0,1,0,1,1],
+    [0,0,0,0,0,0,0,0,0,1,1,0,1,1,0,1,0,0,1,0],
+    [1,1,1,1,1,1,1,0,1,0,0,1,0,1,1,0,1,1,0,1],
+    [1,0,0,0,0,0,1,0,1,1,0,0,1,0,1,0,0,1,1,0],
+    [1,0,1,1,1,0,1,0,0,1,1,0,0,1,1,1,0,0,0,1],
+    [1,0,1,1,1,0,1,1,1,0,1,1,0,0,0,0,1,0,1,0],
+    [1,0,0,0,0,0,1,0,1,0,0,1,1,0,1,0,0,1,0,1],
+    [1,1,1,1,1,1,1,0,0,1,0,0,0,1,0,1,1,0,1,1],
+  ]
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+        <PageBack onClick={() => go('manager-home')} />
+        <h2 className="font-black text-xl">Share Access</h2>
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 py-6 flex flex-col items-center gap-5">
+        <div className="bg-white rounded-3xl p-5 shadow-sm w-full flex flex-col items-center gap-4">
+          <p className="text-sm text-gray-500 font-medium">Share this with tenants to join {config.estateName}</p>
+          <div className="p-3 border-2 border-gray-100 rounded-2xl">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(20,1fr)', gap: 1.5, width: 190 }}>
+              {qr.flat().map((c, i) => (
+                <div key={i} style={{ width: 8, height: 8, backgroundColor: c ? '#111' : '#fff', borderRadius: 1 }} />
+              ))}
+            </div>
+          </div>
+          <div className="bg-gray-50 rounded-2xl px-6 py-3 border border-gray-200 w-full text-center">
+            <p className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-1">Join Code</p>
+            <p className="text-2xl font-black text-gray-900 tracking-widest">{config.joinCode}</p>
+          </div>
+        </div>
+        <div className="w-full">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Share via</p>
+          <div className="grid grid-cols-3 gap-3">
+            {SHARE_APPS.map((app) => (
+              <button key={app.name}
+                className="flex flex-col items-center gap-2 bg-white rounded-2xl py-4 shadow-sm active:scale-95 transition-transform">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center text-lg"
+                  style={{ backgroundColor: app.bg + '28' }}>
+                  <span>{app.emoji}</span>
+                </div>
+                <span className="text-xs font-bold text-gray-700">{app.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Theme Customizer ─────────────────────────────────────────────────────────
+function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => void; config: EstateConfig; setConfig: (c: EstateConfig) => void }) {
+  const isBasic = config.subscription === 'basic'
+  const isPremium = config.subscription === 'premium' || config.subscription === 'platinum'
+  const isPlatinum = config.subscription === 'platinum'
+
+  const PREMIUM_COLORS = ['#1B873F', '#2563eb', '#dc2626', '#d97706', '#7c3aed', '#0891b2', '#db2777', '#ec4899', '#14b8a6', '#f97316', '#84cc16', '#6366f1', '#d4af37', '#000000']
+  const BASIC_COLORS = ['#1B873F', '#2563eb', '#dc2626', '#d97706', '#7c3aed', '#0891b2', '#db2777']
+
+  const PLATINUM_BG_OPTIONS: Array<{ label: string; url: string; gold?: boolean }> = [
+    { label: 'Gold & Black Luxury', url: '', gold: true },
+    { label: 'City', url: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&h=800&fit=crop&auto=format' },
+    { label: 'Estate', url: APT_PHOTO },
+    { label: 'Modern', url: 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=400&h=800&fit=crop&auto=format' },
+    { label: 'Glass Effect', url: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400&h=800&fit=crop&auto=format' },
+    { label: 'Midnight', url: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=400&h=800&fit=crop&auto=format' },
+  ]
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+        <PageBack onClick={() => go('manager-home')} />
+        <h2 className="font-black text-xl">Theme & Background</h2>
+        <div className="ml-auto px-2 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 uppercase">
+          {config.subscription}
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-6">
+        {/* Current Plan Badge */}
+        <div className={`rounded-2xl p-4 text-white ${isPlatinum ? 'bg-gradient-to-r from-yellow-600 to-yellow-400' : isPremium ? 'bg-gradient-to-r from-blue-600 to-blue-400' : 'bg-gradient-to-r from-gray-600 to-gray-400'}`}>
+          <p className="text-xs font-bold uppercase tracking-wide opacity-80">Current Plan</p>
+          <p className="text-2xl font-black">{config.subscription.toUpperCase()}</p>
+          {!isPlatinum && (
+            <button onClick={() => go('plan-select')} className="mt-2 text-xs font-bold bg-white/20 rounded-full px-3 py-1.5 hover:bg-white/30">
+              Upgrade to unlock more →
+            </button>
+          )}
+        </div>
+
+        {/* Primary Color */}
+        <div>
+          <p className="font-bold text-gray-600 mb-3 text-xs uppercase tracking-widest">Primary Color {isBasic && '(Basic: 7 colors)'}</p>
+          <div className="flex gap-3 flex-wrap">
+            {(isBasic ? BASIC_COLORS : isPlatinum ? PREMIUM_COLORS : PREMIUM_COLORS.slice(0, 10)).map((c) => (
+              <button key={c} onClick={() => setConfig({ ...config, color: c })}
+                className="w-11 h-11 rounded-full transition-transform active:scale-90"
+                style={{ backgroundColor: c, boxShadow: config.color === c ? `0 0 0 3px white, 0 0 0 5px ${c}` : 'none' }} />
+            ))}
+            {!isPlatinum && (
+              <div className="w-11 h-11 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
+                <span className="text-gray-400 text-xs"></span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Platinum Exclusive: Gold & Black Theme */}
+        {isPlatinum && (
+          <div>
+            <p className="font-bold text-yellow-600 mb-3 text-xs uppercase tracking-widest">✨ Platinum: Gold & Black Theme</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => setConfig({ ...config, color: '#d4af37', bgImageUrl: '' })}
+                className="h-20 rounded-xl flex items-center justify-center font-bold text-white shadow-lg"
+                style={{ background: 'linear-gradient(135deg, #1a1a1a, #333)', border: '3px solid #d4af37' }}>
+                <span style={{ color: '#d4af37', fontFamily: 'Georgia, serif' }}>Gold & Black</span>
+              </button>
+              <button onClick={() => setConfig({ ...config, color: '#f4e4a0', bgImageUrl: '' })}
+                className="h-20 rounded-xl flex items-center justify-center font-bold text-black shadow-lg"
+                style={{ background: 'linear-gradient(135deg, #f4e4a0, #d4af37)', border: '3px solid #d4af37' }}>
+                <span style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>Liquid Glass</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Background Template */}
+        <div>
+          <p className="font-bold text-gray-600 mb-3 text-xs uppercase tracking-widest">Background Template</p>
+          <div className="grid grid-cols-2 gap-3">
+            {(isPlatinum ? PLATINUM_BG_OPTIONS : BG_OPTIONS).map((bg: any) => (
+              <button key={bg.label} onClick={() => setConfig({ ...config, bgImageUrl: bg.url || '' })}
+                className="h-24 rounded-xl overflow-hidden active:scale-95 transition-transform"
+                style={{ outline: config.bgImageUrl === bg.url ? `3px solid ${config.color}` : '3px solid transparent', outlineOffset: 2 }}>
+                {bg.url
+                  ? <img src={bg.url} alt={bg.label} className="w-full h-full object-cover" />
+                  : bg.gold
+                    ? <div className="w-full h-full flex items-center justify-center font-bold text-white text-sm"
+                        style={{ background: 'linear-gradient(135deg, #1a1a1a, #333)', border: '2px solid #d4af37' }}>
+                        <span style={{ color: '#d4af37' }}>Gold Luxury</span>
+                      </div>
+                    : <div className="w-full h-full flex items-center justify-center font-bold text-white text-sm"
+                        style={{ background: `linear-gradient(135deg, #1B873F, #0F5E2B)` }}>{bg.label}</div>
+                }
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Logo Positioning (Premium+) */}
+        {isPremium && (
+          <div>
+            <p className="font-bold text-gray-600 mb-3 text-xs uppercase tracking-widest">
+              Logo Position {isPremium && !isPlatinum && '(Premium Feature)'}
+            </p>
+            <div className="grid grid-cols-4 gap-2">
+              {(['top-left', 'top-right', 'center', 'bottom-right'] as const).map((pos) => (
+                <button key={pos} onClick={() => setConfig({ ...config, logoPosition: pos })}
+                  className="py-3 rounded-xl text-xs font-bold border-2 transition-all"
+                  style={{ borderColor: config.logoPosition === pos ? config.color : '#e5e7eb', backgroundColor: config.logoPosition === pos ? config.color + '10' : 'white' }}>
+                  {pos.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Upload Custom Image */}
+        <div>
+          <p className="font-bold text-gray-600 mb-3 text-xs uppercase tracking-widest">Upload Custom Image {isBasic && '(Premium Feature )'}</p>
+          <button disabled={isBasic} className={`w-full py-6 border-2 border-dashed rounded-2xl flex flex-col items-center gap-2 active:bg-gray-50 ${isBasic ? 'border-gray-200 text-gray-300' : 'border-gray-300 text-gray-400'}`}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+            <span className="text-sm font-semibold">{isBasic ? 'Upgrade to Premium to upload' : 'Choose from gallery or device'}</span>
+          </button>
+        </div>
+
+        {/* Live Preview */}
+        <div>
+          <p className="font-bold text-gray-600 mb-3 text-xs uppercase tracking-widest">Live Preview</p>
+          <div className="h-28 rounded-2xl overflow-hidden relative shadow-sm">
+            <div className="absolute inset-0">
+              <div className="h-1/2" style={{ backgroundColor: config.color }} />
+              <div className="h-1/2" style={{ backgroundImage: `url(${config.bgImageUrl || APT_PHOTO})`, backgroundSize: 'cover' }} />
+            </div>
+            <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
+              <span className="text-white font-black text-lg">EstateFlow Preview</span>
+            </div>
+          </div>
+        </div>
+
+        <AuthBtn onClick={() => go('manager-home')}>Apply Changes ✓</AuthBtn>
+      </div>
+    </div>
+  )
+}
+
+// ─── Font Picker ──────────────────────────────────────────────────────────────
+function FontPickerScreen({ go, config, setConfig }: { go: (s: Screen) => void; config: EstateConfig; setConfig: (c: EstateConfig) => void }) {
+  const isBasic = config.subscription === 'basic'
+  const isPlatinum = config.subscription === 'platinum'
+
+  const ALL_FONTS = [
+    { label: 'Plus Jakarta Sans', value: "'Plus Jakarta Sans', sans-serif", tier: 'free' },
+    { label: 'Georgia Serif', value: 'Georgia, serif', tier: 'premium' },
+    { label: 'Helvetica Neue', value: 'Helvetica, Arial, sans-serif', tier: 'premium' },
+    { label: 'Trebuchet MS', value: "'Trebuchet MS', sans-serif", tier: 'premium' },
+    { label: 'Courier New Mono', value: "'Courier New', monospace", tier: 'premium' },
+    { label: 'Playfair Display', value: "'Playfair Display', serif", tier: 'platinum' },
+    { label: 'Montserrat', value: "'Montserrat', sans-serif", tier: 'platinum' },
+    { label: 'Liquid Glass (Platinum)', value: "Georgia, serif", tier: 'platinum', liquid: true },
+  ]
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+        <PageBack onClick={() => go('manager-home')} />
+        <h2 className="font-black text-xl">Font Style & Size</h2>
+        <div className="ml-auto px-2 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 uppercase">
+          {config.subscription}
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-6">
+        {/* Plan Banner */}
+        {isPlatinum && (
+          <div className="rounded-2xl p-4 text-white bg-gradient-to-r from-yellow-600 to-yellow-400">
+            <p className="text-xs font-bold uppercase tracking-wide opacity-80">Platinum Access</p>
+            <p className="text-lg font-black">Liquid Glass Fonts Unlocked</p>
+          </div>
+        )}
+
+        <div>
+          <p className="font-bold text-gray-600 mb-3 text-xs uppercase tracking-widest">
+            Font Family {isBasic && '(Basic: 1 free font)'}
+          </p>
+          <div className="flex flex-col gap-2">
+            {ALL_FONTS.map((f) => {
+              const locked = (f.tier === 'premium' && isBasic) || (f.tier === 'platinum' && !isPlatinum)
+              const isSelected = config.fontFamily === f.value
+              return (
+                <button key={f.label}
+                  onClick={() => !locked && setConfig({ ...config, fontFamily: f.value })}
+                  disabled={locked}
+                  className={`w-full py-4 px-5 rounded-xl border-2 text-left transition-all ${locked ? 'opacity-50 bg-gray-50 border-gray-200' : 'active:scale-95 bg-white'}`}
+                  style={{ borderColor: isSelected ? config.color : '#e5e7eb', fontFamily: f.value }}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-base text-gray-900">{f.label}</span>
+                      <span className="text-gray-400 text-sm ml-3">Aa Bb Cc 123</span>
+                    </div>
+                    {locked && (
+                      <span className="text-xs font-bold text-gray-400 bg-gray-200 px-2 py-1 rounded-full">
+                        {f.tier === 'platinum' ? 'Platinum' : 'Premium'}
+                      </span>
+                    )}
+                    {isSelected && !locked && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={config.color} strokeWidth="3" strokeLinecap="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+        <div>
+          <p className="font-bold text-gray-600 mb-2 text-xs uppercase tracking-widest">
+            Font Size — <span style={{ color: config.color }}>{config.fontSize}px</span>
+          </p>
+          <input type="range" min={12} max={22} step={1} value={config.fontSize}
+            onChange={(e) => setConfig({ ...config, fontSize: Number(e.target.value) })}
+            className="w-full" style={{ accentColor: config.color }} />
+          <div className="flex justify-between text-xs text-gray-400 font-medium mt-1">
+            <span>12px Small</span><span>22px Large</span>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <p className="text-xs text-gray-400 uppercase tracking-wide font-bold mb-3">Preview</p>
+          <p style={{ fontFamily: config.fontFamily, fontSize: config.fontSize }}>
+            Welcome to <strong>{config.estateName}</strong>. Estate dues are due on the last day of each month. Thank you for being a valued resident.
+          </p>
+        </div>
+        <AuthBtn onClick={() => go('manager-home')}>Apply Changes ✓</AuthBtn>
+      </div>
+    </div>
+  )
+}
+
+// ─── Logo Upload ──────────────────────────────────────────────────────────────
+function LogoUploadScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+        <PageBack onClick={() => go('manager-home')} />
+        <h2 className="font-black text-xl">Estate Logo</h2>
+      </div>
+      <div className="flex-1 px-5 py-8 flex flex-col items-center gap-6">
+        <div className="w-32 h-32 rounded-3xl border-2 border-dashed border-gray-300 bg-white flex items-center justify-center shadow-sm">
+          {config.logoUrl
+            ? <img src={config.logoUrl} alt="Logo" className="w-full h-full object-cover rounded-3xl" />
+            : <div className="flex flex-col items-center gap-2 text-gray-400">
+                <EstateLogo config={config} size={56} />
+                <span className="text-xs font-semibold">No custom logo</span>
+              </div>
+          }
+        </div>
+        <p className="text-gray-500 text-sm text-center max-w-xs">
+          Your estate logo appears on the tenant login page, home screen, and throughout the app.
+        </p>
+        <div className="w-full flex flex-col gap-3">
+          <AuthBtn onClick={() => {}}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Upload from Gallery
+          </AuthBtn>
+          <AuthBtn onClick={() => {}}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M20 4h-3.17L15 2H9L7.17 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2z" />
+            </svg>
+            Use Camera
+          </AuthBtn>
+          <AuthBtn onClick={() => go('manager-home')}>Done</AuthBtn>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Estate Profile ───────────────────────────────────────────────────────────
+function EstateProfileScreen({ go, config, setConfig }: { go: (s: Screen) => void; config: EstateConfig; setConfig: (c: EstateConfig) => void }) {
+  const [form, setForm] = useState({
+    name: config.estateName, location: '', size: '', occupants: '', dues: '', description: '',
+  })
+  const set = (k: keyof typeof form) => (v: string) => setForm({ ...form, [k]: v })
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+        <PageBack onClick={() => go('manager-home')} />
+        <div>
+          <h2 className="font-black text-xl">Estate Profile</h2>
+          <p className="text-xs text-gray-400 font-medium">Complete your estate setup</p>
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-3 pb-8">
+        <Field placeholder="Name of Estate" value={form.name} onChange={set('name')} />
+        <Field placeholder="Location / Address" value={form.location} onChange={set('location')} />
+        <Field placeholder="Size of Estate (e.g. 5 acres, 120 units)" value={form.size} onChange={set('size')} />
+        <Field placeholder="Estimated Number of Occupants" value={form.occupants} onChange={set('occupants')} />
+        <Field placeholder="Monthly Estate Dues (₦)" value={form.dues} onChange={set('dues')} />
+        <textarea placeholder="Tell us more — amenities, rules, extra info..."
+          value={form.description} onChange={(e) => set('description')(e.target.value)} rows={4}
+          className="w-full py-4 px-5 bg-white rounded-xl border-2 border-black font-semibold text-black placeholder-gray-400 text-base outline-none focus:border-green-600 resize-none" />
+        <AuthBtn onClick={() => { setConfig({ ...config, estateName: form.name || config.estateName }); go('plan-select') }} className="mt-2">
+          Next — Choose Plan →
+        </AuthBtn>
+      </div>
+    </div>
+  )
+}
+
+// ─── Plan Select ──────────────────────────────────────────────────────────────
+function PlanSelectScreen({ go, config, setConfig }: { go: (s: Screen) => void; config: EstateConfig; setConfig: (c: EstateConfig) => void }) {
+  const [selected, setSelected] = useState<string | null>(null)
+  const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+        <PageBack onClick={() => go('estate-profile')} />
+        <h2 className="font-black text-xl">Choose Your Plan</h2>
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 py-5 pb-8 flex flex-col gap-4">
+        <div className="flex bg-gray-200 rounded-xl p-1 gap-1">
+          {(['monthly', 'annual'] as const).map((b) => (
+            <button key={b} onClick={() => setBilling(b)}
+              className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all"
+              style={{ backgroundColor: billing === b ? 'white' : 'transparent', color: billing === b ? '#111' : '#6b7280',
+                boxShadow: billing === b ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
+              {b === 'monthly' ? 'Monthly' : 'Annual (Save 17%)'}
+            </button>
+          ))}
+        </div>
+        {PLANS.map((plan) => (
+          <button key={plan.id} onClick={() => setSelected(plan.id)}
+            className="w-full bg-white rounded-2xl p-5 border-2 text-left transition-all active:scale-95 shadow-sm"
+            style={{ borderColor: selected === plan.id ? config.color : '#f3f4f6' }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: plan.color }} />
+                <span className="font-black text-xl" style={{ color: plan.color }}>{plan.name}</span>
+              </div>
+              <div>
+                <span className="font-black text-2xl text-gray-900">
+                  ₦{(billing === 'monthly' ? plan.monthly : plan.annual).toLocaleString()}
+                </span>
+                <span className="text-gray-400 text-sm font-medium">/{billing === 'monthly' ? 'mo' : 'yr'}</span>
+              </div>
+            </div>
+            <ul className="flex flex-col gap-1.5">
+              {plan.features.map((f) => (
+                <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1B873F" strokeWidth="3" strokeLinecap="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </button>
+        ))}
+        <button onClick={() => { if (selected) { setConfig({ ...config, subscription: selected as 'basic' | 'premium' | 'platinum', enable3D: selected === 'platinum', enableAI: selected === 'platinum' }); go('payment') } }} disabled={!selected}
+          className="w-full py-4 rounded-xl font-bold text-white text-base active:scale-95 transition-transform"
+          style={{ backgroundColor: selected ? config.color : '#d1d5db' }}>
+          Continue to Payment →
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Payment (Full Paystack Integration) ──────────────────────────────────────
+function PaymentScreen({ go, config, setConfig }: { go: (s: Screen) => void; config: EstateConfig; setConfig: (c: EstateConfig) => void }) {
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(null)
+  const [processing, setProcessing] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [email, setEmail] = useState('')
+
+  // Service charge calculation (Platinum AI)
+  const selectedPlan = PLANS.find(p => p.id === config.subscription) || PLANS[0]
+  const baseAmount = 2500 // monthly default
+  const serviceCharge = Math.max(1500, Math.min(9900, Math.round(baseAmount * 0.10)))
+  const totalAmount = baseAmount + serviceCharge
+
+  const handlePaystackPayment = () => {
+    if (!paymentMethod || !email.trim()) return
+    setProcessing(true)
+
+    // Paystack Popup Integration
+    // In production: const handler = PaystackPop.setup({ key: 'pk_live_xxx', ... })
+    // For demo: simulate payment success
+    setTimeout(() => {
+      setProcessing(false)
+      setSuccess(true)
+      // Update config with paid subscription
+      setConfig({ ...config, subscription: config.subscription })
+    }, 2500)
+  }
+
+  if (success) {
+    return (
+      <div className="flex flex-col h-full bg-gray-50">
+        <div className="flex-1 flex flex-col items-center justify-center px-8 gap-6">
+          <div className="relative flex items-center justify-center">
+            <div className="absolute w-32 h-32 rounded-full bg-green-200/60" style={{ animation: 'pulse-ring 1.4s ease-out infinite' }} />
+            <div className="w-24 h-24 rounded-full bg-green-500 flex items-center justify-center shadow-xl">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+          </div>
+          <div className="text-center">
+            <h3 className="text-2xl font-black text-gray-900 mb-2">Payment Successful! 🎉</h3>
+            <p className="text-gray-500 text-sm">Your {config.subscription.toUpperCase()} plan is now active. All features are unlocked.</p>
+          </div>
+          <div className="w-full bg-green-50 border border-green-200 rounded-2xl p-4">
+            <p className="text-green-700 text-sm font-bold text-center">Transaction Reference: EF-{Date.now().toString().slice(-8)}</p>
+            <p className="text-green-600 text-xs text-center mt-1">Receipt sent to {email || 'your email'}</p>
+          </div>
+          <button onClick={() => go('manager-home')}
+            className="w-full py-4 rounded-xl font-bold text-white active:scale-95 transition-transform"
+            style={{ backgroundColor: config.color }}>
+            Go to Dashboard →
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+        <PageBack onClick={() => go('plan-select')} />
+        <h2 className="font-black text-xl">Payment</h2>
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 py-6 flex flex-col gap-5">
+        {/* Order Summary */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <p className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-3">Order Summary</p>
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-bold text-gray-700">{selectedPlan.name} Plan (Monthly)</span>
+            <span className="font-black text-gray-900">₦{selectedPlan.monthly.toLocaleString()}</span>
+          </div>
+          {config.subscription === 'platinum' && (
+            <div className="flex items-center justify-between mb-2 text-sm">
+              <span className="text-gray-500 flex items-center gap-1">🤖 AI Service Charge (10%)</span>
+              <span className="font-bold text-yellow-600">{serviceCharge.toLocaleString()}</span>
+            </div>
+          )}
+          <div className="border-t border-gray-100 my-3" />
+          <div className="flex items-center justify-between">
+            <span className="font-black text-gray-900">Total</span>
+            <span className="font-black text-xl" style={{ color: config.color }}>₦{totalAmount.toLocaleString()}</span>
+          </div>
+        </div>
+
+        {/* Email */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <p className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-3">Receipt Email</p>
+          <Field placeholder="your@email.com" type="email" value={email} onChange={setEmail} />
+        </div>
+
+        {/* Payment Methods */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <p className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-3">Select Payment Method</p>
+          <div className="flex flex-col gap-3">
+            {[
+              { id: 'card', label: 'Debit/Credit Card', icon: '💳', desc: 'Visa, Mastercard, Verve', badge: 'Popular' },
+              { id: 'bank', label: 'Bank Transfer', icon: '🏦', desc: 'GTBank, Access, First Bank, etc.' },
+              { id: 'ussd', label: 'USSD Code', icon: '📱', desc: '*737# (GTB), *901# (Airtel)' },
+              { id: 'paystack', label: 'Paystack Secure', icon: '🔒', desc: 'PCI DSS Compliant', badge: 'Secure' },
+            ].map((m) => (
+              <button key={m.id} onClick={() => setPaymentMethod(m.id)}
+                className="flex items-center gap-4 p-4 rounded-xl border-2 transition-all active:scale-95"
+                style={{ borderColor: paymentMethod === m.id ? config.color : '#e5e7eb', backgroundColor: paymentMethod === m.id ? config.color + '08' : 'white' }}>
+                <span className="text-2xl">{m.icon}</span>
+                <div className="text-left flex-1">
+                  <p className="font-bold text-gray-900 text-sm">{m.label}</p>
+                  <p className="text-gray-400 text-xs">{m.desc}</p>
+                </div>
+                {m.badge && (
+                  <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full">{m.badge}</span>
+                )}
+                {paymentMethod === m.id && (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={config.color} strokeWidth="3" strokeLinecap="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Security Notice */}
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" className="shrink-0 mt-0.5">
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d="M7 11V7a5 5 0 0110 0v4" />
+          </svg>
+          <div>
+            <p className="text-blue-800 text-sm font-bold">Secure Payment via Paystack</p>
+            <p className="text-blue-600 text-xs mt-0.5">Your card details are encrypted and PCI DSS compliant. We never store your card info.</p>
+          </div>
+        </div>
+
+        {/* Pay Button */}
+        <button onClick={handlePaystackPayment} disabled={!paymentMethod || !email.trim() || processing}
+          className="w-full py-4 rounded-xl font-bold text-white text-base active:scale-95 transition-transform flex items-center justify-center gap-2"
+          style={{ backgroundColor: (paymentMethod && email.trim() && !processing) ? config.color : '#d1d5db' }}>
+          {processing ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Processing Payment...
+            </>
+          ) : (
+            <>Pay ₦{totalAmount.toLocaleString()} →</>
+          )}
+        </button>
+
+        <p className="text-xs text-gray-400 text-center">
+          By paying you agree to EstateFlow Terms of Service
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ─── Management Screen ────────────────────────────────────────────────────────
+function ManagementScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
+  const [activeTab, setActiveTab] = useState(0)
+  const [showServiceCharge, setShowServiceCharge] = useState(false)
+  const tabs = ['Dues Paid', 'Complaints', 'Spending']
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+        <PageBack onClick={() => go('manager-home')} />
+        <h2 className="font-black text-xl" style={{ fontFamily: config.fontFamily }}>Management</h2>
+        {config.subscription === 'platinum' && (
+          <div className="ml-auto px-2 py-1 rounded-full text-xs font-bold text-yellow-700 bg-yellow-100 border border-yellow-300">
+            PLATINUM
+          </div>
+        )}
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 py-4 pb-8">
+        {/* Platinum exclusive features */}
+        {config.subscription === 'platinum' && (
+          <div className="mb-5">
+            <House3DAnimation color="#d4af37" />
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <button onClick={() => go('ai-chatbot')}
+                className="py-4 rounded-2xl font-bold text-sm text-black active:scale-95 transition-transform shadow-sm flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #d4af37, #f4e4a0)' }}>
+                🤖 AI Chatbot
+              </button>
+              <button onClick={() => setShowServiceCharge(!showServiceCharge)}
+                className="py-4 rounded-2xl font-bold text-sm text-black active:scale-95 transition-transform shadow-sm flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #f4e4a0, #d4af37)' }}>
+                 Service Charge AI
+              </button>
+            </div>
+            {showServiceCharge && <ServiceChargeCalculator config={config} />}
+          </div>
+        )}
+        {/* Segmented control with sliding pill */}
+        <div className="bg-gray-200 rounded-xl p-1 flex relative mb-5">
+          <div className="absolute top-1 bottom-1 rounded-lg transition-all duration-300 ease-out shadow-sm"
+            style={{ width: `calc(${100 / 3}% - 2.7px)`, left: `calc(${activeTab * 33.33}% + ${activeTab === 0 ? 1 : activeTab === 1 ? 2.35 : 3.7}px)`, backgroundColor: config.color }} />
+          {tabs.map((t, i) => (
+            <button key={t} onClick={() => setActiveTab(i)}
+              className="flex-1 py-2.5 text-sm font-bold relative z-10 rounded-lg transition-colors duration-200"
+              style={{ color: activeTab === i ? 'white' : '#6b7280' }}>
+              {t}
+            </button>
+          ))}
+        </div>
+        {/* Chart */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm mb-5">
+          <p className="font-bold text-gray-700 text-sm mb-4">
+            {activeTab === 0 ? 'Monthly Dues — Paid vs Unpaid (units)' : activeTab === 1 ? 'Complaints Filed per Month' : 'Monthly Spending (₦000s)'}
+          </p>
+          {activeTab === 0 && (
+            <div className="flex items-end gap-2" style={{ height: 120 }}>
+              {CHART_DUES.map((d, i) => (
+                <div key={i} className="flex-1 flex flex-col-reverse items-center gap-0.5">
+                  <span className="text-xs text-gray-400 font-medium">{d.m}</span>
+                  <div className="w-full flex flex-col gap-0.5">
+                    <div className="w-full rounded-sm" style={{ height: d.unpaid * 0.58, backgroundColor: '#fca5a5' }} />
+                    <div className="w-full rounded-sm" style={{ height: d.paid * 0.58, backgroundColor: config.color }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {activeTab === 1 && (
+            <div className="flex items-end gap-2" style={{ height: 120 }}>
+              {CHART_COMPLAINTS.map((v, i) => (
+                <div key={i} className="flex-1 flex flex-col-reverse items-center gap-0.5">
+                  <span className="text-xs text-gray-400 font-medium">{months[i]}</span>
+                  <div className="w-full rounded-t-sm" style={{ height: v * 4.2, backgroundColor: '#f59e0b' }} />
+                </div>
+              ))}
+            </div>
+          )}
+          {activeTab === 2 && (
+            <div className="flex items-end gap-2" style={{ height: 120 }}>
+              {CHART_SPENDING.map((v, i) => (
+                <div key={i} className="flex-1 flex flex-col-reverse items-center gap-0.5">
+                  <span className="text-xs text-gray-400 font-medium">{months[i]}</span>
+                  <div className="w-full rounded-t-sm" style={{ height: v * 0.19, backgroundColor: '#7c3aed' }} />
+                </div>
+              ))}
+            </div>
+          )}
+          {activeTab === 0 && (
+            <div className="flex gap-4 mt-3">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: config.color }} />
+                <span className="text-xs text-gray-500 font-medium">Paid</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-sm bg-red-300" />
+                <span className="text-xs text-gray-500 font-medium">Unpaid</span>
+              </div>
+            </div>
+          )}
+        </div>
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Management Actions</p>
+        <div className="grid grid-cols-2 gap-3">
+          {['Add Info', 'Announcement', 'Notice Board', 'Invoices'].map((label) => (
+            <button key={label} className="py-4 rounded-2xl font-bold text-sm text-white active:scale-95 transition-transform shadow-sm"
+              style={{ backgroundColor: config.color }}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <button className="w-full mt-3 py-4 rounded-2xl font-bold text-sm text-white active:scale-95 transition-transform shadow-sm"
+          style={{ backgroundColor: '#1e293b' }}>
+          📊 Dashboard
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Tenant Code Entry ────────────────────────────────────────────────────────
+function TenantCodeScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
+  const [code, setCode] = useState('')
+  const [error, setError] = useState('')
+  const handleJoin = () => {
+    if (!code.trim()) { setError('Please enter a join code'); return }
+    if (code.trim().toUpperCase() !== config.joinCode.toUpperCase()) {
+      setError('Invalid code — ask your estate manager for the correct code.')
+      return
+    }
+    setError('')
+    go('tenant-home')
+  }
+  return (
+    <SplitBg bgOverride={config.bgImageUrl || undefined}>
+      <div className="flex flex-col h-full px-8">
+        <div className="pt-14 pb-4"><BackChevron onClick={() => go('role-select')} /></div>
+        <div className="flex-1 flex flex-col justify-center gap-5" style={{ animation: 'fade-up 0.5s ease both' }}>
+          <div className="flex flex-col items-center gap-3 mb-2">
+            <EstateLogo config={config} size={56} />
+            <h2 className="text-3xl font-black text-white text-center">{config.estateName}</h2>
+            <p className="text-white/70 text-sm text-center">Enter the join code your estate manager shared with you</p>
+          </div>
+          <Field placeholder="Estate code (e.g. EF-4829-GVE)" value={code} onChange={(v) => { setCode(v); setError('') }} />
+          {error && (
+            <div className="bg-red-500/25 border border-red-400/40 rounded-xl px-4 py-3">
+              <p className="text-white text-sm font-semibold">{error}</p>
+            </div>
+          )}
+          <AuthBtn onClick={handleJoin}>Enter Estate →</AuthBtn>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-white/20" />
+            <span className="text-white/50 text-xs font-medium">OR</span>
+            <div className="flex-1 h-px bg-white/20" />
+          </div>
+          <AuthBtn onClick={() => {}}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+            </svg>
+            Scan QR Code
+          </AuthBtn>
+          <p className="text-white/45 text-xs text-center">Demo hint: try <strong className="text-white/70">EF-4829-GVE</strong></p>
+        </div>
+      </div>
+    </SplitBg>
+  )
+}
+
+// ─── Tenant Home ──────────────────────────────────────────────────────────────
+function TenantHomeScreen({ go, config, menuOpen, setMenuOpen }: {
+  go: (s: Screen) => void; config: EstateConfig; menuOpen: boolean; setMenuOpen: (v: boolean) => void
+}) {
+  const [activeNav, setActiveNav] = useState(0)
+  const navItems: { label: string; Icon: IconFn; screen: Screen }[] = [
+    { label: 'Home', Icon: HomeNavIcon, screen: 'tenant-home' },
+    { label: 'Bills', Icon: BillNavIcon, screen: 'tenant-bills' },
+    { label: 'Maintain', Icon: WrenchNavIcon, screen: 'maintenance' },
+    { label: 'Emergency', Icon: AlarmNavIcon, screen: 'emergency' },
+    { label: 'Guest', Icon: ShieldNavIcon, screen: 'guest' },
+  ]
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex items-center justify-between px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+        <button onClick={() => setMenuOpen(true)} className="flex flex-col gap-[5px] p-1">
+          <span className="block w-6 h-[2.5px] bg-black rounded-full" />
+          <span className="block w-6 h-[2.5px] bg-black rounded-full" />
+          <span className="block w-6 h-[2.5px] bg-black rounded-full" />
+        </button>
+        <div className="flex items-center gap-2">
+          <EstateLogo config={config} size={30} />
+          <span className="font-bold text-base" style={{ fontFamily: config.fontFamily }}>{config.estateName}</span>
+        </div>
+        <button>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+          </svg>
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 py-4 pb-28">
+        <p className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-3">Estate Notices</p>
+        {ANNOUNCEMENTS.map((a, idx) => (
+          <div key={a.id} className="bg-white rounded-2xl shadow-sm mb-3 overflow-hidden"
+            style={{ animation: `fade-up 0.4s ease ${idx * 0.08}s both` }}>
+            {a.img && <img src={a.img} alt={a.title} className="w-full h-36 object-cover" />}
+            <div className="p-4">
+              <p className="text-xs text-gray-400 font-medium mb-1">{a.date}</p>
+              <h5 className="font-bold text-gray-900 mb-1" style={{ fontFamily: config.fontFamily, fontSize: config.fontSize - 2 }}>{a.title}</h5>
+              <p className="text-gray-500 text-xs leading-relaxed" style={{ fontFamily: config.fontFamily }}>{a.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Bottom Nav */}
+      <div className="absolute bottom-0 left-0 right-0 px-3 pb-6">
+        <div className="flex rounded-2xl overflow-hidden shadow-xl" style={{ backgroundColor: config.color }}>
+          {navItems.map((item, i) => (
+            <button key={item.label} onClick={() => { setActiveNav(i); go(item.screen) }}
+              className="flex-1 py-3 flex flex-col items-center gap-1 transition-colors"
+              style={{ backgroundColor: activeNav === i ? 'rgba(0,0,0,0.18)' : 'transparent' }}>
+              <item.Icon color={activeNav === i ? 'white' : 'rgba(255,255,255,0.65)'} size={20} />
+              <span className="text-xs font-bold" style={{ color: activeNav === i ? 'white' : 'rgba(255,255,255,0.65)', fontFamily: config.fontFamily }}>
+                {item.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+      {/* Tenant left-slide menu */}
+      {menuOpen && (
+        <div className="absolute inset-0 z-50 flex">
+          <div className="w-3/4 h-full bg-white flex flex-col pt-16 px-6 pb-8 shadow-2xl"
+            style={{ animation: 'slide-in-left 0.3s ease' }}>
+            <div className="flex items-center gap-3 mb-8">
+              <EstateLogo config={config} size={44} />
+              <div>
+                <p className="font-black text-gray-900 text-base">Chidi Okafor</p>
+                <p className="text-gray-400 text-xs">Block B, Flat 7</p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1 flex-1">
+              {[
+                { label: 'My Profile', icon: '👤' },
+                { label: 'Notifications', icon: '🔔' },
+                { label: 'Help & Support', icon: '❓' },
+                { label: 'About EstateFlow', icon: 'ℹ️' },
+              ].map((item) => (
+                <button key={item.label} onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-4 py-4 px-4 rounded-2xl hover:bg-gray-50 transition-all text-left">
+                  <span className="text-2xl">{item.icon}</span>
+                  <span className="font-bold text-gray-800 text-base">{item.label}</span>
+                  <svg className="ml-auto" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </button>
+              ))}
+            </div>
+            <button onClick={() => { setMenuOpen(false); go('role-select') }}
+              className="flex items-center gap-3 py-3 px-4 rounded-xl text-red-500 font-bold mt-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Sign Out
+            </button>
+          </div>
+          <div className="flex-1 bg-black/40" onClick={() => setMenuOpen(false)} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Tenant Bills ─────────────────────────────────────────────────────────────
+function TenantBillsScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+        <PageBack onClick={() => go('tenant-home')} />
+        <h2 className="font-black text-xl" style={{ fontFamily: config.fontFamily }}>My Bills</h2>
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 py-4 pb-32">
+        <div className="rounded-2xl p-5 mb-5 text-white"
+          style={{ background: `linear-gradient(135deg, ${config.color}, ${config.color}bb)` }}>
+          <p className="text-white/80 text-sm font-medium mb-1">Total Outstanding</p>
+          <p className="text-4xl font-black">₦17,500</p>
+          <p className="text-white/70 text-xs mt-1">2 payments pending · Block B, Flat 7</p>
+        </div>
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">All Bills</p>
+        {BILLS.map((bill, i) => (
+          <div key={i} className="bg-white rounded-2xl p-4 shadow-sm mb-3 flex items-center justify-between">
+            <div className="flex-1">
+              <p className="font-bold text-gray-900 text-sm" style={{ fontFamily: config.fontFamily }}>{bill.label}</p>
+              <p className="text-gray-400 text-xs mt-0.5">Due: {bill.due}</p>
+            </div>
+            <div className="flex flex-col items-end gap-1.5 ml-3">
+              <p className="font-black text-gray-900 text-sm">{bill.amount}</p>
+              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${bill.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                {bill.status === 'paid' ? '✓ Paid' : 'Pending'}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-4 pb-8 flex gap-3">
+        <button className="flex-1 py-4 rounded-xl font-bold text-white active:scale-95 transition-transform"
+          style={{ backgroundColor: config.color }}>Pay Now</button>
+        <button className="flex-1 py-4 rounded-xl font-bold text-gray-700 bg-gray-100 active:scale-95 transition-transform">Receipt</button>
+        <button className="flex-1 py-4 rounded-xl font-bold text-gray-700 bg-gray-100 active:scale-95 transition-transform">History</button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Maintenance ──────────────────────────────────────────────────────────────
+function MaintenanceScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
+  const [selected, setSelected] = useState<string | null>(null)
+  const [desc, setDesc] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+
+  if (submitted) {
+    return (
+      <div className="flex flex-col h-full bg-gray-50">
+        <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+          <PageBack onClick={() => { setSubmitted(false); setSelected(null); setDesc('') }} />
+          <h2 className="font-black text-xl">Maintenance</h2>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center px-8 gap-5">
+          <div className="w-24 h-24 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: config.color + '20' }}>
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke={config.color} strokeWidth="2.5" strokeLinecap="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <h3 className="text-2xl font-black text-gray-900 text-center">Request Submitted!</h3>
+          <p className="text-gray-500 text-sm text-center leading-relaxed">
+            Your <strong>{selected}</strong> maintenance request has been sent to the estate manager. You'll be notified shortly.
+          </p>
+          <button onClick={() => { setSubmitted(false); setSelected(null); setDesc(''); go('tenant-home') }}
+            className="w-full py-4 rounded-xl font-bold text-white active:scale-95 transition-transform"
+            style={{ backgroundColor: config.color }}>
+            Back to Home
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+        <PageBack onClick={() => go('tenant-home')} />
+        <h2 className="font-black text-xl" style={{ fontFamily: config.fontFamily }}>Maintenance Request</h2>
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 py-4 pb-8">
+        <p className="text-sm text-gray-500 font-medium mb-4">Select the type of issue:</p>
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          {MAINTENANCE_CATS.map((cat) => (
+            <button key={cat.label} onClick={() => setSelected(cat.label)}
+              className="flex flex-col items-center gap-2 py-4 rounded-2xl border-2 bg-white active:scale-95 transition-all shadow-sm"
+              style={{ borderColor: selected === cat.label ? config.color : 'transparent', backgroundColor: selected === cat.label ? config.color + '10' : 'white' }}>
+              <span className="text-2xl">{cat.emoji}</span>
+              <span className="text-xs font-bold text-gray-700" style={{ fontFamily: config.fontFamily }}>{cat.label}</span>
+            </button>
+          ))}
+        </div>
+        {selected && (
+          <div className="flex flex-col gap-3" style={{ animation: 'fade-up 0.3s ease both' }}>
+            <textarea placeholder={`Describe the ${selected} issue in detail...`}
+              value={desc} onChange={(e) => setDesc(e.target.value)} rows={4}
+              className="w-full py-4 px-5 bg-white rounded-xl border-2 border-black font-semibold text-black placeholder-gray-400 text-base outline-none focus:border-green-600 resize-none"
+              style={{ fontFamily: config.fontFamily }} />
+            <button onClick={() => desc.trim() && setSubmitted(true)}
+              className="w-full py-4 rounded-xl font-bold text-white active:scale-95 transition-transform"
+              style={{ backgroundColor: desc.trim() ? config.color : '#d1d5db' }}>
+              Submit Request
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Emergency ────────────────────────────────────────────────────────────────
+function EmergencyScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
+  const [alertType, setAlertType] = useState<string | null>(null)
+  const [alertSent, setAlertSent] = useState(false)
+  const types = [
+    { label: 'Fire Alarm', emoji: '🔥', color: '#ef4444' },
+    { label: 'Robbery', emoji: '🚨', color: '#f59e0b' },
+    { label: 'Medical', emoji: '🏥', color: '#3b82f6' },
+    { label: 'Gas Leak', emoji: '💨', color: '#8b5cf6' },
+    { label: 'Flooding', emoji: '🌊', color: '#06b6d4' },
+    { label: 'Other', emoji: '⚠️', color: '#6b7280' },
+  ]
+
+  if (alertSent) {
+    return (
+      <div className="flex flex-col h-full bg-red-50">
+        <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-red-100">
+          <PageBack onClick={() => { setAlertSent(false); setAlertType(null) }} />
+          <h2 className="font-black text-xl text-red-600">Emergency Active</h2>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center px-8 gap-6">
+          <div className="relative flex items-center justify-center">
+            <div className="absolute w-36 h-36 rounded-full bg-red-200/60" style={{ animation: 'pulse-ring 1.4s ease-out infinite' }} />
+            <div className="absolute rounded-full bg-red-300/60" style={{ width: 104, height: 104, animation: 'pulse-ring 1.4s ease-out 0.4s infinite' }} />
+            <div className="w-20 h-20 rounded-full bg-red-500 flex items-center justify-center relative z-10 shadow-xl">
+              <span className="text-3xl">{types.find((t) => t.label === alertType)?.emoji}</span>
+            </div>
+          </div>
+          <div className="text-center">
+            <h3 className="text-2xl font-black text-red-600 mb-2">{alertType} Alert Sent!</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">Emergency alert sent to nearby residents and estate security. Help is on the way.</p>
+          </div>
+          <div className="w-full bg-red-100 rounded-2xl p-4 text-center">
+            <p className="text-red-700 text-sm font-bold">Stay calm. Move to a safe location.</p>
+            <p className="text-red-500 text-xs mt-1">Block B, Flat 7 · Location shared with security</p>
+          </div>
+          <button onClick={() => { setAlertSent(false); setAlertType(null) }}
+            className="w-full py-4 rounded-xl font-bold text-white bg-red-500 active:scale-95 transition-transform">
+            Cancel Alert
+          </button>
+          <button onClick={() => { setAlertSent(false); setAlertType(null); go('tenant-home') }}
+            className="text-gray-400 text-sm font-medium">Back to Home</button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+        <PageBack onClick={() => go('tenant-home')} />
+        <h2 className="font-black text-xl" style={{ fontFamily: config.fontFamily }}>Emergency Alert</h2>
+      </div>
+      <div className="flex-1 px-5 py-4 flex flex-col gap-4">
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
+          <p className="text-amber-800 text-sm font-bold">Only use in real emergencies</p>
+          <p className="text-amber-600 text-xs mt-0.5">Alert will be sent to nearby devices and estate security.</p>
+        </div>
+        <p className="text-sm text-gray-500 font-medium text-center">Select emergency type:</p>
+        <div className="grid grid-cols-2 gap-3">
+          {types.map((t) => (
+            <button key={t.label} onClick={() => { setAlertType(t.label); setAlertSent(true) }}
+              className="flex flex-col items-center gap-3 py-6 rounded-2xl bg-white shadow-sm active:scale-95 transition-transform">
+              <span className="text-3xl">{t.emoji}</span>
+              <span className="font-bold text-sm" style={{ color: t.color, fontFamily: config.fontFamily }}>{t.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Guest Screen ─────────────────────────────────────────────────────────────
+function GuestScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
+  const [step, setStep] = useState<'choose' | 'details' | 'code'>('choose')
+  const [guestType, setGuestType] = useState<string | null>(null)
+  const [guestName, setGuestName] = useState('')
+  const [accessCode] = useState('G-' + Math.floor(1000 + Math.random() * 9000).toString())
+  const types = [
+    { label: 'Delivery', emoji: '📦', desc: 'Package or courier delivery' },
+    { label: 'Uber / Food', emoji: '🛵', desc: 'Ride-hailing or food order' },
+    { label: 'Visitor', emoji: '👤', desc: 'Personal guest or family' },
+  ]
+
+  if (step === 'code') {
+    return (
+      <div className="flex flex-col h-full bg-gray-50">
+        <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+          <PageBack onClick={() => setStep('details')} />
+          <h2 className="font-black text-xl">Access Code</h2>
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-6 flex flex-col gap-5">
+          <div className="bg-white rounded-3xl p-5 shadow-sm flex flex-col items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl"
+              style={{ backgroundColor: config.color + '18' }}>
+              {types.find((t) => t.label === guestType)?.emoji}
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-500 font-medium">{guestType} Access</p>
+              <p className="font-bold text-gray-900 text-sm">{guestName || 'Guest'}</p>
+            </div>
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl px-8 py-4 w-full text-center">
+              <p className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-1">Access Code</p>
+              <p className="text-3xl font-black tracking-widest text-gray-900">{accessCode}</p>
+            </div>
+            <div className="text-xs text-gray-400 text-center">
+              <p>Block B, Flat 7 · Chidi Okafor</p>
+              <p className="mt-0.5">Valid 2 hours · Expires 7:30pm today</p>
+            </div>
+          </div>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Share with guest via</p>
+          <div className="grid grid-cols-2 gap-3">
+            {['WhatsApp', 'Messages', 'Email', 'Copy Code'].map((app) => (
+              <button key={app} className="py-4 bg-white rounded-2xl font-bold text-sm text-gray-700 shadow-sm active:scale-95 transition-transform">{app}</button>
+            ))}
+          </div>
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <p className="font-bold text-gray-900 text-sm">Security Gate Notification</p>
+              <p className="text-xs text-gray-400 mt-0.5">Sent to estate security</p>
+            </div>
+            <div className="p-4 flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+                style={{ backgroundColor: config.color + '18' }}>
+                {types.find((t) => t.label === guestType)?.emoji}
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-sm">{guestType}: {guestName || 'Unknown'}</p>
+                <p className="text-gray-500 text-xs">Block B, Flat 7 · Code: {accessCode}</p>
+                <p className="text-gray-400 text-xs mt-0.5">Today, ~7:30pm</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (step === 'details') {
+    return (
+      <div className="flex flex-col h-full bg-gray-50">
+        <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+          <PageBack onClick={() => setStep('choose')} />
+          <h2 className="font-black text-xl">{guestType} Details</h2>
+        </div>
+        <div className="flex-1 px-5 py-5 flex flex-col gap-4">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto"
+            style={{ backgroundColor: config.color + '18' }}>
+            {types.find((t) => t.label === guestType)?.emoji}
+          </div>
+          <Field placeholder={guestType === 'Visitor' ? "Visitor's full name" : "Driver / company name"} value={guestName} onChange={setGuestName} />
+          <Field placeholder="Street / road name" value="" onChange={() => {}} />
+          <Field placeholder="Your flat / house number" value="Block B, Flat 7" onChange={() => {}} />
+          <button onClick={() => setStep('code')}
+            className="w-full py-4 rounded-xl font-bold text-white active:scale-95 transition-transform mt-2"
+            style={{ backgroundColor: config.color }}>
+            Generate Access Code →
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+        <PageBack onClick={() => go('tenant-home')} />
+        <h2 className="font-black text-xl" style={{ fontFamily: config.fontFamily }}>Guest Access</h2>
+      </div>
+      <div className="flex-1 px-5 py-6 flex flex-col gap-4">
+        <p className="text-sm text-gray-500 font-medium text-center">Who are you expecting?</p>
+        {types.map((t) => (
+          <button key={t.label} onClick={() => { setGuestType(t.label); setStep('details') }}
+            className="flex items-center gap-4 bg-white rounded-2xl p-4 shadow-sm border-2 border-transparent active:scale-95 transition-all text-left">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0"
+              style={{ backgroundColor: config.color + '18' }}>
+              {t.emoji}
+            </div>
+            <div>
+              <p className="font-bold text-gray-900 text-base">{t.label}</p>
+              <p className="text-gray-400 text-xs mt-0.5">{t.desc}</p>
+            </div>
+            <svg className="ml-auto" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── 3D Rotating House (Platinum Only) ────────────────────────────────────────
+function House3DAnimation({ color = '#d4af37' }: { color?: string }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  return (
+    <div className="flex flex-col items-center gap-4 my-6" style={{
+      animation: mounted ? 'rise-up 1.8s ease-out forwards' : 'none',
+      transform: mounted ? 'translateY(0)' : 'translateY(100%)',
+      opacity: mounted ? 1 : 0,
+    }}>
+      <p className="text-xs font-bold uppercase tracking-widest" style={{ color }}>✨ Platinum 3D Estate Model</p>
+      <div style={{ perspective: '800px', width: '200px', height: '200px' }}>
+        <div style={{
+          width: '100%',
+          height: '100%',
+          position: 'relative',
+          transformStyle: 'preserve-3d',
+          animation: 'rotate3d 12s linear infinite',
+        }}>
+          {/* Front face */}
+          <div style={{
+            position: 'absolute', width: '180px', height: '180px', left: '10px', top: '10px',
+            background: `linear-gradient(135deg, ${color}, ${color}aa)`,
+            border: `3px solid ${color}`, borderRadius: '16px',
+            transform: 'translateZ(90px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: `0 0 30px ${color}40`,
+          }}>
+            <svg width="120" height="110" viewBox="0 0 100 90" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 46 L50 10 L88 46" />
+              <path d="M20 46 L20 82 L80 82 L80 46" />
+              <path d="M40 82 L40 58 L60 58 L60 82" />
+            </svg>
+          </div>
+          {/* Back face */}
+          <div style={{
+            position: 'absolute', width: '180px', height: '180px', left: '10px', top: '10px',
+            background: `linear-gradient(135deg, ${color}cc, ${color}88)`,
+            border: `3px solid ${color}`, borderRadius: '16px',
+            transform: 'rotateY(180deg) translateZ(90px)',
+          }} />
+          {/* Left face */}
+          <div style={{
+            position: 'absolute', width: '180px', height: '180px', left: '10px', top: '10px',
+            background: `linear-gradient(135deg, ${color}bb, ${color}66)`,
+            border: `3px solid ${color}`, borderRadius: '16px',
+            transform: 'rotateY(-90deg) translateZ(90px)',
+          }} />
+          {/* Right face */}
+          <div style={{
+            position: 'absolute', width: '180px', height: '180px', left: '10px', top: '10px',
+            background: `linear-gradient(135deg, ${color}bb, ${color}66)`,
+            border: `3px solid ${color}`, borderRadius: '16px',
+            transform: 'rotateY(90deg) translateZ(90px)',
+          }} />
+        </div>
+      </div>
+      <p className="text-xs text-gray-500 text-center px-8">3D CAD estate model rotating 360° • Platinum exclusive</p>
+    </div>
+  )
+}
+
+// ─── AI Smart Chatbot (Platinum Only) ─────────────────────────────────────────
+function AIChatbotScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
+  const [messages, setMessages] = useState<{ role: 'user' | 'ai'; text: string; category?: string }[]>([
+    { role: 'ai', text: "👋 Hi! I'm your AI Estate Assistant. I help summarize tenant complaints and route them to the right maintenance team (Plumber, Electrician, Carpenter, Security). What would you like to know?" }
+  ])
+  const [input, setInput] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+
+  const categorizeComplaint = (text: string): { category: string; summary: string; urgency: string } => {
+    const lower = text.toLowerCase()
+    if (lower.includes('water') || lower.includes('pipe') || lower.includes('leak') || lower.includes('tap') || lower.includes('toilet') || lower.includes('drain')) {
+      return { category: '🔧 Plumbing', summary: `Plumbing issue reported. Requires plumber dispatch. Check for water leaks or pipe damage.`, urgency: 'Medium' }
+    }
+    if (lower.includes('electric') || lower.includes('light') || lower.includes('power') || lower.includes('socket') || lower.includes('fuse') || lower.includes('wiring')) {
+      return { category: '⚡ Electrical', summary: `Electrical fault detected. Requires certified electrician. Verify wiring and circuit breaker status.`, urgency: 'High' }
+    }
+    if (lower.includes('wood') || lower.includes('door') || lower.includes('window') || lower.includes('lock') || lower.includes('hinge') || lower.includes('carpenter')) {
+      return { category: '🪚 Carpentry', summary: `Carpentry repair needed. Assign carpenter for door/window/frame maintenance.`, urgency: 'Low' }
+    }
+    if (lower.includes('security') || lower.includes('guard') || lower.includes('gate') || lower.includes('stranger') || lower.includes('trespass') || lower.includes('robber')) {
+      return { category: '🔒 Security', summary: `Security concern flagged. Notify estate security team immediately. Check access logs and surveillance.`, urgency: 'Critical' }
+    }
+    return { category: '📋 General Maintenance', summary: `General maintenance request received. Route to available technician based on availability.`, urgency: 'Medium' }
+  }
+
+  const sendMessage = () => {
+    if (!input.trim()) return
+    const userMsg = input.trim()
+    setMessages(prev => [...prev, { role: 'user', text: userMsg }])
+    setInput('')
+    setIsTyping(true)
+
+    setTimeout(() => {
+      const { category, summary, urgency } = categorizeComplaint(userMsg)
+      setMessages(prev => [...prev, { role: 'ai', text: summary, category: `${category} • Urgency: ${urgency}` }])
+      setIsTyping(false)
+    }, 1200)
+  }
+
+  const quickPrompts = [
+    "Tenant reported water leaking from bathroom ceiling",
+    "Power outage in Block C since 6pm",
+    "Front gate lock is broken",
+    "Suspicious persons seen near Block A"
+  ]
+
+  return (
+    <div className="flex flex-col h-full bg-gradient-to-b from-gray-900 to-black text-white">
+      <div className="flex items-center gap-3 px-5 pt-12 pb-4 border-b border-gray-800">
+        <PageBack onClick={() => go('manager-home')} />
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #d4af37, #f4e4a0)' }}>
+            <span className="text-sm">🤖</span>
+          </div>
+          <div>
+            <h2 className="font-black text-base" style={{ fontFamily: 'Georgia, serif', color: '#d4af37' }}>EstateFlow AI</h2>
+            <p className="text-xs text-gray-400">Smart Complaint Manager</p>
+          </div>
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
+        <div className="bg-gray-800/50 rounded-2xl p-3 border border-gray-700">
+          <p className="text-xs font-bold text-yellow-400 mb-1">💡 Try these:</p>
+          <div className="flex flex-wrap gap-1.5">
+            {quickPrompts.map(p => (
+              <button key={p} onClick={() => { setInput(p); setTimeout(sendMessage, 100) }}
+                className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-2.5 py-1.5 rounded-full transition-colors">
+                {p}
+              </button>
+            ))}
+          </div>
+        </div>
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+              m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-800 border border-gray-700'
+            }`}>
+              <p className="text-sm leading-relaxed">{m.text}</p>
+              {m.category && (
+                <div className="mt-2 pt-2 border-t border-gray-600">
+                  <p className="text-xs font-bold text-yellow-400">{m.category}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="bg-gray-800 border border-gray-700 rounded-2xl px-4 py-3">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="px-4 py-3 border-t border-gray-800 bg-black">
+        <div className="flex gap-2">
+          <input value={input} onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+            placeholder="Describe tenant complaint..."
+            className="flex-1 bg-gray-800 text-white text-sm rounded-xl px-4 py-3 border border-gray-700 outline-none focus:border-yellow-500" />
+          <button onClick={sendMessage} disabled={!input.trim()}
+            className="px-4 rounded-xl font-bold text-black active:scale-95 transition-transform"
+            style={{ backgroundColor: input.trim() ? '#d4af37' : '#555' }}>
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Service Charge Calculator (Platinum AI) ──────────────────────────────────
+function ServiceChargeCalculator({ config }: { config: EstateConfig }) {
+  const [monthlyDues, setMonthlyDues] = useState('15000')
+  const dues = parseInt(monthlyDues) || 0
+  const percentageCharge = Math.round(dues * 0.10)
+  const smartCharge = Math.max(1500, Math.min(9900, percentageCharge))
+  return (
+    <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-5 border-2 border-yellow-200 shadow-sm">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-2xl">🤖</span>
+        <p className="font-black text-sm text-gray-800">AI Service Charge Calculator</p>
+      </div>
+      <p className="text-xs text-gray-500 mb-3">Platinum AI automatically calculates 10% service charge (₦1,500 – ₦9,900 range)</p>
+      <div className="flex gap-2 mb-3">
+        <div className="flex-1">
+          <label className="text-xs font-bold text-gray-600 mb-1 block">Monthly Estate Dues ()</label>
+          <input type="number" value={monthlyDues} onChange={(e) => setMonthlyDues(e.target.value)}
+            className="w-full py-3 px-4 bg-white rounded-xl border-2 border-gray-200 font-bold text-lg outline-none focus:border-yellow-500" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white rounded-xl p-3 border border-gray-200">
+          <p className="text-xs text-gray-400 font-medium">10% Calculation</p>
+          <p className="font-black text-lg text-gray-700">₦{percentageCharge.toLocaleString()}</p>
+        </div>
+        <div className="bg-yellow-100 rounded-xl p-3 border-2 border-yellow-300">
+          <p className="text-xs text-yellow-700 font-bold">Smart AI Charge</p>
+          <p className="font-black text-lg text-yellow-900">₦{smartCharge.toLocaleString()}</p>
+        </div>
+      </div>
+      <div className="mt-3 bg-yellow-50 rounded-lg p-2.5">
+        <p className="text-xs text-yellow-800">
+          <strong>Formula:</strong> max(1500, min(9900, dues × 10%)) = max(1500, min(9900, {percentageCharge.toLocaleString()})) = <strong>₦{smartCharge.toLocaleString()}</strong>
+        </p>
+      </div>
+    </div>
+  )
+}
+function HomeNavIcon({ color, size }: { color: string; size: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+}
+function BillNavIcon({ color, size }: { color: string; size: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
+}
+function WrenchNavIcon({ color, size }: { color: string; size: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" /></svg>
+}
+function AlarmNavIcon({ color, size }: { color: string; size: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="13" r="8" /><path d="M12 9v4M12 17h.01" /><path d="M5 3L3 5M21 5l-2-2" /></svg>
+}
+function ShieldNavIcon({ color, size }: { color: string; size: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+}
+function LogoNavIcon({ color, size }: { color: string; size: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+}
+function FontNavIcon({ color, size }: { color: string; size: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><polyline points="4 7 4 4 20 4 20 7" /><line x1="9" y1="20" x2="15" y2="20" /><line x1="12" y1="4" x2="12" y2="20" /></svg>
+}
+function QRNavIcon({ color, size }: { color: string; size: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+}
+function ThemeNavIcon({ color, size }: { color: string; size: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><path d="M12 2a10 10 0 010 20" /><path d="M12 7a5 5 0 010 10" /></svg>
+}
+function GearNavIcon({ color, size }: { color: string; size: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
+}
+
+// ─── Root App ─────────────────────────────────────────────────────────────────
+export default function App() {
+  const [screen, setScreen] = useState<Screen>('splash')
+  const [config, setConfig] = useState<EstateConfig>(DEFAULT_CONFIG)
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  const go = (s: Screen) => { setMenuOpen(false); setScreen(s) }
+
+  const screens: Record<Screen, React.ReactNode> = {
+    splash: <SplashScreen onDone={() => go('role-select')} />,
+    'role-select': <RoleSelectScreen go={go} />,
+    'manager-auth': <ManagerAuthScreen go={go} />,
+    'manager-signup': <ManagerSignUpScreen go={go} />,
+    'manager-login': <ManagerLoginScreen go={go} />,
+    'manager-home': <ManagerHomeScreen go={go} config={config} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />,
+    'qr-share': <QRShareScreen go={go} config={config} />,
+    'theme-customizer': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} />,
+    'font-picker': <FontPickerScreen go={go} config={config} setConfig={setConfig} />,
+    'logo-upload': <LogoUploadScreen go={go} config={config} />,
+    'estate-profile': <EstateProfileScreen go={go} config={config} setConfig={setConfig} />,
+    'plan-select': <PlanSelectScreen go={go} config={config} setConfig={setConfig} />,
+    payment: <PaymentScreen go={go} config={config} setConfig={setConfig} />,
+    management: <ManagementScreen go={go} config={config} />,
+    'tenant-code': <TenantCodeScreen go={go} config={config} />,
+    'tenant-home': <TenantHomeScreen go={go} config={config} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />,
+    'tenant-bills': <TenantBillsScreen go={go} config={config} />,
+    maintenance: <MaintenanceScreen go={go} config={config} />,
+    emergency: <EmergencyScreen go={go} config={config} />,
+    guest: <GuestScreen go={go} config={config} />,
+    'ai-chatbot': <AIChatbotScreen go={go} config={config} />,
+  }
+
+  return (
+    <div className="min-h-screen bg-zinc-400 flex items-center justify-center p-0 sm:p-6">
+      <div
+        className="relative bg-white overflow-hidden w-full sm:w-[400px]"
+        style={{
+          height: '100dvh',
+          maxHeight: '900px',
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          boxShadow: '0 30px 80px rgba(0,0,0,0.4)',
+          borderRadius: 'clamp(0px, 2vw, 36px)',
+        }}
+      >
+        {screens[screen]}
+      </div>
+    </div>
+  )
+}
