@@ -8,7 +8,7 @@ export type Screen =
   | 'qr-share' | 'theme-customizer' | 'font-picker' | 'logo-upload'
   | 'estate-profile' | 'payment-setup' | 'management'
   | 'announcement-editor' | 'invoices' | 'manager-settings'
-  | 'tenants' | 'reports'
+  | 'tenants' | 'reports' | 'search-tenant'
   | 'tenant-code' | 'tenant-onboarding' | 'tenant-home' | 'tenant-bills'
   | 'tenant-pay' | 'tenant-receipts' | 'tenant-profile' | 'tenant-settings'
   | 'tenant-complaints' | 'maintenance' | 'emergency' | 'guest' | 'ai-chatbot'

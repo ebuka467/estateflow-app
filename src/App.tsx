@@ -89,7 +89,7 @@ function ManagerAuthScreen({ go }: { go: (s: Screen) => void }) {
     <div className="pt-14 pb-5"><button onClick={() => go('role-select')} className="flex items-center gap-1 text-white font-semibold text-sm">← Back</button></div>
     <h2 className="text-3xl font-black text-white mb-1">Estate Manager</h2><p className="text-white/70 text-sm mb-8">Choose how to continue</p>
     <div className="flex flex-col gap-3">
-      <WhiteBtn onClick={() => go('manager-home')}><svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Sign in with Google</WhiteBtn>
+      <WhiteBtn onClick={async () => { try { await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } }) } catch { alert('Enable Google provider in Supabase Dashboard') } }}><svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Sign in with Google</WhiteBtn>
       <WhiteBtn onClick={() => go('manager-signup')}>Sign Up</WhiteBtn>
       <WhiteBtn onClick={() => go('manager-login')}>Log In</WhiteBtn>
     </div>
@@ -155,7 +155,7 @@ function ManagerLoginScreen({ go, config }: { go: (s: Screen) => void; config: E
 // ============================================
 // ESTATE PROFILE SCREEN (New onboarding — no plans)
 // ============================================
-function EstateProfileScreen({ go, config, setConfig }: { go: (s: Screen) => void; config: EstateConfig; setConfig: (c: EstateConfig) => void }) {
+function EstateProfileScreen({ go, config, setConfig, userEmail }: { go: (s: Screen) => void; config: EstateConfig; setConfig: (c: EstateConfig) => void; userEmail?: string }) {
   const [form, setForm] = useState({ name: config.estateName, location: '', size: '', occupants: '', dues: '15000', accountNum: config.estateAccountNumber, accountName: config.estateAccountName, bank: config.estateBank, picUrl: '' })
   const set = (k: keyof typeof form) => (v: string) => setForm({ ...form, [k]: v })
   const breakdown = calculatePaymentBreakdown(parseInt(form.dues) || 15000)
@@ -196,7 +196,7 @@ function EstateProfileScreen({ go, config, setConfig }: { go: (s: Screen) => voi
       <ThemedBtn onClick={async () => {
         const dues = parseInt(form.dues) || 15000
         try {
-          await supabase.from('estates').insert([{ name: form.name || 'My Estate', manager_email: 'manager@estate.com', join_code: 'EF-' + Math.floor(10000 + Math.random() * 90000), monthly_dues: dues, app_dues: Math.round(dues * 0.10), estate_account_number: form.accountNum, estate_account_name: form.accountName, estate_bank: form.bank }]).select()
+          await supabase.from('estates').insert([{ name: form.name || 'My Estate', manager_email: userEmail || '', join_code: 'EF-' + Math.floor(10000 + Math.random() * 90000), monthly_dues: dues, app_dues: Math.round(dues * 0.10), estate_account_number: form.accountNum, estate_account_name: form.accountName, estate_bank: form.bank }]).select()
         } catch (err) { console.log('Save note:', err) }
         setConfig({ ...config, estateName: form.name || config.estateName, monthlyDues: dues, estateAccountNumber: form.accountNum, estateAccountName: form.accountName, estateBank: form.bank, bgImageUrl: form.picUrl })
         go('payment-setup')
@@ -245,9 +245,9 @@ function PaymentSetupScreen({ go, config, setConfig }: { go: (s: Screen) => void
 // ============================================
 // MANAGER HOME / DASHBOARD (Upgraded)
 // ============================================
-function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, invoices, complaints, alerts, clearSession }: {
+function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, invoices, complaints, alerts, clearSession, tenantLogins }: {
   go: (s: Screen) => void; config: EstateConfig; menuOpen: boolean; setMenuOpen: (v: boolean) => void
-  notifications: Notification[]; invoices: Invoice[]; complaints: Complaint[]; alerts: EmergencyAlert[]; clearSession: () => void
+  notifications: Notification[]; invoices: Invoice[]; complaints: Complaint[]; alerts: EmergencyAlert[]; clearSession: () => void; tenantLogins: { name: string; house: string; date: string }[]
 }) {
   const isGB = config.isGoldBlackTheme
   const bgColor = isGB ? '#000000' : (config.color + '10')
@@ -286,12 +286,18 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
         </div>
         <p className="text-white/60 text-xs mt-3">EstateFlow Service Fee: ₦{totalFees.toLocaleString()}</p>
       </div>
+      {/* Search Bar (Patch §7, §9) */}
+      <button onClick={() => go('search-tenant')} className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-3 shadow-sm mb-4 active:scale-[0.99] transition-transform" style={{ border: '1px solid ' + borderColor }}>
+        <Icon icon="mdi:magnify" width="20" height="20" style={{ color: '#9ca3af' }} />
+        <span className="text-gray-400 text-sm font-medium">Search tenant by name or unit...</span>
+        <span className="ml-auto text-xs font-bold px-2 py-1 rounded-lg" style={{ backgroundColor: config.color + '15', color: config.color }}>QR</span>
+      </button>
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-3 mb-5">
         {[
           { label: 'Paid', value: verifiedInvoices.length.toString(), c: '#1B873F' },
           { label: 'Pending', value: pendingInvoices.length.toString(), c: '#f59e0b' },
-          { label: 'Units', value: '120', c: isGB ? '#d4af37' : '#2563eb' },
+          { label: 'Units', value: tenantLogins.length > 0 ? tenantLogins.length.toString() : '—', c: isGB ? '#d4af37' : '#2563eb' },
         ].map((s) => (
           <div key={s.label} className="rounded-2xl p-3 text-center shadow-sm" style={{ backgroundColor: cardBg, border: '1px solid ' + borderColor }}>
             <p className="text-2xl font-black" style={{ color: s.c }}>{s.value}</p>
@@ -299,7 +305,7 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
           </div>
         ))}
       </div>
-      {/* Operational Stats */}
+      {/* Operational Overview */}
       <div className="grid grid-cols-3 gap-3 mb-5">
         {[
           { label: 'Maintenance', value: openMaintenance.toString(), c: '#f59e0b', icon: 'mdi:wrench' },
@@ -307,23 +313,23 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
           { label: 'Alerts', value: activeAlerts.toString(), c: '#8b5cf6', icon: 'mdi:alarm-light' },
         ].map((s) => (
           <div key={s.label} className="rounded-2xl p-3 text-center shadow-sm" style={{ backgroundColor: cardBg, border: '1px solid ' + borderColor }}>
-            <Icon icon={s.icon} width="20" height="20" style={{ color: s.c }} className="mx-auto mb-1" />
-            <p className="text-xl font-black" style={{ color: s.c }}>{s.value}</p>
+            <Icon icon={s.icon} width="18" height="18" style={{ color: s.c }} className="mx-auto mb-1" />
+            <p className="text-lg font-black" style={{ color: s.c }}>{s.value}</p>
             <p className="text-xs font-medium mt-0.5" style={{ color: textS }}>{s.label}</p>
           </div>
         ))}
       </div>
-      {/* Quick Actions */}
-      <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: textS }}>Operations</p>
-      <div className="grid grid-cols-2 gap-3 mb-5">
+      {/* Management — deduplicated (Patch §7) */}
+      <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: textS }}>Management</p>
+      <div className="grid grid-cols-2 gap-3 mb-4">
         {[
-          { label: 'Management', icon: 'mdi:chart-bar', s: 'management' as Screen },
-          { label: 'Announcements', icon: 'mdi:bullhorn', s: 'announcement-editor' as Screen },
           { label: 'Invoices', icon: 'mdi:receipt', s: 'invoices' as Screen },
+          { label: 'Announcements', icon: 'mdi:bullhorn', s: 'announcement-editor' as Screen },
           { label: 'Customize', icon: 'mdi:palette', s: 'theme-customizer' as Screen },
+          { label: 'Reports', icon: 'mdi:chart-bar', s: 'management' as Screen },
         ].map((a) => (
           <button key={a.label} onClick={() => go(a.s)} className="flex items-center gap-3 rounded-2xl px-4 py-4 shadow-sm active:scale-[0.98] transition-transform text-left" style={{ backgroundColor: cardBg, border: '1px solid ' + borderColor }}>
-            <Icon icon={a.icon} width="24" height="24" style={{ color: textP }} /><span className="font-bold text-sm" style={{ color: textP }}>{a.label}</span>
+            <Icon icon={a.icon} width="22" height="22" style={{ color: textP }} /><span className="font-bold text-sm" style={{ color: textP }}>{a.label}</span>
           </button>
         ))}
       </div>
@@ -332,10 +338,10 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
         {[
           { label: 'QR Share', icon: 'mdi:qrcode', s: 'qr-share' as Screen },
           { label: 'Settings', icon: 'mdi:cog', s: 'manager-settings' as Screen },
-          { label: 'Estate Profile', icon: 'mdi:office-building', s: 'estate-profile' as Screen },
+          { label: 'Estate', icon: 'mdi:office-building', s: 'estate-profile' as Screen },
         ].map((a) => (
           <button key={a.label} onClick={() => go(a.s)} className="flex flex-col items-center gap-2 py-4 rounded-2xl shadow-sm active:scale-[0.98] transition-transform" style={{ backgroundColor: cardBg, border: '1px solid ' + borderColor }}>
-            <Icon icon={a.icon} width="28" height="28" style={{ color: textP }} /><span className="text-xs font-bold" style={{ color: textP }}>{a.label}</span>
+            <Icon icon={a.icon} width="26" height="26" style={{ color: textP }} /><span className="text-xs font-bold" style={{ color: textP }}>{a.label}</span>
           </button>
         ))}
       </div>
@@ -360,11 +366,12 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
       <div className="flex items-center gap-3 mb-8"><div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ backgroundColor: config.color }}><HouseIcon stroke="white" size={24} /></div><div><p className="font-black text-gray-900">{config.estateName}</p><p className="text-gray-400 text-xs">Estate Manager</p></div></div>
       <div className="flex flex-col gap-1 flex-1">
         {[
-          { label: 'Estate Profile', icon: 'mdi:office-building', s: 'estate-profile' as Screen },
-          { label: 'Management', icon: 'mdi:chart-bar', s: 'management' as Screen },
+          { label: 'Search Tenant', icon: 'mdi:account-search', s: 'search-tenant' as Screen },
+          { label: 'Invoices & Payments', icon: 'mdi:receipt', s: 'invoices' as Screen },
           { label: 'Announcements', icon: 'mdi:bullhorn', s: 'announcement-editor' as Screen },
-          { label: 'Invoices', icon: 'mdi:receipt', s: 'invoices' as Screen },
-          { label: 'Customize', icon: 'mdi:palette', s: 'theme-customizer' as Screen },
+          { label: 'Reports', icon: 'mdi:chart-bar', s: 'management' as Screen },
+          { label: 'Customize Estate', icon: 'mdi:palette', s: 'theme-customizer' as Screen },
+          { label: 'Estate Profile', icon: 'mdi:office-building', s: 'estate-profile' as Screen },
           { label: 'Settings', icon: 'mdi:cog', s: 'manager-settings' as Screen },
         ].map((item) => (
           <button key={item.label} onClick={() => { setMenuOpen(false); go(item.s) }} className="flex items-center gap-4 py-4 px-4 rounded-2xl hover:bg-gray-50 active:scale-[0.98] transition-all text-left">
@@ -861,6 +868,98 @@ function ServiceWorkerScreen({ go, config, complaints }: { go: (s: Screen) => vo
 // ============================================
 // MANAGER SETTINGS
 // ============================================
+// ============================================
+// SEARCH TENANT SCREEN (Patch §5, §9)
+// ============================================
+function SearchTenantScreen({ go, config, tenantLogins, invoices }: {
+  go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[]; invoices: Invoice[]
+}) {
+  const [query, setQuery] = useState('')
+  const minQuery = 2
+  const trimmed = query.trim()
+  const results = trimmed.length >= minQuery
+    ? tenantLogins.filter(t => t.name.toLowerCase().includes(trimmed.toLowerCase()) || t.house.toLowerCase().includes(trimmed.toLowerCase()))
+    : []
+  const getTenantFinance = (house: string) => {
+    const tenantInvoices = invoices.filter(i => i.houseNumber === house)
+    const paid = tenantInvoices.filter(i => i.status === 'verified').reduce((s, i) => s + i.baseAmount, 0)
+    const outstanding = tenantInvoices.filter(i => i.status === 'pending').reduce((s, i) => s + i.baseAmount, 0)
+    return { paid, outstanding, totalPayments: tenantInvoices.filter(i => i.status === 'verified').length }
+  }
+  return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '10' }}>
+    <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+      <PageBack onClick={() => go('manager-home')} />
+      <h2 className="font-black text-xl">Search Tenant</h2>
+    </div>
+    <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-4">
+      {/* Search Bar */}
+      <div className="relative">
+        <Icon icon="mdi:magnify" width="20" height="20" className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: '#9ca3af' }} />
+        <input
+          type="text"
+          placeholder="Search by name or unit..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          autoFocus
+          className="w-full py-4 pl-12 pr-5 bg-white rounded-xl border-2 border-black/10 font-semibold text-black placeholder-gray-400 text-base outline-none focus:border-green-600 transition-all shadow-sm"
+        />
+      </div>
+      {/* Search info */}
+      <p className="text-xs text-gray-400">Minimum {minQuery} characters. Results limited to your estate.</p>
+      {/* Results */}
+      {trimmed.length < minQuery ? (
+        <div className="text-center py-12">
+          <Icon icon="mdi:account-search" width="48" height="48" style={{ color: '#d1d5db' }} />
+          <p className="text-gray-400 text-sm mt-3">Type at least {minQuery} characters to search</p>
+        </div>
+      ) : results.length === 0 ? (
+        <div className="text-center py-12">
+          <Icon icon="mdi:account-off" width="48" height="48" style={{ color: '#d1d5db' }} />
+          <p className="font-bold text-gray-600 mt-3">No tenants found</p>
+          <p className="text-gray-400 text-sm mt-1">No results for "{trimmed}"</p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">{results.length} result{results.length !== 1 ? 's' : ''}</p>
+          {results.map((t, i) => {
+            const fin = getTenantFinance(t.house)
+            return (
+              <div key={i} className="bg-white rounded-2xl p-4 shadow-sm">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg" style={{ backgroundColor: config.color }}>
+                    {t.name[0]?.toUpperCase() || '?'}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-gray-900">{t.name}</p>
+                    <p className="text-gray-400 text-xs">{t.house} — Joined {t.date}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-green-50 rounded-lg p-2 text-center">
+                    <p className="text-xs text-green-600 font-bold">Paid</p>
+                    <p className="font-bold text-sm text-green-800">₦{fin.paid.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-yellow-50 rounded-lg p-2 text-center">
+                    <p className="text-xs text-yellow-600 font-bold">Owing</p>
+                    <p className="font-bold text-sm text-yellow-800">₦{fin.outstanding.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-2 text-center">
+                    <p className="text-xs text-blue-600 font-bold">Payments</p>
+                    <p className="font-bold text-sm text-blue-800">{fin.totalPayments}</p>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  </div>
+}
+
+// ============================================
+// MANAGER SETTINGS
+// ============================================
 function ManagerSettingsScreen({ go, config, tenantLogins }: { go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[] }) {
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '10' }}>
     <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Settings</h2></div>
@@ -892,6 +991,8 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [tenant, setTenant] = useState<TenantInfo | null>(null)
   const [activeRole, setActiveRole] = useState<string>(() => localStorage.getItem('ef_role') || '')
+  const [userEmail, setUserEmail] = useState<string>('')
+  const [authChecked, setAuthChecked] = useState(false)
   const [tenantLogins, setTenantLogins] = useState<{ name: string; house: string; date: string }[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([
     { id: 'n1', title: 'Estate Fumigation', message: 'Estate-wide fumigation Saturday 19 July at 8am.', date: 'Jul 14, 2026', type: 'announcement', read: false },
@@ -903,10 +1004,18 @@ export default function App() {
   const [guestCodes, setGuestCodes] = useState<GuestCode[]>([])
   const go = useCallback((s: Screen) => { setMenuOpen(false); setScreen(s) }, [])
 
-  // Auth state listener
+  // Auth state listener — verifies session, captures user email
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT') { localStorage.removeItem('ef_role'); setActiveRole('') }
+    // Check current session first
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.email) setUserEmail(session.user.email)
+      setAuthChecked(true)
+    })
+    // Listen for changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user?.email) setUserEmail(session.user.email)
+      if (event === 'SIGNED_OUT') { localStorage.removeItem('ef_role'); setActiveRole(''); setUserEmail('') }
+      setAuthChecked(true)
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -950,10 +1059,11 @@ export default function App() {
     'manager-auth': <ManagerAuthScreen go={go} />,
     'manager-signup': <ManagerSignUpScreen go={go} config={config} />,
     'manager-login': <ManagerLoginScreen go={go} config={config} />,
-    'manager-home': <ManagerHomeScreen go={go} config={config} menuOpen={menuOpen} setMenuOpen={setMenuOpen} notifications={notifications} invoices={invoices} complaints={complaints} alerts={alerts} clearSession={clearSession} />,
+    'manager-home': <ManagerHomeScreen go={go} config={config} menuOpen={menuOpen} setMenuOpen={setMenuOpen} notifications={notifications} invoices={invoices} complaints={complaints} alerts={alerts} clearSession={clearSession} tenantLogins={tenantLogins} />,
+    'search-tenant': <SearchTenantScreen go={go} config={config} tenantLogins={tenantLogins} invoices={invoices} />,
     'qr-share': <QRShareScreen go={go} config={config} />,
     'theme-customizer': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} />,
-    'estate-profile': <EstateProfileScreen go={go} config={config} setConfig={setConfig} />,
+    'estate-profile': <EstateProfileScreen go={go} config={config} setConfig={setConfig} userEmail={userEmail} />,
     'payment-setup': <PaymentSetupScreen go={go} config={config} setConfig={setConfig} />,
     management: <ManagementScreen go={go} config={config} invoices={invoices} complaints={complaints} />,
     'announcement-editor': <AnnouncementEditorScreen go={go} config={config} setNotifications={setNotifications} notifications={notifications} />,
