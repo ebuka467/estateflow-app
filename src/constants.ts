@@ -2,12 +2,187 @@
 // ESTATEFLOW — Constants & Static Data
 // ============================================
 
-import type { EstateConfig } from './types'
+import type { EstateConfig, EstateTheme, LayoutPreset } from './types'
 
 // EstateFlow service fee percentage (added ON TOP of estate dues)
 export const SERVICE_FEE_PERCENT = 10
 
-// Default estate configuration — ALL features enabled for every estate
+// ============================================
+// 10 COMPLETE VISUAL THEMES (Master §16)
+// Each defines a coherent visual system, not just a colour
+// ============================================
+export const ESTATE_THEMES: EstateTheme[] = [
+  {
+    id: 'modern-green',
+    name: 'Modern Green',
+    primary: '#1B873F',
+    secondary: '#065f46',
+    accent: '#10b981',
+    background: '#f0fdf4',
+    surface: '#ffffff',
+    textPrimary: '#111827',
+    textSecondary: '#6b7280',
+    border: '#e5e7eb',
+    shadow: 'medium',
+    radius: 'rounded',
+    description: 'Fresh, professional, Nigerian estate standard',
+  },
+  {
+    id: 'ocean-blue',
+    name: 'Ocean Blue',
+    primary: '#1e40af',
+    secondary: '#1e3a8a',
+    accent: '#3b82f6',
+    background: '#eff6ff',
+    surface: '#ffffff',
+    textPrimary: '#111827',
+    textSecondary: '#4b5563',
+    border: '#dbeafe',
+    shadow: 'medium',
+    radius: 'rounded',
+    description: 'Trustworthy, corporate, clean',
+  },
+  {
+    id: 'royal-purple',
+    name: 'Royal Purple',
+    primary: '#7c3aed',
+    secondary: '#5b21b6',
+    accent: '#a78bfa',
+    background: '#faf5ff',
+    surface: '#ffffff',
+    textPrimary: '#1f2937',
+    textSecondary: '#6b7280',
+    border: '#ede9fe',
+    shadow: 'medium',
+    radius: 'rounded',
+    description: 'Premium, distinctive, elegant',
+  },
+  {
+    id: 'warm-sand',
+    name: 'Warm Sand',
+    primary: '#b45309',
+    secondary: '#92400e',
+    accent: '#f59e0b',
+    background: '#fffbeb',
+    surface: '#ffffff',
+    textPrimary: '#1c1917',
+    textSecondary: '#78716c',
+    border: '#fef3c7',
+    shadow: 'subtle',
+    radius: 'rounded',
+    description: 'Warm, welcoming, approachable',
+  },
+  {
+    id: 'forest',
+    name: 'Forest',
+    primary: '#166534',
+    secondary: '#14532d',
+    accent: '#4ade80',
+    background: '#f0fdf4',
+    surface: '#ffffff',
+    textPrimary: '#052e16',
+    textSecondary: '#4b5563',
+    border: '#dcfce7',
+    shadow: 'subtle',
+    radius: 'sharp',
+    description: 'Natural, grounded, established',
+  },
+  {
+    id: 'minimal-light',
+    name: 'Minimal Light',
+    primary: '#374151',
+    secondary: '#1f2937',
+    accent: '#6b7280',
+    background: '#f9fafb',
+    surface: '#ffffff',
+    textPrimary: '#111827',
+    textSecondary: '#9ca3af',
+    border: '#f3f4f6',
+    shadow: 'none',
+    radius: 'sharp',
+    description: 'Clean, distraction-free, modern',
+  },
+  {
+    id: 'dark-premium',
+    name: 'Dark Premium',
+    primary: '#d4af37',
+    secondary: '#b8941f',
+    accent: '#fbbf24',
+    background: '#0a0a0a',
+    surface: '#1a1a1a',
+    textPrimary: '#fafafa',
+    textSecondary: '#a1a1aa',
+    border: '#27272a',
+    shadow: 'strong',
+    radius: 'rounded',
+    description: 'Luxury, exclusive, high-end',
+  },
+  {
+    id: 'rose-modern',
+    name: 'Rose Modern',
+    primary: '#be185d',
+    secondary: '#9d174d',
+    accent: '#f472b6',
+    background: '#fdf2f8',
+    surface: '#ffffff',
+    textPrimary: '#1f2937',
+    textSecondary: '#6b7280',
+    border: '#fce7f3',
+    shadow: 'subtle',
+    radius: 'pill',
+    description: 'Contemporary, soft, distinctive',
+  },
+  {
+    id: 'slate-professional',
+    name: 'Slate Professional',
+    primary: '#475569',
+    secondary: '#334155',
+    accent: '#0ea5e9',
+    background: '#f8fafc',
+    surface: '#ffffff',
+    textPrimary: '#0f172a',
+    textSecondary: '#64748b',
+    border: '#e2e8f0',
+    shadow: 'medium',
+    radius: 'sharp',
+    description: 'Business-like, serious, trustworthy',
+  },
+  {
+    id: 'classic-estate',
+    name: 'Classic Estate',
+    primary: '#1e3a5f',
+    secondary: '#0f2439',
+    accent: '#c9a227',
+    background: '#fefce8',
+    surface: '#ffffff',
+    textPrimary: '#1c1917',
+    textSecondary: '#57534e',
+    border: '#e7e5e4',
+    shadow: 'medium',
+    radius: 'sharp',
+    description: 'Traditional, heritage, established authority',
+  },
+]
+
+// ============================================
+// 10 LAYOUT PRESETS (Master §19)
+// ============================================
+export const LAYOUT_PRESETS: LayoutPreset[] = [
+  { id: 'modern', name: 'Modern', description: 'Large summary cards + clean sections', cardDensity: 'normal', showWelcomeHero: true, prioritizeFinance: false, prioritizeCommunity: false, prioritizeOperations: false, gridColumns: 2 },
+  { id: 'classic', name: 'Classic', description: 'Traditional estate management layout', cardDensity: 'normal', showWelcomeHero: true, prioritizeFinance: false, prioritizeCommunity: false, prioritizeOperations: false, gridColumns: 2 },
+  { id: 'compact', name: 'Compact', description: 'More information, less vertical space', cardDensity: 'compact', showWelcomeHero: false, prioritizeFinance: false, prioritizeCommunity: false, prioritizeOperations: false, gridColumns: 3 },
+  { id: 'spacious', name: 'Spacious', description: 'Large cards with breathing room', cardDensity: 'spacious', showWelcomeHero: true, prioritizeFinance: false, prioritizeCommunity: false, prioritizeOperations: false, gridColumns: 2 },
+  { id: 'finance-first', name: 'Finance First', description: 'Dues and payment information prioritized', cardDensity: 'normal', showWelcomeHero: true, prioritizeFinance: true, prioritizeCommunity: false, prioritizeOperations: false, gridColumns: 2 },
+  { id: 'community', name: 'Community', description: 'Announcements and community info first', cardDensity: 'normal', showWelcomeHero: true, prioritizeFinance: false, prioritizeCommunity: true, prioritizeOperations: false, gridColumns: 2 },
+  { id: 'operations', name: 'Operations', description: 'Maintenance, complaints, security prioritized', cardDensity: 'normal', showWelcomeHero: false, prioritizeFinance: false, prioritizeCommunity: false, prioritizeOperations: true, gridColumns: 3 },
+  { id: 'minimal', name: 'Minimal', description: 'Simple, low-distraction dashboard', cardDensity: 'compact', showWelcomeHero: false, prioritizeFinance: false, prioritizeCommunity: false, prioritizeOperations: false, gridColumns: 2 },
+  { id: 'widget', name: 'Widget Grid', description: 'Dense information with widget cards', cardDensity: 'compact', showWelcomeHero: false, prioritizeFinance: true, prioritizeCommunity: false, prioritizeOperations: true, gridColumns: 3 },
+  { id: 'magazine', name: 'Magazine', description: 'Card grid with featured content', cardDensity: 'spacious', showWelcomeHero: true, prioritizeFinance: false, prioritizeCommunity: true, prioritizeOperations: false, gridColumns: 2 },
+]
+
+// ============================================
+// DEFAULT CONFIG
+// ============================================
 export const DEFAULT_CONFIG: EstateConfig = {
   color: '#1B873F',
   secondaryColor: '#065f46',
@@ -19,22 +194,29 @@ export const DEFAULT_CONFIG: EstateConfig = {
   estateName: 'Greenview Estate',
   estateDescription: '',
   joinCode: 'EF-4829-GVE',
-  logoPosition: 'top-left',
-  enable3D: true,
-  enableAI: true,
+  welcomeMessage: 'Welcome home.',
+  themeId: 'modern-green',
   isGoldBlackTheme: false,
-  monthlyDues: 15000,
-  estateAccountNumber: '0123456789',
-  estateAccountName: 'Greenview Estate Mgt',
-  estateBank: 'GTBank',
+  backgroundType: 'solid',
+  gradientAngle: 135,
+  gradientColors: ['#1B873F', '#065f46'],
+  backgroundOpacity: 1,
+  layoutId: 'modern',
+  cardStyle: 'elevated',
+  buttonStyle: 'rounded',
+  borderRadius: 16,
+  shadowIntensity: 'medium',
+  enable3D: true,
   useEstateLogoFor3D: false,
   threeDOpacity: 0.2,
   threeDScale: 1,
   threeDSpeed: 20,
-  borderRadius: 16,
-  shadowIntensity: 'medium',
-  welcomeMessage: 'Welcome home.',
-  cardStyle: 'rounded',
+  monthlyDues: 15000,
+  estateAccountNumber: '0123456789',
+  estateAccountName: 'Greenview Estate Mgt',
+  estateBank: 'GTBank',
+  enableAI: true,
+  logoPosition: 'top-left',
 }
 
 export const APT_PHOTO = 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=900&h=1200&fit=crop&auto=format'
@@ -56,30 +238,23 @@ export const AVATARS = AVATAR_SVGS
 
 export const BANKS = ['GTBank', 'Access Bank', 'First Bank', 'UBA', 'Zenith', 'Fidelity', 'Sterling', 'Wema', 'Union']
 
-// Theme colors available to ALL estates (no subscription lock)
-export const THEME_COLORS = [
-  '#1B873F', '#2563eb', '#dc2626', '#d97706', '#7c3aed', '#0891b2',
-  '#db2777', '#ec4899', '#14b8a6', '#f97316', '#84cc16', '#6366f1',
-  '#d4af37', '#000000', '#0ea5e9', '#8b5cf6',
-]
+// Theme colors (kept for backward compat — themes now define full systems)
+export const THEME_COLORS = ESTATE_THEMES.map(t => t.primary)
 
-// Professional font library
+// Professional font library (Master §18)
 export const FONT_OPTIONS = [
   { label: 'Plus Jakarta Sans', value: "'Plus Jakarta Sans', sans-serif" },
   { label: 'Inter', value: "'Inter', sans-serif" },
-  { label: 'Manrope', value: "'Manrope', sans-serif" },
-  { label: 'DM Sans', value: "'DM Sans', sans-serif" },
-  { label: 'Outfit', value: "'Outfit', sans-serif" },
   { label: 'Poppins', value: "'Poppins', sans-serif" },
   { label: 'Montserrat', value: "'Montserrat', sans-serif" },
-  { label: 'Lato', value: "'Lato', sans-serif" },
-  { label: 'Roboto', value: "'Roboto', sans-serif" },
   { label: 'Nunito Sans', value: "'Nunito Sans', sans-serif" },
+  { label: 'Roboto', value: "'Roboto', sans-serif" },
+  { label: 'Lato', value: "'Lato', sans-serif" },
+  { label: 'Open Sans', value: "'Open Sans', sans-serif" },
   { label: 'Playfair Display', value: "'Playfair Display', serif" },
-  { label: 'Libre Baskerville', value: "'Libre Baskerville', serif" },
+  { label: 'Merriweather', value: "'Merriweather', serif" },
 ]
 
-// Maintenance categories
 export const MAINTENANCE_CATEGORIES = [
   { label: 'Plumbing', icon: 'mdi:wrench' },
   { label: 'Electrical', icon: 'mdi:flash' },
@@ -91,7 +266,6 @@ export const MAINTENANCE_CATEGORIES = [
   { label: 'Other', icon: 'mdi:alert-circle' },
 ]
 
-// Emergency types
 export const EMERGENCY_TYPES = [
   { label: 'Fire', icon: 'mdi:fire', color: '#ef4444', emoji: '🔥' },
   { label: 'Security', icon: 'mdi:police-badge', color: '#f59e0b', emoji: '🚨' },
@@ -100,7 +274,6 @@ export const EMERGENCY_TYPES = [
   { label: 'Other', icon: 'mdi:alert-octagon', color: '#6b7280', emoji: '⚠️' },
 ]
 
-// Guest types
 export const GUEST_TYPES = [
   { label: 'Delivery', icon: 'mdi:package' },
   { label: 'Ride/Food', icon: 'mdi:motorbike' },

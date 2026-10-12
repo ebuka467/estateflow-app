@@ -14,8 +14,42 @@ export type Screen =
   | 'tenant-complaints' | 'maintenance' | 'emergency' | 'guest' | 'ai-chatbot'
   | 'service-code' | 'service-role' | 'service-security' | 'service-worker'
 
-// Every estate gets ALL features — no subscription tiers
+// Visual theme definition — each theme is a complete visual system
+export interface EstateTheme {
+  id: string
+  name: string
+  primary: string
+  secondary: string
+  accent: string
+  background: string
+  surface: string
+  textPrimary: string
+  textSecondary: string
+  border: string
+  shadow: 'none' | 'subtle' | 'medium' | 'strong'
+  radius: 'sharp' | 'rounded' | 'pill'
+  description: string
+}
+
+// Layout preset definition
+export interface LayoutPreset {
+  id: string
+  name: string
+  description: string
+  cardDensity: 'compact' | 'normal' | 'spacious'
+  showWelcomeHero: boolean
+  prioritizeFinance: boolean
+  prioritizeCommunity: boolean
+  prioritizeOperations: boolean
+  gridColumns: 2 | 3
+}
+
+// Background type
+export type BackgroundType = 'solid' | 'gradient' | 'image' | 'pattern'
+
+// Full estate configuration — ALL features for every estate
 export interface EstateConfig {
+  // Identity
   color: string
   secondaryColor: string
   fontFamily: string
@@ -26,24 +60,43 @@ export interface EstateConfig {
   estateName: string
   estateDescription: string
   joinCode: string
-  logoPosition: 'top-left' | 'top-right' | 'center' | 'bottom-right'
-  enable3D: boolean
-  enableAI: boolean
+  welcomeMessage: string
+
+  // Theme (from 10 presets)
+  themeId: string
   isGoldBlackTheme: boolean
-  monthlyDues: number
-  // EstateFlow service fee is 10% added ON TOP of estate dues
-  // Tenant pays: monthlyDues + (monthlyDues * 0.10)
-  estateAccountNumber: string
-  estateAccountName: string
-  estateBank: string
+
+  // Background
+  backgroundType: BackgroundType
+  gradientAngle: number
+  gradientColors: [string, string]
+  backgroundOpacity: number
+
+  // Layout
+  layoutId: string
+
+  // Card/Button styles
+  cardStyle: 'soft' | 'bordered' | 'elevated' | 'minimal'
+  buttonStyle: 'rounded' | 'pill' | 'sharp' | 'outlined'
+  borderRadius: number
+  shadowIntensity: 'none' | 'subtle' | 'medium' | 'strong'
+
+  // 3D Model
+  enable3D: boolean
   useEstateLogoFor3D: boolean
   threeDOpacity: number
   threeDScale: number
   threeDSpeed: number
-  borderRadius: number
-  shadowIntensity: 'none' | 'subtle' | 'medium' | 'strong'
-  welcomeMessage: string
-  cardStyle: 'sharp' | 'rounded' | 'pill'
+
+  // Financial
+  monthlyDues: number
+  estateAccountNumber: string
+  estateAccountName: string
+  estateBank: string
+
+  // Feature flags (all enabled for everyone)
+  enableAI: boolean
+  logoPosition: 'top-left' | 'top-right' | 'center' | 'bottom-right'
 }
 
 export interface TenantInfo {
@@ -68,17 +121,11 @@ export interface Invoice {
   id: string
   tenantName: string
   houseNumber: string
-  // Estate dues — what the estate requested
   baseAmount: number
-  // EstateFlow 10% service fee — added ON TOP
   serviceFee: number
-  // Processing fee (currently 0)
   processingFee: number
-  // What the tenant actually pays
   totalAmount: number
-  // What the estate receives (same as baseAmount)
   estateSettlement: number
-  // What EstateFlow earns (same as serviceFee)
   estateflowShare: number
   date: string
   status: 'pending' | 'verified' | 'rejected'
@@ -151,4 +198,26 @@ export function calculatePaymentBreakdown(baseAmount: number): {
     estateSettlement: baseAmount,
     estateflowShare: serviceFee,
   }
+}
+
+// WCAG contrast ratio calculation (Patch §8, §62)
+export function getLuminance(hex: string): number {
+  const rgb = hex.replace('#', '').match(/.{2}/g)?.map(c => {
+    const v = parseInt(c, 16) / 255
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+  }) || [0, 0, 0]
+  return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
+}
+
+export function getContrastRatio(hex1: string, hex2: string): number {
+  const l1 = getLuminance(hex1)
+  const l2 = getLuminance(hex2)
+  const lighter = Math.max(l1, l2)
+  const darker = Math.min(l1, l2)
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+// WCAG AA requires 4.5:1 for normal text, 3:1 for large text
+export function meetsWCAG_AA(foreground: string, background: string): boolean {
+  return getContrastRatio(foreground, background) >= 4.5
 }
