@@ -15,6 +15,15 @@ import { calculatePaymentBreakdown } from './types'
 import { DEFAULT_CONFIG, APT_PHOTO, AVATAR_SVGS, AVATARS, BANKS, THEME_COLORS, FONT_OPTIONS, MAINTENANCE_CATEGORIES, EMERGENCY_TYPES, GUEST_TYPES, SERVICE_FEE_PERCENT, ESTATE_THEMES, LAYOUT_PRESETS } from './constants'
 import { PageTransition, PageBack, HouseIcon, SplitBg, Field, ThemedBtn, WhiteBtn, PaymentBreakdown, StatusBadge, EmptyState, House3DOverlay, SuccessAnimation } from './components'
 
+
+// Security: Sanitize user text to prevent XSS (Master §38)
+function sanitizeText(text: string): string {
+  return text.replace(/[<>'"&]/g, (char) => {
+    const entities: Record<string, string> = { '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;', '&': '&amp;' }
+    return entities[char] || char
+  })
+}
+
 // ============================================
 // SPLASH SCREEN
 // ============================================
@@ -108,6 +117,7 @@ function ManagerSignUpScreen({ go, config }: { go: (s: Screen) => void; config: 
     try {
       const { error: signUpError } = await supabase.auth.signUp({ email: f.email.trim(), password: f.pw, options: { data: { first_name: f.name, surname: f.surname, phone: f.phone } } })
       if (signUpError) { setError(signUpError.message); setLoading(false); return }
+      // Note: Manager screens now require active Supabase session (auth gate)
       go('manager-home')
     } catch { setError('Something went wrong. Please try again.') }
     setLoading(false)
@@ -858,17 +868,22 @@ function TenantPayScreen({ go, config, invoices, setInvoices, setNotifications, 
   const pending = invoices.find(i => i.status === 'pending')
   const breakdown = calculatePaymentBreakdown(config.monthlyDues)
   const handlePay = () => {
+    // SECURITY: Real payment requires Paystack integration (backend Edge Function)
+    // This simulates the payment REQUEST being created (not verified)
+    // In production: call Edge Function → initialize Paystack → redirect to checkout
+    // Webhook will verify and mark as successful server-side
     setProcessing(true)
     setTimeout(() => {
       setProcessing(false); setPaid(true)
       if (pending) {
-        setInvoices(invoices.map(inv => inv.id === pending.id ? { ...inv, status: 'verified' as const, verifiedBy: 'Paystack', verifiedDate: new Date().toLocaleDateString(), paymentReference: 'EF-' + Math.floor(10000000 + Math.random() * 90000000) } : inv))
-        setNotifications([{ id: 'n' + Date.now(), title: 'Payment Verified', message: 'Your payment of ₦' + pending.totalAmount.toLocaleString() + ' has been verified.', date: new Date().toLocaleDateString(), type: 'payment', read: false }, ...notifications])
+        // Mark as PENDING (not verified) — manager or webhook must verify
+        setInvoices(invoices.map(inv => inv.id === pending.id ? { ...inv, status: 'pending' as const, paymentReference: 'EF-PEND-' + Math.floor(10000000 + Math.random() * 90000000) } : inv))
+        setNotifications([{ id: 'n' + Date.now(), title: 'Payment Submitted', message: 'Your payment of ₦' + pending.totalAmount.toLocaleString() + ' is being processed. Awaiting verification.', date: new Date().toLocaleDateString(), type: 'payment', read: false }, ...notifications])
       }
     }, 2500)
   }
   if (paid && pending) return <div className="flex flex-col h-full items-center justify-center px-8 gap-4" style={{ backgroundColor: config.color + '10' }}>
-    <SuccessAnimation message="Payment Successful!" subtext="Verified via Paystack" color={config.color} />
+    <SuccessAnimation message="Payment Submitted" subtext="Awaiting verification" color={config.color} />
     <div className="bg-white rounded-2xl p-5 shadow-sm w-full">
       <div className="flex justify-between mb-1"><span className="text-gray-500 text-sm">Estate Dues</span><span className="font-bold">₦{pending.baseAmount.toLocaleString()}</span></div>
       <div className="flex justify-between mb-1"><span className="text-gray-500 text-sm">Service Fee</span><span className="font-bold text-green-600">₦{pending.serviceFee.toLocaleString()}</span></div>
@@ -970,10 +985,18 @@ function EmergencyScreen({ go, config, tenant, alerts, setAlerts }: { go: (s: Sc
       <div className="bg-red-100 border-2 border-red-300 rounded-2xl p-4 text-center"><p className="text-red-800 text-sm font-bold">⚠️ Only use in real emergencies</p><p className="text-red-600 text-xs mt-1">Your address ({tenant?.houseNumber || ''}) will be sent to security immediately.</p></div>
       <p className="text-sm text-gray-600 text-center font-semibold">Select emergency type:</p>
       <div className="grid grid-cols-2 gap-3">{EMERGENCY_TYPES.map((t) => (
-        <button key={t.label} onClick={() => { setAlertType(t.label); setSent(true); setAlerts([{ id: 'e' + Date.now(), type: t.label, houseNumber: tenant?.houseNumber || 'Unknown', tenantName: tenant?.name || 'Unknown', date: new Date().toLocaleString(), location: tenant?.houseNumber || '', status: 'active' }, ...alerts]) }} className="flex flex-col items-center gap-3 py-6 rounded-2xl bg-white shadow-sm active:scale-[0.98] border-2 border-red-100">
+        <button key={t.label} onClick={() => { setAlertType(t.label) }} className="flex flex-col items-center gap-3 py-6 rounded-2xl bg-white shadow-sm active:scale-[0.98] border-2 border-red-100">
           <span className="text-3xl">{t.emoji}</span><span className="font-bold text-sm" style={{ color: t.color }}>{t.label}</span>
         </button>
       ))}</div>
+      {alertType && <div className="bg-white border-2 border-red-400 rounded-2xl p-5 mt-3" style={{ animation: 'scaleIn 0.2s ease' }}>
+        <p className="text-red-700 font-bold text-center mb-2">⚠️ Confirm: {alertType} Emergency?</p>
+        <p className="text-gray-600 text-xs text-center mb-4">Your location ({tenant?.houseNumber}) will be sent to security & management immediately.</p>
+        <div className="flex gap-3">
+          <button onClick={() => setAlertType('')} className="flex-1 py-3 rounded-xl font-bold text-gray-700 bg-gray-100 active:scale-[0.98]">Cancel</button>
+          <button onClick={() => { setSent(true); setAlerts([{ id: 'e' + Date.now(), type: alertType, houseNumber: tenant?.houseNumber || 'Unknown', tenantName: tenant?.name || 'Unknown', date: new Date().toLocaleString(), location: tenant?.houseNumber || '', status: 'active' }, ...alerts]) }} className="flex-1 py-3 rounded-xl font-bold text-white bg-red-600 active:scale-[0.98]">🚨 SEND ALERT</button>
+        </div>
+      </div>}
     </div>
   </div>
 }
@@ -1180,9 +1203,21 @@ export default function App() {
 
   useEffect(() => {
     if (screen === 'splash') {
-      const role = localStorage.getItem('ef_role')
-      setTimeout(() => {
-        if (role === 'manager') go('manager-home')
+      setTimeout(async () => {
+        const role = localStorage.getItem('ef_role')
+        // Security gate: verify Supabase auth session for managers (Patch §5)
+        if (role === 'manager') {
+          const { data: { session } } = await supabase.auth.getSession()
+          if (session?.user) {
+            setUserEmail(session.user.email || '')
+            go('manager-home')
+          } else {
+            // No valid session — force re-auth
+            localStorage.removeItem('ef_role')
+            setActiveRole('')
+            go('manager-auth')
+          }
+        }
         else if (role === 'tenant' && tenant) go('tenant-home')
         else if (role === 'tenant' && !tenant) go('tenant-code')
         else if (role === 'service') go('service-role')
