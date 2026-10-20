@@ -130,7 +130,7 @@ function ManagerSignUpScreen({ go, config }: { go: (s: Screen) => void; config: 
       <Field placeholder="Phone Number" type="tel" value={f.phone} onChange={set('phone')} /><Field placeholder="Email Address" type="email" value={f.email} onChange={set('email')} />
       <Field placeholder="Password" type="password" value={f.pw} onChange={set('pw')} />
       {error && <div className="bg-red-500/30 rounded-xl px-4 py-3"><p className="text-white text-sm font-semibold">{error}</p></div>}
-      <ThemedBtn onClick={handleSignUp} color={config.color} disabled={loading} className="mt-2">
+      <ThemedBtn onClick={handleSignUp} color={config.color} disabled={false} className="mt-2">
         {loading ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Creating Account...</> : 'Create Account →'}
       </ThemedBtn>
     </div>
@@ -156,7 +156,7 @@ function ManagerLoginScreen({ go, config }: { go: (s: Screen) => void; config: E
     <div className="flex flex-col gap-3">
       <Field placeholder="Email Address" type="email" value={email} onChange={setEmail} /><Field placeholder="Password" type="password" value={pw} onChange={setPw} />
       {error && <div className="bg-red-500/30 rounded-xl px-4 py-3"><p className="text-white text-sm font-semibold">{error}</p></div>}
-      <ThemedBtn onClick={handleLogin} color={config.color} disabled={loading} className="mt-2">
+      <ThemedBtn onClick={handleLogin} color={config.color} disabled={false} className="mt-2">
         {loading ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Signing In...</> : 'Log In →'}
       </ThemedBtn>
     </div>
@@ -330,24 +330,11 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
           </div>
         ))}
       </div>
-      {/* Management — deduplicated (Patch §7) */}
-      <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: textS }}>Management</p>
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        {[
-          { label: 'Invoices', icon: 'mdi:receipt', s: 'invoices' as Screen },
-          { label: 'Announcements', icon: 'mdi:bullhorn', s: 'announcement-editor' as Screen },
-          { label: 'Customize', icon: 'mdi:palette', s: 'theme-customizer' as Screen },
-          { label: 'Reports', icon: 'mdi:chart-bar', s: 'management' as Screen },
-        ].map((a) => (
-          <button key={a.label} onClick={() => go(a.s)} className="flex items-center gap-3 rounded-2xl px-4 py-4 shadow-sm active:scale-[0.98] transition-transform text-left" style={{ backgroundColor: cardBg, border: '1px solid ' + borderColor }}>
-            <Icon icon={a.icon} width="22" height="22" style={{ color: textP }} /><span className="font-bold text-sm" style={{ color: textP }}>{a.label}</span>
-          </button>
-        ))}
-      </div>
+
       <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: textS }}>Quick Actions</p>
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'QR Share', icon: 'mdi:qrcode', s: 'qr-share' as Screen },
+          { label: 'Tenants', icon: 'mdi:account-group', s: 'tenants' as Screen },
           { label: 'Settings', icon: 'mdi:cog', s: 'manager-settings' as Screen },
           { label: 'Estate', icon: 'mdi:office-building', s: 'estate-profile' as Screen },
         ].map((a) => (
@@ -973,34 +960,53 @@ function TenantSettingsScreen({ go, config, clearSession }: { go: (s: Screen) =>
 // ============================================
 function EmergencyScreen({ go, config, tenant, alerts, setAlerts }: { go: (s: Screen) => void; config: EstateConfig; tenant: TenantInfo | null; alerts: EmergencyAlert[]; setAlerts: (a: EmergencyAlert[]) => void }) {
   const [sent, setSent] = useState(false); const [alertType, setAlertType] = useState('')
-  if (sent) return <div className="flex flex-col h-full items-center justify-center px-8 gap-6 bg-red-50">
-    <div className="relative flex items-center justify-center"><div className="absolute w-36 h-36 rounded-full bg-red-200/60" style={{ animation: 'pulse-ring 1.4s ease-out infinite' }} /><div className="w-20 h-20 rounded-full bg-red-500 flex items-center justify-center shadow-xl"><Icon icon="mdi:alarm-light" width="40" height="40" style={{ color: 'white' }} /></div></div>
-    <h3 className="text-2xl font-black text-red-600">{alertType} Alert Sent!</h3>
-    <p className="text-gray-600 text-sm text-center">Security & management notified at {tenant?.houseNumber || ''}.</p>
-    <ThemedBtn onClick={() => go('tenant-home')} color="#ef4444">Back to Home</ThemedBtn>
+  const isGB = config.isGoldBlackTheme
+  const emergencyBg = isGB ? '#1a0000' : config.color + '08'
+  const emergencyCard = isGB ? '#1a1a1a' : 'white'
+  const emergencyBorder = isGB ? '#ef4444' : config.color + '30'
+  const emergencyText = isGB ? '#fca5a5' : '#991b1b'
+  
+  if (sent) return <div className="flex flex-col h-full items-center justify-center px-8 gap-6" style={{ backgroundColor: emergencyBg }}>
+    <div className="relative flex items-center justify-center"><div className="absolute w-36 h-36 rounded-full" style={{ backgroundColor: config.color + '30', animation: 'pulse-ring 1.4s ease-out infinite' }} /><div className="w-20 h-20 rounded-full flex items-center justify-center shadow-xl" style={{ backgroundColor: config.color }}><Icon icon="mdi:alarm-light" width="40" height="40" style={{ color: 'white' }} /></div></div>
+    <h3 className="text-2xl font-black" style={{ color: config.color }}>{alertType} Alert Sent!</h3>
+    <p className="text-sm text-center" style={{ color: isGB ? '#a1a1aa' : '#6b7280' }}>Security & management notified at {tenant?.houseNumber || ''}.</p>
+    <ThemedBtn onClick={() => go('tenant-home')} color={config.color}>Back to Home</ThemedBtn>
   </div>
-  return <div className="flex flex-col h-full" style={{ backgroundColor: '#fef2f2' }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-red-600 text-white"><PageBack onClick={() => go('tenant-home')} light /><h2 className="font-black text-xl">Emergency</h2></div>
+  return <div className="flex flex-col h-full" style={{ backgroundColor: emergencyBg }}>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: isGB ? '#1a0000' : config.color, borderColor: emergencyBorder }}>
+      <PageBack onClick={() => go('tenant-home')} light={isGB} /><h2 className="font-black text-xl" style={{ color: isGB ? '#fca5a5' : 'white' }}>Emergency</h2>
+    </div>
     <div className="flex-1 px-5 py-4 flex flex-col gap-4">
-      <div className="bg-red-100 border-2 border-red-300 rounded-2xl p-4 text-center"><p className="text-red-800 text-sm font-bold">⚠️ Only use in real emergencies</p><p className="text-red-600 text-xs mt-1">Your address ({tenant?.houseNumber || ''}) will be sent to security immediately.</p></div>
-      <p className="text-sm text-gray-600 text-center font-semibold">Select emergency type:</p>
-      <div className="grid grid-cols-2 gap-3">{EMERGENCY_TYPES.map((t) => (
-        <button key={t.label} onClick={() => { setAlertType(t.label) }} className="flex flex-col items-center gap-3 py-6 rounded-2xl bg-white shadow-sm active:scale-[0.98] border-2 border-red-100">
-          <span className="text-3xl">{t.emoji}</span><span className="font-bold text-sm" style={{ color: t.color }}>{t.label}</span>
+      <div className="rounded-2xl p-4 text-center" style={{ backgroundColor: config.color + '10', border: '2px solid ' + emergencyBorder }}>
+        <p className="text-sm font-bold" style={{ color: emergencyText }}>️ Only use in real emergencies</p>
+        <p className="text-xs mt-1" style={{ color: isGB ? '#a1a1aa' : '#6b7280' }}>Your address ({tenant?.houseNumber || ''}) will be sent to security immediately.</p>
+      </div>
+      <p className="text-sm text-center font-semibold" style={{ color: isGB ? '#fca5a5' : '#374151' }}>Select emergency type:</p>
+      <div className="grid grid-cols-2 gap-3">{[
+        { label: 'Fire', icon: 'mdi:fire', color: '#ef4444' },
+        { label: 'Security', icon: 'mdi:shield-alert', color: '#f59e0b' },
+        { label: 'Medical', icon: 'mdi:hospital-box', color: '#3b82f6' },
+        { label: 'Gas Leak', icon: 'mdi:gas-cylinder', color: '#8b5cf6' },
+        { label: 'Other', icon: 'mdi:alert-octagon', color: '#6b7280' },
+      ].map((t) => (
+        <button key={t.label} onClick={() => { setAlertType(t.label) }} className="flex flex-col items-center gap-3 py-6 rounded-2xl shadow-sm active:scale-[0.98] transition-transform" style={{ backgroundColor: emergencyCard, border: '2px solid ' + emergencyBorder }}>
+          <Icon icon={t.icon} width="40" height="40" style={{ color: t.color }} /><span className="font-bold text-sm" style={{ color: t.color }}>{t.label}</span>
         </button>
       ))}</div>
-      {alertType && <div className="bg-white border-2 border-red-400 rounded-2xl p-5 mt-3" style={{ animation: 'scaleIn 0.2s ease' }}>
-        <p className="text-red-700 font-bold text-center mb-2">⚠️ Confirm: {alertType} Emergency?</p>
-        <p className="text-gray-600 text-xs text-center mb-4">Your location ({tenant?.houseNumber}) will be sent to security & management immediately.</p>
+      {alertType && <div className="rounded-2xl p-5 mt-3" style={{ backgroundColor: emergencyCard, border: '2px solid ' + emergencyBorder, animation: 'scaleIn 0.2s ease' }}>
+        <p className="font-bold text-center mb-2" style={{ color: emergencyText }}>Confirm: {alertType} Emergency?</p>
+        <p className="text-xs text-center mb-4" style={{ color: isGB ? '#a1a1aa' : '#6b7280' }}>Your location ({tenant?.houseNumber}) will be sent to security & management immediately.</p>
         <div className="flex gap-3">
-          <button onClick={() => setAlertType('')} className="flex-1 py-3 rounded-xl font-bold text-gray-700 bg-gray-100 active:scale-[0.98]">Cancel</button>
-          <button onClick={() => { setSent(true); setAlerts([{ id: 'e' + Date.now(), type: alertType, houseNumber: tenant?.houseNumber || 'Unknown', tenantName: tenant?.name || 'Unknown', date: new Date().toLocaleString(), location: tenant?.houseNumber || '', status: 'active' }, ...alerts]) }} className="flex-1 py-3 rounded-xl font-bold text-white bg-red-600 active:scale-[0.98]">🚨 SEND ALERT</button>
+          <button onClick={() => setAlertType('')} className="flex-1 py-3 rounded-xl font-bold active:scale-[0.98]" style={{ backgroundColor: isGB ? '#333' : '#f3f4f6', color: isGB ? '#fca5a5' : '#374151' }}>Cancel</button>
+          <button onClick={() => { setSent(true); setAlerts([{ id: 'e' + Date.now(), type: alertType, houseNumber: tenant?.houseNumber || 'Unknown', tenantName: tenant?.name || 'Unknown', date: new Date().toLocaleString(), location: tenant?.houseNumber || '', status: 'active' }, ...alerts]) }} className="flex-1 py-3 rounded-xl font-bold text-white active:scale-[0.98]" style={{ backgroundColor: config.color }}>SEND ALERT</button>
         </div>
       </div>}
     </div>
   </div>
 }
 
+// ============================================
+// 
 // ============================================
 // GUEST SCREEN
 // ============================================
@@ -1036,6 +1042,43 @@ function ServiceSecurityScreen({ go, config, alerts, guestCodes }: { go: (s: Scr
 
 function ServiceWorkerScreen({ go, config, complaints }: { go: (s: Screen) => void; config: EstateConfig; complaints: Complaint[] }) {
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '10' }}><div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('service-role')} /><h2 className="font-black text-xl">My Jobs</h2></div><div className="flex-1 overflow-y-auto px-5 py-5">{complaints.length === 0 ? <EmptyState icon="mdi:inbox" title="No jobs assigned" message="New jobs will appear here." color={config.color} /> : complaints.map((c) => <div key={c.id} className="bg-white rounded-2xl p-4 shadow-sm mb-3"><div className="flex items-start justify-between mb-2"><div><p className="font-bold text-gray-900">{c.category}</p><p className="text-gray-400 text-xs">{c.houseNumber} — {c.date}</p></div><StatusBadge status={c.status} /></div><p className="text-gray-600 text-sm">{c.description}</p><div className="mt-3 pt-3 border-t text-xs text-gray-400"><p>Tenant: {c.tenantName}</p><p>Unit: <strong className="text-gray-700">{c.houseNumber}</strong></p></div></div>)}</div></div>
+}
+
+// ============================================
+// TENANTS SCREEN (Manager view of estate tenants)
+// ============================================
+function TenantsScreen({ go, config, tenantLogins, invoices }: { go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[]; invoices: Invoice[] }) {
+  const isGB = config.isGoldBlackTheme
+  const bgColor = isGB ? '#000000' : (config.color + '10')
+  const cardBg = isGB ? '#1a1a1a' : 'white'
+  const textP = isGB ? '#d4af37' : '#111827'
+  const textS = isGB ? '#f4e4a0' : '#6b7280'
+  const borderColor = isGB ? '#d4af3733' : '#f3f4f6'
+  const getTenantFinance = (house: string) => {
+    const tInvoices = invoices.filter(i => i.houseNumber === house)
+    const paid = tInvoices.filter(i => i.status === 'verified').reduce((s, i) => s + i.baseAmount, 0)
+    const outstanding = tInvoices.filter(i => i.status === 'pending').reduce((s, i) => s + i.baseAmount, 0)
+    return { paid, outstanding, payments: tInvoices.filter(i => i.status === 'verified').length }
+  }
+  return <div className="flex flex-col h-full" style={{ backgroundColor: bgColor }}>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Tenants</h2><span className="ml-auto text-xs font-bold px-2 py-1 rounded-full" style={{ backgroundColor: config.color + '15', color: config.color }}>{tenantLogins.length} joined</span></div>
+    <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-3">
+      {tenantLogins.length === 0 ? <div className="text-center py-16"><Icon icon="mdi:account-group" width="64" height="64" style={{ color: '#d1d5db' }} /><p className="font-bold text-gray-700 mt-3">No tenants yet</p><p className="text-gray-400 text-sm mt-1">Share your join code to onboard tenants</p><button onClick={() => go('qr-share')} className="mt-4 px-6 py-2.5 rounded-xl font-bold text-white text-sm" style={{ backgroundColor: config.color }}>Share Join Code</button></div> :
+      tenantLogins.map((t, i) => { const fin = getTenantFinance(t.house); return (
+        <div key={i} className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: cardBg, border: '1px solid ' + borderColor }}>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg" style={{ backgroundColor: config.color }}>{t.name[0]?.toUpperCase() || '?'}</div>
+            <div className="flex-1"><p className="font-bold" style={{ color: textP }}>{t.name}</p><p className="text-xs" style={{ color: textS }}>{t.house} — Joined {t.date}</p></div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-lg p-2 text-center" style={{ backgroundColor: '#1B873F10' }}><p className="text-xs text-green-600 font-bold">Paid</p><p className="font-bold text-sm text-green-800">{fin.paid.toLocaleString()}</p></div>
+            <div className="rounded-lg p-2 text-center" style={{ backgroundColor: '#f59e0b10' }}><p className="text-xs text-yellow-600 font-bold">Owing</p><p className="font-bold text-sm text-yellow-800">₦{fin.outstanding.toLocaleString()}</p></div>
+            <div className="rounded-lg p-2 text-center" style={{ backgroundColor: '#2563eb10' }}><p className="text-xs text-blue-600 font-bold">Payments</p><p className="font-bold text-sm text-blue-800">{fin.payments}</p></div>
+          </div>
+        </div>
+      )})}
+    </div>
+  </div>
 }
 
 // ============================================
@@ -1130,6 +1173,8 @@ function SearchTenantScreen({ go, config, tenantLogins, invoices }: {
   </div>
 }
 
+// ============================================
+// TENANTS SCREEN (Manager view of estate tenants)
 // ============================================
 // MANAGER SETTINGS
 // ============================================
@@ -1273,7 +1318,7 @@ export default function App() {
     'ai-chatbot': <TenantHomeScreen go={go} config={config} tenant={tenant} notifications={notifications} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />,
     'font-picker': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} />,
     'logo-upload': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} />,
-    tenants: <ManagerSettingsScreen go={go} config={config} tenantLogins={tenantLogins} />,
+    tenants: <TenantsScreen go={go} config={config} tenantLogins={tenantLogins} invoices={invoices} />,
     reports: <ManagementScreen go={go} config={config} invoices={invoices} complaints={complaints} />,
   }
 
