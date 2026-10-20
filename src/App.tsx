@@ -521,7 +521,6 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
       themeId: theme.id,
       color: theme.primary,
       secondaryColor: theme.secondary,
-      background: theme.background,
       fontFamily: config.fontFamily,
       isGoldBlackTheme: theme.id === 'dark-premium',
       shadowIntensity: theme.shadow,

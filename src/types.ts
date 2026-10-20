@@ -9,6 +9,7 @@ export type Screen =
   | 'estate-profile' | 'payment-setup' | 'management'
   | 'announcement-editor' | 'invoices' | 'manager-settings'
   | 'tenants' | 'reports' | 'search-tenant'
+  | 'privacy-policy' | 'terms-of-service' | 'payment-refund-policy' | 'emergency-disclaimer'
   | 'tenant-code' | 'tenant-onboarding' | 'tenant-home' | 'tenant-bills'
   | 'tenant-pay' | 'tenant-receipts' | 'tenant-profile' | 'tenant-settings'
   | 'tenant-complaints' | 'maintenance' | 'emergency' | 'guest' | 'ai-chatbot'

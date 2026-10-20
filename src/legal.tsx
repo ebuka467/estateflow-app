@@ -4,11 +4,12 @@
 // ============================================
 
 import { PageBack } from './components'
+import type { Screen } from './types'
 
 // ============================================
 // PRIVACY POLICY
 // ============================================
-export function PrivacyPolicy({ go, config }: { go: (s: string) => void; config: any }) {
+export function PrivacyPolicy({ go, config }: { go: (s: Screen) => void; config: any }) {
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="flex items-center gap-3 px-5 pt-12 pb-4 border-b border-gray-100">
@@ -91,7 +92,7 @@ export function PrivacyPolicy({ go, config }: { go: (s: string) => void; config:
 // ============================================
 // TERMS OF SERVICE
 // ============================================
-export function TermsOfService({ go, config }: { go: (s: string) => void; config: any }) {
+export function TermsOfService({ go, config }: { go: (s: Screen) => void; config: any }) {
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="flex items-center gap-3 px-5 pt-12 pb-4 border-b border-gray-100">
@@ -199,7 +200,7 @@ export function TermsOfService({ go, config }: { go: (s: string) => void; config
 // ============================================
 // PAYMENT & REFUND POLICY
 // ============================================
-export function PaymentRefundPolicy({ go, config }: { go: (s: string) => void; config: any }) {
+export function PaymentRefundPolicy({ go, config }: { go: (s: Screen) => void; config: any }) {
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="flex items-center gap-3 px-5 pt-12 pb-4 border-b border-gray-100">
@@ -261,7 +262,7 @@ export function PaymentRefundPolicy({ go, config }: { go: (s: string) => void; c
 // ============================================
 // EMERGENCY DISCLAIMER
 // ============================================
-export function EmergencyDisclaimer({ go, config }: { go: (s: string) => void; config: any }) {
+export function EmergencyDisclaimer({ go, config }: { go: (s: Screen) => void; config: any }) {
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="flex items-center gap-3 px-5 pt-12 pb-4 border-b border-gray-100">
