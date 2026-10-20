@@ -14,6 +14,7 @@ import { meetsWCAG_AA } from './types'
 import { calculatePaymentBreakdown } from './types'
 import { DEFAULT_CONFIG, APT_PHOTO, AVATAR_SVGS, AVATARS, BANKS, THEME_COLORS, FONT_OPTIONS, MAINTENANCE_CATEGORIES, EMERGENCY_TYPES, GUEST_TYPES, SERVICE_FEE_PERCENT, ESTATE_THEMES, LAYOUT_PRESETS } from './constants'
 import { PageTransition, PageBack, HouseIcon, SplitBg, Field, ThemedBtn, WhiteBtn, PaymentBreakdown, StatusBadge, EmptyState, House3DOverlay, SuccessAnimation } from './components'
+import { PrivacyPolicy, TermsOfService, PaymentRefundPolicy, EmergencyDisclaimer } from './legal'
 
 
 // Security: Sanitize user text to prevent XSS (Master §38)
@@ -1196,6 +1197,27 @@ function ManagerSettingsScreen({ go, config, tenantLogins }: { go: (s: Screen) =
           <div className="flex justify-between"><span>Account</span><span className="font-bold">{config.estateAccountNumber}</span></div>
         </div>
       </div>
+      <div className="bg-white rounded-2xl p-5 shadow-sm">
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Legal</p>
+        <div className="flex flex-col gap-2">
+          <button onClick={() => go('privacy-policy')} className="w-full text-left py-3 px-4 rounded-xl hover:bg-gray-50 active:scale-[0.98] transition-all border border-gray-100">
+            <p className="font-bold text-sm text-gray-800">Privacy Policy</p>
+            <p className="text-xs text-gray-500">How we handle your data</p>
+          </button>
+          <button onClick={() => go('terms-of-service')} className="w-full text-left py-3 px-4 rounded-xl hover:bg-gray-50 active:scale-[0.98] transition-all border border-gray-100">
+            <p className="font-bold text-sm text-gray-800">Terms of Service</p>
+            <p className="text-xs text-gray-500">Rules for using EstateFlow</p>
+          </button>
+          <button onClick={() => go('payment-refund-policy')} className="w-full text-left py-3 px-4 rounded-xl hover:bg-gray-50 active:scale-[0.98] transition-all border border-gray-100">
+            <p className="font-bold text-sm text-gray-800">Payment & Refund Policy</p>
+            <p className="text-xs text-gray-500">Fees and refund process</p>
+          </button>
+          <button onClick={() => go('emergency-disclaimer')} className="w-full text-left py-3 px-4 rounded-xl hover:bg-gray-50 active:scale-[0.98] transition-all border border-gray-100">
+            <p className="font-bold text-sm text-gray-800">Emergency Disclaimer</p>
+            <p className="text-xs text-gray-500">Important safety information</p>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 }
@@ -1318,6 +1340,10 @@ export default function App() {
     'ai-chatbot': <TenantHomeScreen go={go} config={config} tenant={tenant} notifications={notifications} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />,
     'font-picker': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} />,
     'logo-upload': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} />,
+    'privacy-policy': <PrivacyPolicy go={go} config={config} />,
+    'terms-of-service': <TermsOfService go={go} config={config} />,
+    'payment-refund-policy': <PaymentRefundPolicy go={go} config={config} />,
+    'emergency-disclaimer': <EmergencyDisclaimer go={go} config={config} />,
     tenants: <TenantsScreen go={go} config={config} tenantLogins={tenantLogins} invoices={invoices} />,
     reports: <ManagementScreen go={go} config={config} invoices={invoices} complaints={complaints} />,
   }
