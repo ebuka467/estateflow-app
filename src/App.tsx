@@ -208,7 +208,7 @@ function EstateProfileScreen({ go, config, setConfig, userEmail }: { go: (s: Scr
       <ThemedBtn onClick={async () => {
         const dues = parseInt(form.dues) || 15000
         try {
-          await supabase.from('estates').insert([{ name: form.name || 'My Estate', manager_email: userEmail || '', join_code: 'EF-' + Math.floor(10000 + Math.random() * 90000), monthly_dues: dues, app_dues: Math.round(dues * 0.10), estate_account_number: form.accountNum, estate_account_name: form.accountName, estate_bank: form.bank }]).select()
+          await supabase.from('estates').insert([{ name: form.name || 'My Estate', manager_email: userEmail || '', join_code: 'EF-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase(), monthly_dues: dues, app_dues: Math.round(dues * 0.10), estate_account_number: form.accountNum, estate_account_name: form.accountName, estate_bank: form.bank }]).select()
         } catch (err) { console.log('Save note:', err) }
         setConfig({ ...config, estateName: form.name || config.estateName, monthlyDues: dues, estateAccountNumber: form.accountNum, estateAccountName: form.accountName, estateBank: form.bank, bgImageUrl: form.picUrl })
         go('payment-setup')
@@ -501,20 +501,47 @@ function InvoicesScreen({ go, config, invoices, setInvoices, setNotifications, n
 // ============================================
 // THEME CUSTOMIZER (Full — available to ALL estates)
 // ============================================
+// ============================================
+// THEME CUSTOMIZER SCREEN — Full Studio
+// ============================================
 function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => void; config: EstateConfig; setConfig: (c: EstateConfig) => void }) {
   const [activeTab, setActiveTab] = useState<'themes' | 'background' | 'fonts' | 'layout' | 'cards' | '3d' | 'preview'>('themes')
+  const [bgColorPicker, setBgColorPicker] = useState(config.color)
+  const [selectedPattern, setSelectedPattern] = useState(0)
+  const [previewRole, setPreviewRole] = useState<'manager' | 'tenant' | 'staff'>('manager')
   const currentTheme = ESTATE_THEMES.find(t => t.id === config.themeId) || ESTATE_THEMES[0]
   const currentLayout = LAYOUT_PRESETS.find(l => l.id === config.layoutId) || LAYOUT_PRESETS[0]
   const contrastPass = meetsWCAG_AA(currentTheme.textPrimary, currentTheme.background)
+  
   const tabs: { id: typeof activeTab; label: string; icon: string }[] = [
     { id: 'themes', label: 'Themes', icon: 'mdi:palette' },
     { id: 'background', label: 'Background', icon: 'mdi:image' },
     { id: 'fonts', label: 'Fonts', icon: 'mdi:format-font' },
     { id: 'layout', label: 'Layout', icon: 'mdi:view-grid' },
-    { id: 'cards', label: 'Cards', icon: 'mdi:card' },
+    { id: 'cards', label: 'Style', icon: 'mdi:card' },
     { id: '3d', label: '3D', icon: 'mdi:cube-outline' },
     { id: 'preview', label: 'Preview', icon: 'mdi:eye' },
   ]
+
+  // 15 Pattern templates
+  const patterns = [
+    { name: 'Dots', svg: 'circle cx="20" cy="20" r="3" fill="currentColor"' },
+    { name: 'Lines', svg: 'line x1="0" y1="20" x2="40" y2="20" stroke="currentColor" stroke-width="2"' },
+    { name: 'Grid', svg: 'rect x="0" y="0" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1"' },
+    { name: 'Zigzag', svg: 'polyline points="0,20 10,5 20,20 30,5 40,20" fill="none" stroke="currentColor" stroke-width="2"' },
+    { name: 'Diamonds', svg: 'polygon points="20,5 35,20 20,35 5,20" fill="none" stroke="currentColor" stroke-width="1.5"' },
+    { name: 'Waves', svg: 'path d="M0,20 Q10,5 20,20 T40,20" fill="none" stroke="currentColor" stroke-width="2"' },
+    { name: 'Crosses', svg: 'line x1="15" y1="10" x2="25" y2="20" stroke="currentColor" stroke-width="2" / line x1="25" y1="10" x2="15" y2="20" stroke="currentColor" stroke-width="2"' },
+    { name: 'Triangles', svg: 'polygon points="20,5 35,30 5,30" fill="none" stroke="currentColor" stroke-width="1.5"' },
+    { name: 'Hexagons', svg: 'polygon points="20,5 33,12 33,27 20,34 7,27 7,12" fill="none" stroke="currentColor" stroke-width="1"' },
+    { name: 'Circles', svg: 'circle cx="20" cy="20" r="12" fill="none" stroke="currentColor" stroke-width="1.5"' },
+    { name: 'Squares', svg: 'rect x="8" y="8" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"' },
+    { name: 'Stars', svg: 'polygon points="20,5 23,15 33,15 25,21 28,31 20,25 12,31 15,21 7,15 17,15" fill="currentColor" opacity="0.3"' },
+    { name: 'Bricks', svg: 'rect x="0" y="0" width="20" height="10" fill="none" stroke="currentColor" stroke-width="1" / rect x="20" y="0" width="20" height="10" fill="none" stroke="currentColor" stroke-width="1" / rect x="10" y="10" width="20" height="10" fill="none" stroke="currentColor" stroke-width="1"' },
+    { name: 'Chevron', svg: 'polyline points="5,10 20,25 35,10" fill="none" stroke="currentColor" stroke-width="2"' },
+    { name: 'Topographic', svg: 'circle cx="20" cy="20" r="5" fill="none" stroke="currentColor" stroke-width="1" / circle cx="20" cy="20" r="10" fill="none" stroke="currentColor" stroke-width="1" / circle cx="20" cy="20" r="15" fill="none" stroke="currentColor" stroke-width="1"' },
+  ]
+
   const applyTheme = (theme: typeof ESTATE_THEMES[0]) => {
     setConfig({
       ...config,
@@ -527,8 +554,20 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
       borderRadius: theme.radius === 'sharp' ? 8 : theme.radius === 'pill' ? 999 : 16,
     })
   }
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setConfig({ ...config, bgImageUrl: reader.result as string, backgroundType: 'image' })
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   return <div className="flex flex-col h-full" style={{ backgroundColor: currentTheme.background }}>
-    <div className="flex items-center gap-3 px-5 pt-12 pb-3 border-b" style={{ backgroundColor: currentTheme.surface, borderColor: currentTheme.border }}>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-3 border-b" style={{ backgroundColor: currentTheme.surface, borderColor: currentTheme.border }}>
       <PageBack onClick={() => go('manager-home')} />
       <h2 className="font-black text-xl" style={{ color: currentTheme.textPrimary }}>Customize Estate</h2>
     </div>
@@ -544,14 +583,14 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
       {/* === THEMES TAB === */}
       {activeTab === 'themes' && <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <p className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>10 Complete Themes</p>
+          <p className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>20 Complete Themes</p>
           <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ backgroundColor: currentTheme.primary + '15', color: currentTheme.primary }}>All Free</span>
         </div>
         <div className="grid grid-cols-2 gap-3">
           {ESTATE_THEMES.map(theme => {
             const isActive = config.themeId === theme.id
             return (
-              <button key={theme.id} onClick={() => applyTheme(theme)} className="rounded-2xl p-3 text-left transition-all active:scale-[0.98] shadow-sm" style={{ backgroundColor: theme.surface, border: '2px solid ' + (isActive ? theme.primary : theme.border) }}>
+              <button key={theme.id} onClick={() => applyTheme(theme)} className="rounded-2xl p-3 text-left transition-all active:scale-[0.97]" style={{ backgroundColor: theme.surface, border: '2px solid ' + (isActive ? theme.primary : theme.border) }}>
                 <div className="flex gap-1 mb-2 h-8 rounded-lg overflow-hidden">
                   <div className="flex-1" style={{ backgroundColor: theme.primary }} />
                   <div className="flex-1" style={{ backgroundColor: theme.secondary }} />
@@ -567,6 +606,7 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
         </div>
         {!contrastPass && <div className="bg-red-50 border border-red-200 rounded-xl p-3"><p className="text-xs text-red-800 font-bold">⚠️ Low contrast detected</p><p className="text-xs text-red-700 mt-1">Current theme may not meet WCAG AA for text readability.</p></div>}
       </div>}
+
       {/* === BACKGROUND TAB === */}
       {activeTab === 'background' && <div className="flex flex-col gap-4">
         <p className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>Background Type</p>
@@ -577,6 +617,22 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
             </button>
           ))}
         </div>
+        
+        {/* Solid color picker */}
+        {config.backgroundType === 'solid' && <div className="flex flex-col gap-3">
+          <p className="text-xs font-bold" style={{ color: currentTheme.textSecondary }}>Choose background color:</p>
+          <div className="flex items-center gap-3">
+            <input type="color" value={bgColorPicker} onChange={(e) => { setBgColorPicker(e.target.value); setConfig({ ...config, background: e.target.value }) }} className="w-16 h-12 rounded-lg cursor-pointer border-2" style={{ borderColor: currentTheme.border }} />
+            <div className="flex-1 h-12 rounded-lg" style={{ backgroundColor: bgColorPicker }} />
+          </div>
+          <div className="grid grid-cols-6 gap-2">
+            {['#ffffff', '#f0f0f0', '#1a1a1a', '#000000', currentTheme.primary, currentTheme.secondary].map(c => (
+              <button key={c} onClick={() => { setBgColorPicker(c); setConfig({ ...config, background: c }) }} className="h-10 rounded-lg border-2 active:scale-90 transition-transform" style={{ backgroundColor: c, borderColor: bgColorPicker === c ? currentTheme.primary : currentTheme.border }} />
+            ))}
+          </div>
+        </div>}
+        
+        {/* Gradient controls */}
         {config.backgroundType === 'gradient' && <div className="flex flex-col gap-3">
           <div><p className="text-xs font-bold mb-2" style={{ color: currentTheme.textSecondary }}>Angle: {config.gradientAngle}°</p><input type="range" min="0" max="360" value={config.gradientAngle} onChange={(e) => setConfig({ ...config, gradientAngle: parseInt(e.target.value) })} className="w-full" /></div>
           <div className="flex gap-3">
@@ -585,11 +641,45 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
           </div>
           <div className="h-20 rounded-xl" style={{ background: `linear-gradient(${config.gradientAngle}deg, ${config.gradientColors[0]}, ${config.gradientColors[1]})` }} />
         </div>}
+        
+        {/* Image upload from gallery */}
         {config.backgroundType === 'image' && <div className="flex flex-col gap-3">
-          <Field placeholder="Image URL" value={config.bgImageUrl} onChange={(v) => setConfig({ ...config, bgImageUrl: v })} />
-          <div><p className="text-xs font-bold mb-2" style={{ color: currentTheme.textSecondary }}>Opacity: {Math.round(config.backgroundOpacity * 100)}%</p><input type="range" min="10" max="100" value={config.backgroundOpacity * 100} onChange={(e) => setConfig({ ...config, backgroundOpacity: parseInt(e.target.value) / 100 })} className="w-full" /></div>
+          <p className="text-xs font-bold" style={{ color: currentTheme.textSecondary }}>Upload from your gallery:</p>
+          <label className="flex flex-col items-center justify-center py-8 rounded-xl border-2 border-dashed cursor-pointer active:scale-[0.98] transition-transform" style={{ borderColor: currentTheme.border, backgroundColor: currentTheme.surface }}>
+            <Icon icon="mdi:image-plus" width="48" height="48" style={{ color: currentTheme.primary }} />
+            <p className="font-bold text-sm mt-2" style={{ color: currentTheme.textPrimary }}>Add Image</p>
+            <p className="text-xs" style={{ color: currentTheme.textSecondary }}>Tap to choose from gallery</p>
+            <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+          </label>
+          {config.bgImageUrl && <div className="relative">
+            <div className="h-40 rounded-xl bg-cover bg-center" style={{ backgroundImage: `url(${config.bgImageUrl})` }} />
+            <button onClick={() => setConfig({ ...config, bgImageUrl: '' })} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center font-bold">×</button>
+          </div>}
+          <div><p className="text-xs font-bold mb-2" style={{ color: currentTheme.textSecondary }}>Image Opacity: {Math.round(config.backgroundOpacity * 100)}%</p><input type="range" min="10" max="100" value={config.backgroundOpacity * 100} onChange={(e) => setConfig({ ...config, backgroundOpacity: parseInt(e.target.value) / 100 })} className="w-full" /></div>
+        </div>}
+        
+        {/* Pattern templates */}
+        {config.backgroundType === 'pattern' && <div className="flex flex-col gap-3">
+          <p className="text-xs font-bold" style={{ color: currentTheme.textSecondary }}>15 Aesthetic Pattern Templates:</p>
+          <div className="grid grid-cols-3 gap-3">
+            {patterns.map((p, i) => (
+              <button key={p.name} onClick={() => setSelectedPattern(i)} className="rounded-xl border-2 p-2 transition-all active:scale-95" style={{ borderColor: selectedPattern === i ? currentTheme.primary : currentTheme.border, backgroundColor: currentTheme.surface }}>
+                <svg viewBox="0 0 40 40" className="w-full h-12" style={{ color: currentTheme.primary }} dangerouslySetInnerHTML={{ __html: p.svg }} />
+                <p className="text-xs font-bold mt-1" style={{ color: currentTheme.textPrimary }}>{p.name}</p>
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2 mt-3">
+            <p className="text-xs font-bold" style={{ color: currentTheme.textSecondary }}>Pattern color:</p>
+            <input type="color" value={config.color} onChange={(e) => setConfig({ ...config, color: e.target.value })} className="w-full h-10 rounded-lg cursor-pointer" />
+            <label className="flex items-center gap-2 mt-2">
+              <input type="checkbox" checked={config.enable3D} onChange={(e) => setConfig({ ...config, enable3D: e.target.checked })} className="w-5 h-5" />
+              <span className="text-xs font-bold" style={{ color: currentTheme.textPrimary }}>Add estate image behind pattern</span>
+            </label>
+          </div>
         </div>}
       </div>}
+
       {/* === FONTS TAB === */}
       {activeTab === 'fonts' && <div className="flex flex-col gap-4">
         <p className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>Typography</p>
@@ -602,22 +692,38 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
           ))}
         </div>
       </div>}
-      {/* === LAYOUT TAB === */}
+
+      {/* === LAYOUT TAB with mini previews === */}
       {activeTab === 'layout' && <div className="flex flex-col gap-4">
         <p className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>10 Layout Presets</p>
-        <div className="flex flex-col gap-2">
-          {LAYOUT_PRESETS.map(layout => (
-            <button key={layout.id} onClick={() => setConfig({ ...config, layoutId: layout.id })} className="p-4 rounded-xl border-2 text-left transition-all" style={{ borderColor: config.layoutId === layout.id ? currentTheme.primary : currentTheme.border, backgroundColor: config.layoutId === layout.id ? currentTheme.primary + '10' : currentTheme.surface }}>
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>{layout.name}</span>
-                {config.layoutId === layout.id && <span className="text-xs font-bold" style={{ color: currentTheme.primary }}>✓</span>}
-              </div>
-              <p className="text-xs mt-1" style={{ color: currentTheme.textSecondary }}>{layout.description}</p>
-            </button>
-          ))}
+        <div className="grid grid-cols-2 gap-3">
+          {LAYOUT_PRESETS.map(layout => {
+            const isActive = config.layoutId === layout.id
+            return (
+              <button key={layout.id} onClick={() => setConfig({ ...config, layoutId: layout.id })} className="rounded-xl border-2 p-3 text-left transition-all active:scale-[0.97]" style={{ borderColor: isActive ? currentTheme.primary : currentTheme.border, backgroundColor: isActive ? currentTheme.primary + '10' : currentTheme.surface }}>
+                {/* Mini preview */}
+                <div className="h-16 rounded-lg mb-2 overflow-hidden border" style={{ borderColor: currentTheme.border, backgroundColor: currentTheme.background }}>
+                  <div className="h-3 mx-1 mt-1 rounded" style={{ backgroundColor: currentTheme.primary, width: '60%' }} />
+                  <div className="flex gap-1 mx-1 mt-1">
+                    <div className="h-6 flex-1 rounded" style={{ backgroundColor: currentTheme.surface, border: '1px solid ' + currentTheme.border }} />
+                    <div className="h-6 flex-1 rounded" style={{ backgroundColor: currentTheme.surface, border: '1px solid ' + currentTheme.border }} />
+                  </div>
+                  <div className="flex gap-1 mx-1 mt-1">
+                    {Array.from({length: layout.gridColumns}).map((_, i) => (
+                      <div key={i} className="h-4 rounded flex-1" style={{ backgroundColor: currentTheme.primary + '30' }} />
+                    ))}
+                  </div>
+                </div>
+                <p className="font-bold text-xs" style={{ color: currentTheme.textPrimary }}>{layout.name}</p>
+                <p className="text-xs mt-0.5" style={{ color: currentTheme.textSecondary }}>{layout.description}</p>
+                {isActive && <p className="text-xs font-bold mt-1" style={{ color: currentTheme.primary }}>✓ Active</p>}
+              </button>
+            )
+          })}
         </div>
       </div>}
-      {/* === CARDS TAB === */}
+
+      {/* === CARDS/STYLE TAB === */}
       {activeTab === 'cards' && <div className="flex flex-col gap-5">
         <div>
           <p className="font-bold text-sm mb-3" style={{ color: currentTheme.textPrimary }}>Card Style</p>
@@ -650,6 +756,7 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
           </div>
         </div>
       </div>}
+
       {/* === 3D TAB === */}
       {activeTab === '3d' && <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between p-4 rounded-xl" style={{ backgroundColor: currentTheme.surface, border: '1px solid ' + currentTheme.border }}>
@@ -671,29 +778,69 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
           </div>
         </div>}
       </div>}
-      {/* === PREVIEW TAB === */}
+
+      {/* === PREVIEW TAB — Shows all 3 role views === */}
       {activeTab === 'preview' && <div className="flex flex-col gap-4">
-        <p className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>Live Preview — Tenant View</p>
-        <div className="rounded-3xl overflow-hidden shadow-xl border-4" style={{ borderColor: currentTheme.border, maxWidth: 320, margin: '0 auto' }}>
-          <div className="p-4" style={{ background: config.backgroundType === 'gradient' ? `linear-gradient(${config.gradientAngle}deg, ${config.gradientColors[0]}, ${config.gradientColors[1]})` : config.backgroundType === 'image' && config.bgImageUrl ? `linear-gradient(rgba(0,0,0,${1 - config.backgroundOpacity}), rgba(0,0,0,${1 - config.backgroundOpacity})), url(${config.bgImageUrl}) center/cover` : currentTheme.background }}>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: currentTheme.primary }}><HouseIcon stroke="white" size={18} /></div>
-              <span className="font-bold text-sm" style={{ color: currentTheme.textPrimary, fontFamily: config.fontFamily }}>{config.estateName}</span>
-            </div>
-            <div className="rounded-2xl p-4 mb-3" style={{ background: `linear-gradient(135deg, ${currentTheme.primary}, ${currentTheme.primary}bb)` }}>
-              <p className="text-white/80 text-xs">Welcome</p>
-              <p className="text-white font-black text-lg">{config.welcomeMessage}</p>
-              <p className="text-white/70 text-xs mt-2">Next payment: ₦{(config.monthlyDues * 1.1).toLocaleString()}</p>
-            </div>
-            <div className="grid grid-cols-3 gap-2 mb-3">
-              {['Paid', 'Pending', 'Units'].map(label => (
-                <div key={label} className="rounded-xl p-2 text-center" style={{ backgroundColor: currentTheme.surface, boxShadow: config.cardStyle === 'elevated' ? '0 4px 12px rgba(0,0,0,0.1)' : 'none', border: config.cardStyle === 'bordered' ? '1px solid ' + currentTheme.border : 'none', borderRadius: config.buttonStyle === 'pill' ? 999 : config.buttonStyle === 'sharp' ? 4 : 12 }}>
-                  <p className="font-black text-sm" style={{ color: currentTheme.primary }}>—</p>
-                  <p className="text-xs" style={{ color: currentTheme.textSecondary }}>{label}</p>
-                </div>
-              ))}
-            </div>
-            <button className="w-full py-2.5 rounded-xl font-bold text-white text-sm" style={{ backgroundColor: currentTheme.primary, borderRadius: config.buttonStyle === 'pill' ? 999 : config.buttonStyle === 'sharp' ? 4 : 12 }}>Pay Now</button>
+        <p className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>Live Preview</p>
+        <div className="flex bg-gray-200 rounded-xl p-1 gap-1">
+          {(['manager', 'tenant', 'staff'] as const).map(role => (
+            <button key={role} onClick={() => setPreviewRole(role)} className="flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all" style={{ backgroundColor: previewRole === role ? 'white' : 'transparent', color: previewRole === role ? '#111' : '#6b7280' }}>{role}</button>
+          ))}
+        </div>
+        <div className="rounded-3xl overflow-hidden shadow-xl border-4 mx-auto" style={{ borderColor: currentTheme.border, maxWidth: 320 }}>
+          <div className="p-4 min-h-[400px]" style={{ background: config.backgroundType === 'gradient' ? `linear-gradient(${config.gradientAngle}deg, ${config.gradientColors[0]}, ${config.gradientColors[1]})` : config.backgroundType === 'image' && config.bgImageUrl ? `linear-gradient(rgba(0,0,0,${1 - config.backgroundOpacity}), rgba(0,0,0,${1 - config.backgroundOpacity})), url(${config.bgImageUrl}) center/cover` : currentTheme.background, fontFamily: config.fontFamily }}>
+            {previewRole === 'manager' && <>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: currentTheme.primary }}><HouseIcon stroke="white" size={18} /></div>
+                <span className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>{config.estateName}</span>
+              </div>
+              <div className="rounded-2xl p-4 mb-3" style={{ background: `linear-gradient(135deg, ${currentTheme.primary}, ${currentTheme.primary}bb)` }}>
+                <p className="text-white/80 text-xs">Good morning</p>
+                <p className="text-white font-black text-lg">{config.estateName}</p>
+                <p className="text-white/70 text-xs mt-2">{config.monthlyDues.toLocaleString()}/mo</p>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {['Paid', 'Pending', 'Units'].map(label => (
+                  <div key={label} className="rounded-xl p-2 text-center" style={{ backgroundColor: currentTheme.surface, boxShadow: config.cardStyle === 'elevated' ? '0 4px 12px rgba(0,0,0,0.1)' : 'none', border: config.cardStyle === 'bordered' ? '1px solid ' + currentTheme.border : 'none', borderRadius: config.buttonStyle === 'pill' ? 999 : config.buttonStyle === 'sharp' ? 4 : 12 }}>
+                    <p className="font-black text-sm" style={{ color: currentTheme.primary }}>—</p>
+                    <p className="text-xs" style={{ color: currentTheme.textSecondary }}>{label}</p>
+                  </div>
+                ))}
+              </div>
+              <button className="w-full py-2.5 rounded-xl font-bold text-white text-sm" style={{ backgroundColor: currentTheme.primary, borderRadius: config.buttonStyle === 'pill' ? 999 : config.buttonStyle === 'sharp' ? 4 : 12 }}>Management</button>
+            </>}
+            {previewRole === 'tenant' && <>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: currentTheme.primary }}><HouseIcon stroke="white" size={18} /></div>
+                <span className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>{config.estateName}</span>
+              </div>
+              <div className="rounded-2xl p-4 mb-3" style={{ background: `linear-gradient(135deg, ${currentTheme.primary}, ${currentTheme.primary}bb)` }}>
+                <p className="text-white/80 text-xs">Next Payment</p>
+                <p className="text-white font-black text-2xl">₦{(config.monthlyDues * 1.1).toLocaleString()}</p>
+              </div>
+              <button className="w-full py-2.5 rounded-xl font-bold text-white text-sm mb-3" style={{ backgroundColor: currentTheme.primary, borderRadius: config.buttonStyle === 'pill' ? 999 : config.buttonStyle === 'sharp' ? 4 : 12 }}>Pay Now</button>
+              <div className="grid grid-cols-2 gap-2">
+                {['Bills', 'Maintenance'].map(label => (
+                  <div key={label} className="rounded-xl p-3 text-center" style={{ backgroundColor: currentTheme.surface, borderRadius: config.buttonStyle === 'pill' ? 999 : 12 }}>
+                    <p className="text-xs font-bold" style={{ color: currentTheme.textPrimary }}>{label}</p>
+                  </div>
+                ))}
+              </div>
+            </>}
+            {previewRole === 'staff' && <>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: currentTheme.primary }}><Icon icon="mdi:wrench" width="18" height="18" style={{ color: 'white' }} /></div>
+                <span className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>Service Staff</span>
+              </div>
+              <div className="rounded-2xl p-4 mb-3" style={{ backgroundColor: currentTheme.surface, border: '1px solid ' + currentTheme.border, borderRadius: config.buttonStyle === 'pill' ? 999 : 12 }}>
+                <p className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>My Jobs</p>
+                <p className="text-xs" style={{ color: currentTheme.textSecondary }}>3 assigned tasks</p>
+              </div>
+              <div className="rounded-2xl p-4" style={{ backgroundColor: currentTheme.surface, border: '1px solid ' + currentTheme.border, borderRadius: config.buttonStyle === 'pill' ? 999 : 12 }}>
+                <p className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>Scan QR</p>
+                <p className="text-xs" style={{ color: currentTheme.textSecondary }}>Verify guest access</p>
+              </div>
+            </>}
           </div>
         </div>
         <ThemedBtn onClick={() => go('manager-home')} color={currentTheme.primary}>Apply & Save ✓</ThemedBtn>
@@ -702,6 +849,8 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
     </div>
   </div>
 }
+
+
 
 // ============================================
 // QR SHARE SCREEN
@@ -950,7 +1099,17 @@ function TenantSettingsScreen({ go, config, clearSession }: { go: (s: Screen) =>
       <div className="bg-white rounded-2xl p-5 shadow-sm"><p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Notifications</p>
         <div className="flex items-center justify-between"><span className="font-bold text-gray-800">Enable Notifications</span><button onClick={() => setNotifOn(!notifOn)} className="w-12 h-7 rounded-full p-0.5 transition-colors" style={{ backgroundColor: notifOn ? '#1B873F' : '#d1d5db' }}><div className="w-6 h-6 rounded-full bg-white shadow-sm transition-transform" style={{ transform: notifOn ? 'translateX(20px)' : 'translateX(0)' }} /></button></div>
       </div>
-      <button onClick={() => { clearSession(); go('role-select') }} className="w-full py-4 rounded-xl font-bold text-red-500 bg-red-50 active:scale-[0.98] transition-transform">Sign Out</button>
+      <div className="bg-white rounded-2xl p-5 shadow-sm">
+        <p className="text-xs font-bold text-red-400 uppercase tracking-wide mb-3">Account</p>
+        <div className="flex flex-col gap-2">
+          <button onClick={() => { if (confirm('Leave this estate?')) { clearSession(); go('role-select') } }} className="w-full py-3 rounded-xl font-bold text-red-600 bg-red-50 active:scale-[0.98] transition-transform text-left px-4">
+            <Icon icon="mdi:logout" width="18" height="18" className="inline mr-2 -mt-1" />Leave Estate
+          </button>
+          <button onClick={() => { if (confirm('Delete your account? This cannot be undone.')) { clearSession(); go('role-select') } }} className="w-full py-3 rounded-xl font-bold text-red-700 bg-red-100 active:scale-[0.98] transition-transform text-left px-4">
+            <Icon icon="mdi:delete" width="18" height="18" className="inline mr-2 -mt-1" />Delete Account
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 }
@@ -1187,6 +1346,18 @@ function ManagerSettingsScreen({ go, config, tenantLogins }: { go: (s: Screen) =
         {tenantLogins.length === 0 ? <p className="text-gray-400 text-sm text-center py-4">No tenants yet.</p> : tenantLogins.map((t, i) => (<div key={i} className="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0"><div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl">{t.name[0] || ''}</div><div className="flex-1"><p className="font-bold text-gray-900 text-sm">{t.name}</p><p className="text-gray-400 text-xs">{t.house} — Joined {t.date}</p></div></div>))}
       </div>
       <div className="bg-white rounded-2xl p-5 shadow-sm">
+        <p className="text-xs font-bold text-red-400 uppercase tracking-wide mb-3">Account</p>
+        <div className="flex flex-col gap-2">
+          <button onClick={async () => { if (confirm('Sign out of your account?')) { await clearSession(); go('role-select') } }} className="w-full py-3 rounded-xl font-bold text-red-600 bg-red-50 active:scale-[0.98] transition-transform text-left px-4">
+            <Icon icon="mdi:logout" width="18" height="18" className="inline mr-2 -mt-1" />Sign Out
+          </button>
+          <button onClick={async () => { if (confirm('Delete your account? This cannot be undone.')) { try { await supabase.auth.signOut(); await supabase.auth.admin?.deleteUser?.(userEmail); } catch {} clearSession(); go('role-select') } }} className="w-full py-3 rounded-xl font-bold text-red-700 bg-red-100 active:scale-[0.98] transition-transform text-left px-4">
+            <Icon icon="mdi:delete" width="18" height="18" className="inline mr-2 -mt-1" />Delete Account
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl p-5 shadow-sm">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Estate Information</p>
         <div className="text-sm text-gray-600 space-y-2">
           <div className="flex justify-between"><span>Estate</span><span className="font-bold">{config.estateName}</span></div>
@@ -1251,9 +1422,19 @@ export default function App() {
       setAuthChecked(true)
     })
     // Listen for changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user?.email) setUserEmail(session.user.email)
-      if (event === 'SIGNED_OUT') { localStorage.removeItem('ef_role'); setActiveRole(''); setUserEmail('') }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user?.email) {
+        setUserEmail(session.user.email)
+        // Try to load estate from database
+        try {
+          const { data: estates } = await supabase.from('estates').select('*').eq('manager_email', session.user.email).limit(1)
+          if (estates && estates.length > 0) {
+            const e = estates[0]
+            setConfig(prev => ({ ...prev, estateName: e.name || prev.estateName, joinCode: e.join_code || prev.joinCode, monthlyDues: (e.monthly_dues || 1500000) / 100, estateAccountNumber: e.estate_account_number || '', estateAccountName: e.estate_account_name || '', estateBank: e.estate_bank || '' }))
+          }
+        } catch {}
+      }
+      if (event === 'SIGNED_OUT') { localStorage.removeItem('ef_role'); localStorage.removeItem('ef_estate_id'); setActiveRole(''); setUserEmail('') }
       setAuthChecked(true)
     })
     return () => subscription.unsubscribe()
