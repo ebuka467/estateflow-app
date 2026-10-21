@@ -145,11 +145,11 @@ function ManagerLoginScreen({ go, config }: { go: (s: Screen) => void; config: E
     if (!email.trim() || !pw.trim()) { setError('Please fill in email and password'); return }
     setLoading(true); setError('')
     try {
-      const { error: loginError } = await supabase.auth.signInWithPassword({ email: email.trim(), password: pw })
+      const { data, error: loginError } = await supabase.auth.signInWithPassword({ email: email.trim(), password: pw })
+      console.log('Login result:', data)
       if (loginError) { setError(loginError.message); setLoading(false); return }
       go('manager-home')
-    } catch { setError('Something went wrong.') }
-    setLoading(false)
+    } catch (e) { setError('Error: ' + (e as Error).message); setLoading(false) }
   }
   return <SplitBg color={config.color} bg={config.bgImageUrl}><div className="px-8 flex flex-col h-full">
     <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4"><button onClick={() => go('manager-auth')} className="flex items-center gap-1 text-white font-semibold text-sm">← Back</button></div>
@@ -1425,12 +1425,23 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user?.email) {
         setUserEmail(session.user.email)
-        // Try to load estate from database
+        // Load estate from localStorage first (always works)
+        try {
+          const saved = localStorage.getItem('ef_estate_data')
+          if (saved) {
+            const parsed = JSON.parse(saved)
+            setConfig(prev => ({ ...prev, ...parsed }))
+          }
+        } catch {}
+        // Also try database (may fail due to RLS)
         try {
           const { data: estates } = await supabase.from('estates').select('*').eq('manager_email', session.user.email).limit(1)
           if (estates && estates.length > 0) {
             const e = estates[0]
-            setConfig(prev => ({ ...prev, estateName: e.name || prev.estateName, joinCode: e.join_code || prev.joinCode, monthlyDues: (e.monthly_dues || 1500000) / 100, estateAccountNumber: e.estate_account_number || '', estateAccountName: e.estate_account_name || '', estateBank: e.estate_bank || '' }))
+            const dbData = { estateName: e.name, joinCode: e.join_code, monthlyDues: (e.monthly_dues || 1500000) / 100, estateAccountNumber: e.estate_account_number || '', estateAccountName: e.estate_account_name || '', estateBank: e.estate_bank || '' }
+            setConfig(prev => ({ ...prev, ...dbData }))
+            localStorage.setItem('ef_estate_data', JSON.stringify(dbData))
+            if (e.id) localStorage.setItem('ef_estate_id', e.id)
           }
         } catch {}
       }
