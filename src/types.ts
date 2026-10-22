@@ -75,6 +75,7 @@ export interface EstateConfig {
 
   // Layout
   layoutId: string
+  backgroundPattern: number
 
   // Card/Button styles
   cardStyle: 'soft' | 'bordered' | 'elevated' | 'minimal'
