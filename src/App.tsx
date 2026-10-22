@@ -262,11 +262,14 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
   notifications: Notification[]; invoices: Invoice[]; complaints: Complaint[]; alerts: EmergencyAlert[]; clearSession: () => void; tenantLogins: { name: string; house: string; date: string }[]
 }) {
   const isGB = config.isGoldBlackTheme
+  const currentLayout = LAYOUT_PRESETS.find(l => l.id === config.layoutId) || LAYOUT_PRESETS[0]
   const bgColor = isGB ? '#000000' : (config.color + '10')
   const cardBg = isGB ? '#1a1a1a' : 'white'
   const textP = isGB ? '#d4af37' : '#111827'
   const textS = isGB ? '#f4e4a0' : '#6b7280'
   const borderColor = isGB ? '#d4af3733' : '#f3f4f6'
+  const cardPadding = currentLayout.cardDensity === 'compact' ? 'p-2' : currentLayout.cardDensity === 'spacious' ? 'p-5' : 'p-3'
+  const gridGap = currentLayout.cardDensity === 'compact' ? 'gap-2' : currentLayout.cardDensity === 'spacious' ? 'gap-4' : 'gap-3'
 
   const verifiedInvoices = invoices.filter(i => i.status === 'verified')
   const pendingInvoices = invoices.filter(i => i.status === 'pending')
@@ -370,8 +373,6 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
           { label: 'Announcements', icon: 'mdi:bullhorn', s: 'announcement-editor' as Screen },
           { label: 'Reports', icon: 'mdi:chart-bar', s: 'management' as Screen },
           { label: 'Customize Estate', icon: 'mdi:palette', s: 'theme-customizer' as Screen },
-          { label: 'Estate Profile', icon: 'mdi:office-building', s: 'estate-profile' as Screen },
-          { label: 'Settings', icon: 'mdi:cog', s: 'manager-settings' as Screen },
         ].map((item) => (
           <button key={item.label} onClick={() => { setMenuOpen(false); go(item.s) }} className="flex items-center gap-4 py-4 px-4 rounded-2xl hover:bg-gray-50 active:scale-[0.98] transition-all text-left">
             <Icon icon={item.icon} width="24" height="24" style={{ color: '#6b7280' }} /><span className="font-bold text-gray-800">{item.label}</span>
@@ -1208,11 +1209,14 @@ function ServiceWorkerScreen({ go, config, complaints }: { go: (s: Screen) => vo
 // ============================================
 function TenantsScreen({ go, config, tenantLogins, invoices }: { go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[]; invoices: Invoice[] }) {
   const isGB = config.isGoldBlackTheme
+  const currentLayout = LAYOUT_PRESETS.find(l => l.id === config.layoutId) || LAYOUT_PRESETS[0]
   const bgColor = isGB ? '#000000' : (config.color + '10')
   const cardBg = isGB ? '#1a1a1a' : 'white'
   const textP = isGB ? '#d4af37' : '#111827'
   const textS = isGB ? '#f4e4a0' : '#6b7280'
   const borderColor = isGB ? '#d4af3733' : '#f3f4f6'
+  const cardPadding = currentLayout.cardDensity === 'compact' ? 'p-2' : currentLayout.cardDensity === 'spacious' ? 'p-5' : 'p-3'
+  const gridGap = currentLayout.cardDensity === 'compact' ? 'gap-2' : currentLayout.cardDensity === 'spacious' ? 'gap-4' : 'gap-3'
   const getTenantFinance = (house: string) => {
     const tInvoices = invoices.filter(i => i.houseNumber === house)
     const paid = tInvoices.filter(i => i.status === 'verified').reduce((s, i) => s + i.baseAmount, 0)
@@ -1416,9 +1420,28 @@ export default function App() {
 
   // Auth state listener — verifies session, captures user email
   useEffect(() => {
-    // Check current session first
+    // Load saved estate data immediately from localStorage
+    try {
+      const saved = localStorage.getItem('ef_estate_data')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        setConfig(prev => ({ ...prev, ...parsed }))
+      }
+    } catch {}
+    // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user?.email) setUserEmail(session.user.email)
+      if (session?.user?.email) {
+        setUserEmail(session.user.email)
+        // Also try to load from database
+        supabase.from('estates').select('*').eq('manager_email', session.user.email).limit(1).then(({ data }) => {
+          if (data && data.length > 0) {
+            const e = data[0]
+            const dbData = { estateName: e.name, joinCode: e.join_code, monthlyDues: (e.monthly_dues || 1500000) / 100, estateAccountNumber: e.estate_account_number || '', estateAccountName: e.estate_account_name || '', estateBank: e.estate_bank || '' }
+            setConfig(prev => ({ ...prev, ...dbData }))
+            localStorage.setItem('ef_estate_data', JSON.stringify(dbData))
+          }
+        })
+      }
       setAuthChecked(true)
     })
     // Listen for changes

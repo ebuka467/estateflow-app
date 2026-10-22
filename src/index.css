@@ -117,3 +117,56 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
+
+
+/* Smooth tab transitions */
+.tab-content {
+  animation: tabSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes tabSlideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Active tab indicator */
+.tab-active {
+  position: relative;
+}
+
+.tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background: currentColor;
+  border-radius: 2px;
+  animation: indicatorSlide 0.3s ease;
+}
+
+@keyframes indicatorSlide {
+  from { width: 0; opacity: 0; }
+  to { width: 20px; opacity: 1; }
+}
+
+/* Smooth micro-interactions */
+button, [role="button"] {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:active, [role="button"]:active {
+  transform: scale(0.97);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
