@@ -170,3 +170,12 @@ button:active, [role="button"]:active {
   transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(0,0,0,0.1);
 }
+
+/* Screen background that lets app background show through */
+.screen-transparent {
+  background: transparent !important;
+}
+.screen-glass {
+  background: rgba(255,255,255,0.85) !important;
+  backdrop-filter: blur(10px);
+}

@@ -877,16 +877,45 @@ function QRShareScreen({ go, config }: { go: (s: Screen) => void; config: Estate
 // ============================================
 // TENANT SCREENS
 // ============================================
-function TenantCodeScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
-  const [code, setCode] = useState(''); const [error, setError] = useState('')
-  const handleJoin = () => { if (!code.trim()) { setError('Please enter a code'); return } if (code.trim().toUpperCase() !== config.joinCode.toUpperCase()) { setError('Invalid code'); return } go('tenant-onboarding') }
+function TenantCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void; config: EstateConfig; setConfig: (c: EstateConfig) => void }) {
+  const [code, setCode] = useState(''); const [error, setError] = useState(''); const [loading, setLoading] = useState(false)
+  const handleJoin = async () => {
+    if (!code.trim()) { setError('Please enter a code'); return }
+    setLoading(true); setError('')
+    try {
+      // Lookup estate from Supabase by join code (cross-device!)
+      const { data, error } = await supabase.rpc('find_estate_by_join_code', { p_join_code: code.trim().toUpperCase() })
+      if (error || !data || data.length === 0) {
+        setError('Invalid code. Check with your estate manager.')
+        setLoading(false); return
+      }
+      const estate = data[0]
+      // Load estate config from database
+      const fetchedConfig = {
+        ...config,
+        estateName: estate.estate_name,
+        joinCode: code.trim().toUpperCase(),
+        monthlyDues: (estate.monthly_dues || 1500000) / 100,
+        estateAccountNumber: '',
+        estateAccountName: estate.estate_account_name || '',
+        estateBank: estate.estate_bank || '',
+      }
+      localStorage.setItem('ef_estate_data', JSON.stringify(fetchedConfig))
+      localStorage.setItem('ef_estate_id', estate.estate_id)
+      setConfig(fetchedConfig)
+      go('tenant-onboarding')
+    } catch (e) {
+      setError('Network error. Please try again.')
+    }
+    setLoading(false)
+  }
   return <div className="relative h-full overflow-hidden"><div className="absolute inset-0"><div className="h-1/2" style={{ backgroundColor: config.color }} /><div className="h-1/2" style={{ backgroundImage: 'url(' + (config.bgImageUrl || APT_PHOTO) + ')', backgroundSize: 'cover' }} /></div><div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} />
     <div className="relative z-10 h-full flex flex-col px-8"><div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4"><button onClick={() => go('role-select')} className="flex items-center gap-1 text-white font-semibold text-sm">← Back</button></div>
       <div className="flex-1 flex flex-col justify-center gap-5" style={{ animation: 'fade-up 0.5s ease both' }}>
         <div className="flex flex-col items-center gap-3"><div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: config.color }}><HouseIcon stroke="white" size={36} /></div><h2 className="text-3xl font-black text-white text-center">{config.estateName}</h2><p className="text-white/70 text-sm text-center">Enter the join code from your manager</p></div>
         <input type="text" placeholder={'Code (e.g. ' + config.joinCode + ')'} value={code} onChange={(e) => { setCode(e.target.value); setError('') }} className="w-full py-4 px-5 bg-white rounded-xl border-2 border-black/10 font-bold text-black text-center text-lg tracking-widest outline-none shadow-sm" />
         {error && <div className="bg-red-500/30 rounded-xl px-4 py-3"><p className="text-white text-sm font-semibold">{error}</p></div>}
-        <button onClick={handleJoin} className="w-full py-4 rounded-xl font-bold text-white shadow-lg active:scale-[0.98]" style={{ backgroundColor: config.color }}>Enter Estate →</button>
+        <button onClick={handleJoin} disabled={loading} className="w-full py-4 rounded-xl font-bold text-white shadow-lg active:scale-[0.98]" style={{ backgroundColor: config.color }}>{loading ? 'Looking up estate...' : 'Enter Estate →'}</button>
       </div>
     </div>
   </div>
@@ -1180,10 +1209,22 @@ function GuestScreen({ go, config, tenant, guestCodes, setGuestCodes }: { go: (s
 // ============================================
 // SERVICE STAFF SCREENS
 // ============================================
-function ServiceCodeScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
-  const [code, setCode] = useState(''); const [error, setError] = useState('')
-  const handleJoin = () => { if (!code.trim()) { setError('Please enter a code'); return } if (code.trim().toUpperCase() !== config.joinCode.toUpperCase()) { setError('Invalid code'); return } go('service-role') }
-  return <div className="relative h-full overflow-hidden"><div className="absolute inset-0"><div className="h-1/2" style={{ backgroundColor: config.color }} /><div className="h-1/2" style={{ backgroundImage: 'url(' + (config.bgImageUrl || APT_PHOTO) + ')', backgroundSize: 'cover' }} /></div><div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} /><div className="relative z-10 h-full flex flex-col px-8"><div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4"><button onClick={() => go('role-select')} className="flex items-center gap-1 text-white font-semibold text-sm">← Back</button></div><div className="flex-1 flex flex-col justify-center gap-5" style={{ animation: 'fade-up 0.5s ease both' }}><div className="flex flex-col items-center gap-3"><div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: config.color }}><Icon icon="mdi:wrench" width="36" height="36" style={{ color: 'white' }} /></div><h2 className="text-3xl font-black text-white text-center">Service Staff</h2><p className="text-white/70 text-sm text-center">Enter the code from the estate manager</p></div><input type="text" placeholder={'Code (e.g. ' + config.joinCode + ')'} value={code} onChange={(e) => { setCode(e.target.value); setError('') }} className="w-full py-4 px-5 bg-white rounded-xl border-2 border-black/10 font-bold text-black text-center text-lg tracking-widest outline-none" />{error && <div className="bg-red-500/30 rounded-xl px-4 py-3"><p className="text-white text-sm font-semibold">{error}</p></div>}<button onClick={handleJoin} className="w-full py-4 rounded-xl font-bold text-white shadow-lg active:scale-[0.98]" style={{ backgroundColor: config.color }}>Continue →</button></div></div></div>
+function ServiceCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void; config: EstateConfig; setConfig: (c: EstateConfig) => void }) {
+  const [code, setCode] = useState(''); const [error, setError] = useState(''); const [loading, setLoading] = useState(false)
+  const handleJoin = async () => {
+    if (!code.trim()) { setError('Please enter a code'); return }
+    setLoading(true); setError('')
+    try {
+      const { data, error } = await supabase.rpc('find_estate_by_join_code', { p_join_code: code.trim().toUpperCase() })
+      if (error || !data || data.length === 0) { setError('Invalid code.'); setLoading(false); return }
+      const estate = data[0]
+      setConfig({ ...config, estateName: estate.estate_name, joinCode: code.trim().toUpperCase(), monthlyDues: (estate.monthly_dues || 1500000) / 100 })
+      localStorage.setItem('ef_estate_data', JSON.stringify({ estateName: estate.estate_name, joinCode: code.trim().toUpperCase(), monthlyDues: (estate.monthly_dues || 1500000) / 100 }))
+      go('service-role')
+    } catch { setError('Network error.') }
+    setLoading(false)
+  }
+  return <div className="relative h-full overflow-hidden"><div className="absolute inset-0"><div className="h-1/2" style={{ backgroundColor: config.color }} /><div className="h-1/2" style={{ backgroundImage: 'url(' + (config.bgImageUrl || APT_PHOTO) + ')', backgroundSize: 'cover' }} /></div><div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} /><div className="relative z-10 h-full flex flex-col px-8"><div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4"><button onClick={() => go('role-select')} className="flex items-center gap-1 text-white font-semibold text-sm">← Back</button></div><div className="flex-1 flex flex-col justify-center gap-5" style={{ animation: 'fade-up 0.5s ease both' }}><div className="flex flex-col items-center gap-3"><div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: config.color }}><Icon icon="mdi:wrench" width="36" height="36" style={{ color: 'white' }} /></div><h2 className="text-3xl font-black text-white text-center">Service Staff</h2><p className="text-white/70 text-sm text-center">Enter the code from the estate manager</p></div><input type="text" placeholder={'Code (e.g. ' + config.joinCode + ')'} value={code} onChange={(e) => { setCode(e.target.value); setError('') }} className="w-full py-4 px-5 bg-white rounded-xl border-2 border-black/10 font-bold text-black text-center text-lg tracking-widest outline-none" />{error && <div className="bg-red-500/30 rounded-xl px-4 py-3"><p className="text-white text-sm font-semibold">{error}</p></div>}<button onClick={handleJoin} disabled={loading} className="w-full py-4 rounded-xl font-bold text-white shadow-lg active:scale-[0.98]" style={{ backgroundColor: config.color }}>{loading ? 'Looking up...' : 'Continue →'}</button></div></div></div>
 }
 
 function ServiceRoleScreen({ go }: { go: (s: Screen) => void }) {
@@ -1535,7 +1576,7 @@ export default function App() {
     'announcement-editor': <AnnouncementEditorScreen go={go} config={config} setNotifications={setNotifications} notifications={notifications} />,
     invoices: <InvoicesScreen go={go} config={config} invoices={invoices} setInvoices={setInvoices} setNotifications={setNotifications} notifications={notifications} />,
     'manager-settings': <ManagerSettingsScreen go={go} config={config} tenantLogins={tenantLogins} />,
-    'tenant-code': <TenantCodeScreen go={go} config={config} />,
+    'tenant-code': <TenantCodeScreen go={go} config={config} setConfig={setConfig} />,
     'tenant-onboarding': <TenantOnboardingScreen go={go} config={config} setTenant={(t) => { setTenant(t); setRole('tenant') }} />,
     'tenant-home': <TenantHomeScreen go={go} config={config} tenant={tenant} notifications={notifications} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />,
     'tenant-bills': <TenantBillsScreen go={go} config={config} tenant={tenant} invoices={invoices} setInvoices={setInvoices} setNotifications={setNotifications} notifications={notifications} />,
@@ -1547,7 +1588,7 @@ export default function App() {
     maintenance: <TenantComplaintsScreen go={go} config={config} tenant={tenant} complaints={complaints} setComplaints={setComplaints} setNotifications={setNotifications} notifications={notifications} />,
     emergency: <EmergencyScreen go={go} config={config} tenant={tenant} alerts={alerts} setAlerts={setAlerts} />,
     guest: <GuestScreen go={go} config={config} tenant={tenant} guestCodes={guestCodes} setGuestCodes={setGuestCodes} />,
-    'service-code': <ServiceCodeScreen go={go} config={config} />,
+    'service-code': <ServiceCodeScreen go={go} config={config} setConfig={setConfig} />,
     'service-role': <ServiceRoleScreen go={go} />,
     'service-security': <ServiceSecurityScreen go={go} config={config} alerts={alerts} guestCodes={guestCodes} />,
     'service-worker': <ServiceWorkerScreen go={go} config={config} complaints={complaints} />,
