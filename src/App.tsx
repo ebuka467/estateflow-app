@@ -445,7 +445,10 @@ function AnnouncementEditorScreen({ go, config, setNotifications, notifications 
   const handleSend = () => {
     if (!title.trim() || !body.trim()) return
     const notif: Notification = { id: 'n' + Date.now(), title: title.trim(), message: body.trim(), date: new Date().toLocaleDateString(), type: 'announcement', read: false }
-    setNotifications([notif, ...notifications]); setTitle(''); setBody(''); setSent(true); setTimeout(() => setSent(false), 2000)
+    setNotifications([notif, ...notifications])
+    // Save to Supabase so tenants see it on their devices
+    supabase.from('announcements').insert([{ estate_id: localStorage.getItem('ef_estate_id') || '', author_id: null, title: title.trim(), body: body.trim(), priority: 'normal' }]).then(() => {}).catch(() => {})
+    setTitle(''); setBody(''); setSent(true); setTimeout(() => setSent(false), 2000)
   }
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
     <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Announcements</h2></div>
@@ -844,7 +847,11 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
             </>}
           </div>
         </div>
-        <ThemedBtn onClick={() => go('manager-home')} color={currentTheme.primary}>Apply & Save ✓</ThemedBtn>
+        <ThemedBtn onClick={async () => {
+        // Save customization to Supabase so tenants/staff inherit it
+        try { await supabase.from('estates').update({ primary_color: config.color, font_family: config.fontFamily, theme_id: config.themeId, layout_id: config.layoutId, background_type: config.backgroundType, gradient_angle: config.gradientAngle, gradient_color1: config.gradientColors[0], gradient_color2: config.gradientColors[1], bg_image_url: config.bgImageUrl, enable_3d: config.enable3D }).eq('manager_email', userEmail) } catch {}
+        go('manager-home')
+      }} color={currentTheme.primary}>Apply & Save ✓</ThemedBtn>
         <button onClick={() => setConfig(DEFAULT_CONFIG)} className="w-full py-3 text-sm font-semibold text-center" style={{ color: currentTheme.textSecondary }}>Reset to Default</button>
       </div>}
     </div>
@@ -899,6 +906,16 @@ function TenantCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void; 
         estateAccountNumber: '',
         estateAccountName: estate.estate_account_name || '',
         estateBank: estate.estate_bank || '',
+        // Inherit manager's design
+        color: estate.primary_color || '#1B873F',
+        fontFamily: estate.font_family || config.fontFamily,
+        themeId: estate.theme_id || 'modern-green',
+        layoutId: estate.layout_id || 'modern',
+        backgroundType: estate.background_type || 'solid',
+        gradientAngle: estate.gradient_angle || 135,
+        gradientColors: [estate.gradient_color1 || '#1B873F', estate.gradient_color2 || '#065f46'],
+        bgImageUrl: estate.bg_image_url || '',
+        enable3D: estate.enable_3d !== false,
       }
       localStorage.setItem('ef_estate_data', JSON.stringify(fetchedConfig))
       localStorage.setItem('ef_estate_id', estate.estate_id)
@@ -1092,7 +1109,10 @@ function TenantComplaintsScreen({ go, config, tenant, complaints, setComplaints,
   const [selected, setSelected] = useState<string | null>(null); const [desc, setDesc] = useState(''); const [submitted, setSubmitted] = useState(false)
   const handleSubmit = () => {
     if (!selected || !desc.trim() || !tenant) return
-    setComplaints([{ id: 'c' + Date.now(), tenantName: tenant.name, houseNumber: tenant.houseNumber, category: selected, description: desc.trim(), date: new Date().toLocaleDateString(), status: 'open', priority: 'medium' }, ...complaints])
+    const newComplaint = { id: 'c' + Date.now(), tenantName: tenant.name, houseNumber: tenant.houseNumber, category: selected, description: desc.trim(), date: new Date().toLocaleDateString(), status: 'open' as const, priority: 'medium' as const }
+    setComplaints([newComplaint, ...complaints])
+    // Save to Supabase so manager sees it
+    supabase.from('complaints').insert([{ estate_id: localStorage.getItem('ef_estate_id') || '', tenant_name: tenant.name, house_number: tenant.houseNumber, category: selected, description: desc.trim(), status: 'open' }]).then(() => {}).catch(() => {})
     setNotifications([{ id: 'n' + Date.now(), title: 'Report Submitted', message: 'Your ' + selected + ' report has been sent to management.', date: new Date().toLocaleDateString(), type: 'maintenance', read: false }, ...notifications])
     setDesc(''); setSelected(null); setSubmitted(true); setTimeout(() => setSubmitted(false), 2500)
   }
@@ -1396,7 +1416,7 @@ function ManagerSettingsScreen({ go, config, tenantLogins }: { go: (s: Screen) =
           <button onClick={async () => { if (confirm('Sign out of your account?')) { await clearSession(); go('role-select') } }} className="w-full py-3 rounded-xl font-bold text-red-600 bg-red-50 active:scale-[0.98] transition-transform text-left px-4">
             <Icon icon="mdi:logout" width="18" height="18" className="inline mr-2 -mt-1" />Sign Out
           </button>
-          <button onClick={async () => { if (confirm('Delete your account? This cannot be undone.')) { try { await supabase.auth.signOut(); await supabase.auth.admin?.deleteUser?.(userEmail); } catch {} clearSession(); go('role-select') } }} className="w-full py-3 rounded-xl font-bold text-red-700 bg-red-100 active:scale-[0.98] transition-transform text-left px-4">
+          <button onClick={async () => { if (confirm('Delete your account and estate data? This cannot be undone.')) { try { const { data: { user } } = await supabase.auth.getUser(); if (user) { await supabase.from('estates').delete().eq('manager_email', userEmail); await supabase.auth.signOut(); } } catch {} clearSession(); go('role-select') } }} className="w-full py-3 rounded-xl font-bold text-red-700 bg-red-100 active:scale-[0.98] transition-transform text-left px-4">
             <Icon icon="mdi:delete" width="18" height="18" className="inline mr-2 -mt-1" />Delete Account
           </button>
         </div>
@@ -1603,17 +1623,17 @@ export default function App() {
     reports: <ManagementScreen go={go} config={config} invoices={invoices} complaints={complaints} />,
   }
 
-  const appBg = config.backgroundType === 'gradient'
-    ? 'linear-gradient(' + config.gradientAngle + 'deg, ' + config.gradientColors[0] + ', ' + config.gradientColors[1] + ')'
-    : config.backgroundType === 'image' && config.bgImageUrl
-    ? 'linear-gradient(rgba(0,0,0,' + (1 - config.backgroundOpacity) + '), rgba(0,0,0,' + (1 - config.backgroundOpacity) + ')), url(' + config.bgImageUrl + ') center/cover no-repeat'
-    : config.backgroundType === 'solid'
-    ? config.color
-    : config.color + '08'
+  // Background ONLY applies to outer container, never affects text/fonts
+  const getBgStyle = () => {
+    if (config.backgroundType === 'gradient') return { background: 'linear-gradient(' + config.gradientAngle + 'deg, ' + config.gradientColors[0] + ', ' + config.gradientColors[1] + ')' }
+    if (config.backgroundType === 'image' && config.bgImageUrl) return { backgroundImage: 'url(' + config.bgImageUrl + ')', backgroundSize: 'cover', backgroundPosition: 'center' }
+    if (config.backgroundType === 'solid') return { backgroundColor: config.color }
+    return { backgroundColor: '#f5f5f5' }
+  }
 
   return (
     <div className="min-h-screen bg-zinc-400 flex items-center justify-center p-0 sm:p-6">
-      <div className="relative overflow-hidden w-full sm:max-w-[420px] md:max-w-[480px] lg:max-w-[500px] mx-auto" style={{ height: '100dvh', maxHeight: '900px', fontFamily: config.fontFamily, boxShadow: '0 30px 80px rgba(0,0,0,0.4)', borderRadius: 'clamp(0px, 2vw, 36px)', background: appBg }}>
+      <div className="relative overflow-hidden w-full sm:max-w-[420px] md:max-w-[480px] lg:max-w-[500px] mx-auto" style={{ height: '100dvh', maxHeight: '900px', fontFamily: config.fontFamily, boxShadow: '0 30px 80px rgba(0,0,0,0.4)', borderRadius: 'clamp(0px, 2vw, 36px)', ...getBgStyle() }}>
         <PageTransition>{screens[screen]}</PageTransition>
       </div>
     </div>
