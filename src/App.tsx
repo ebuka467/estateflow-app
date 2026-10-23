@@ -909,7 +909,7 @@ function TenantCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void; 
         ...config,
         estateName: estate.estate_name,
         joinCode: code.trim().toUpperCase(),
-        monthlyDues: (estate.monthly_dues || 1500000) / 100,
+        monthlyDues: estate.monthly_dues || 15000,
         estateAccountNumber: '',
         estateAccountName: estate.estate_account_name || '',
         estateBank: estate.estate_bank || '',
@@ -1245,8 +1245,8 @@ function ServiceCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void;
       const { data, error } = await supabase.rpc('find_estate_by_join_code', { p_join_code: code.trim().toUpperCase() })
       if (error || !data || data.length === 0) { setError('Invalid code.'); setLoading(false); return }
       const estate = data[0]
-      setConfig({ ...config, estateName: estate.estate_name, joinCode: code.trim().toUpperCase(), monthlyDues: (estate.monthly_dues || 1500000) / 100 })
-      localStorage.setItem('ef_estate_data', JSON.stringify({ estateName: estate.estate_name, joinCode: code.trim().toUpperCase(), monthlyDues: (estate.monthly_dues || 1500000) / 100 }))
+      setConfig({ ...config, estateName: estate.estate_name, joinCode: code.trim().toUpperCase(), monthlyDues: estate.monthly_dues || 15000 })
+      localStorage.setItem('ef_estate_data', JSON.stringify({ estateName: estate.estate_name, joinCode: code.trim().toUpperCase(), monthlyDues: estate.monthly_dues || 15000 }))
       go('service-role')
     } catch { setError('Network error.') }
     setLoading(false)
@@ -1276,6 +1276,8 @@ function ServiceWorkerScreen({ go, config, complaints }: { go: (s: Screen) => vo
 // TENANTS SCREEN (Manager view of estate tenants)
 // ============================================
 function TenantsScreen({ go, config, tenantLogins, invoices }: { go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[]; invoices: Invoice[] }) {
+  const [dbTenants, setDbTenants] = useState<{ name: string; house_number: string; joinedDate?: string }[]>([])
+  const [loading, setLoading] = useState(true)
   const isGB = config.isGoldBlackTheme
   const currentLayout = LAYOUT_PRESETS.find(l => l.id === config.layoutId) || LAYOUT_PRESETS[0]
   const bgColor = isGB ? '#000000' : (config.color + '18')
@@ -1283,26 +1285,44 @@ function TenantsScreen({ go, config, tenantLogins, invoices }: { go: (s: Screen)
   const textP = isGB ? '#d4af37' : '#111827'
   const textS = isGB ? '#f4e4a0' : '#6b7280'
   const borderColor = isGB ? '#d4af3733' : '#f3f4f6'
-  const cardPadding = currentLayout.cardDensity === 'compact' ? 'p-2' : currentLayout.cardDensity === 'spacious' ? 'p-5' : 'p-3'
   const gridGap = currentLayout.cardDensity === 'compact' ? 'gap-2' : currentLayout.cardDensity === 'spacious' ? 'gap-4' : 'gap-3'
+
+  useEffect(() => {
+    const loadTenants = async () => {
+      try {
+        const { data } = await supabase.from('tenants').select('*').eq('estate_id', localStorage.getItem('ef_estate_id') || '')
+        if (data) setDbTenants(data as any)
+      } catch {}
+      setLoading(false)
+    }
+    loadTenants()
+  }, [])
+
+  // Merge local and DB tenants
+  const allTenants = [...dbTenants.map((t: any) => ({ name: t.name || t.tenant_name, house: t.house_number || t.house, date: t.joined_date || t.created_at?.split('T')[0] || 'Unknown' })), ...tenantLogins]
+  // Remove duplicates by house number
+  const uniqueTenants = allTenants.filter((t, i, arr) => arr.findIndex(x => x.house === t.house) === i)
+
   const getTenantFinance = (house: string) => {
     const tInvoices = invoices.filter(i => i.houseNumber === house)
     const paid = tInvoices.filter(i => i.status === 'verified').reduce((s, i) => s + i.baseAmount, 0)
     const outstanding = tInvoices.filter(i => i.status === 'pending').reduce((s, i) => s + i.baseAmount, 0)
     return { paid, outstanding, payments: tInvoices.filter(i => i.status === 'verified').length }
   }
+
   return <div className="flex flex-col h-full" style={{ backgroundColor: bgColor }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Tenants</h2><span className="ml-auto text-xs font-bold px-2 py-1 rounded-full" style={{ backgroundColor: config.color + '15', color: config.color }}>{tenantLogins.length} joined</span></div>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Tenants</h2><span className="ml-auto text-xs font-bold px-2 py-1 rounded-full" style={{ backgroundColor: config.color + '15', color: config.color }}>{loading ? '...' : uniqueTenants.length + ' joined'}</span></div>
     <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-3">
-      {tenantLogins.length === 0 ? <div className="text-center py-16"><Icon icon="mdi:account-group" width="64" height="64" style={{ color: '#d1d5db' }} /><p className="font-bold text-gray-700 mt-3">No tenants yet</p><p className="text-gray-400 text-sm mt-1">Share your join code to onboard tenants</p><button onClick={() => go('qr-share')} className="mt-4 px-6 py-2.5 rounded-xl font-bold text-white text-sm" style={{ backgroundColor: config.color }}>Share Join Code</button></div> :
-      tenantLogins.map((t, i) => { const fin = getTenantFinance(t.house); return (
+      {loading ? <div className="text-center py-16"><p className="text-gray-400">Loading tenants...</p></div> :
+      uniqueTenants.length === 0 ? <div className="text-center py-16"><Icon icon="mdi:account-group" width="64" height="64" style={{ color: '#d1d5db' }} /><p className="font-bold text-gray-700 mt-3">No tenants yet</p><p className="text-gray-400 text-sm mt-1">Share your join code to onboard tenants</p><button onClick={() => go('qr-share')} className="mt-4 px-6 py-2.5 rounded-xl font-bold text-white text-sm" style={{ backgroundColor: config.color }}>Share Join Code</button></div> :
+      uniqueTenants.map((t, i) => { const fin = getTenantFinance(t.house); return (
         <div key={i} className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: cardBg, border: '1px solid ' + borderColor }}>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg" style={{ backgroundColor: config.color }}>{t.name[0]?.toUpperCase() || '?'}</div>
             <div className="flex-1"><p className="font-bold" style={{ color: textP }}>{t.name}</p><p className="text-xs" style={{ color: textS }}>{t.house} — Joined {t.date}</p></div>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-lg p-2 text-center" style={{ backgroundColor: '#1B873F10' }}><p className="text-xs text-green-600 font-bold">Paid</p><p className="font-bold text-sm text-green-800">{fin.paid.toLocaleString()}</p></div>
+          <div className={"grid grid-cols-3 " + gridGap}>
+            <div className="rounded-lg p-2 text-center" style={{ backgroundColor: '#1B873F10' }}><p className="text-xs text-green-600 font-bold">Paid</p><p className="font-bold text-sm text-green-800">₦{fin.paid.toLocaleString()}</p></div>
             <div className="rounded-lg p-2 text-center" style={{ backgroundColor: '#f59e0b10' }}><p className="text-xs text-yellow-600 font-bold">Owing</p><p className="font-bold text-sm text-yellow-800">₦{fin.outstanding.toLocaleString()}</p></div>
             <div className="rounded-lg p-2 text-center" style={{ backgroundColor: '#2563eb10' }}><p className="text-xs text-blue-600 font-bold">Payments</p><p className="font-bold text-sm text-blue-800">{fin.payments}</p></div>
           </div>
@@ -1322,10 +1342,25 @@ function SearchTenantScreen({ go, config, tenantLogins, invoices }: {
   go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[]; invoices: Invoice[]
 }) {
   const [query, setQuery] = useState('')
+  const [dbTenants, setDbTenants] = useState<{ name: string; house_number: string }[]>([])
   const minQuery = 2
   const trimmed = query.trim()
+
+  useEffect(() => {
+    const loadTenants = async () => {
+      try {
+        const { data } = await supabase.from('tenants').select('*').eq('estate_id', localStorage.getItem('ef_estate_id') || '')
+        if (data) setDbTenants(data as any)
+      } catch {}
+    }
+    loadTenants()
+  }, [])
+
+  const allTenants = [...dbTenants.map((t: any) => ({ name: t.name || t.tenant_name, house: t.house_number || t.house })), ...tenantLogins]
+  const uniqueTenants = allTenants.filter((t, i, arr) => arr.findIndex(x => x.house === t.house) === i)
+
   const results = trimmed.length >= minQuery
-    ? tenantLogins.filter(t => t.name.toLowerCase().includes(trimmed.toLowerCase()) || t.house.toLowerCase().includes(trimmed.toLowerCase()))
+    ? uniqueTenants.filter(t => t.name.toLowerCase().includes(trimmed.toLowerCase()) || t.house.toLowerCase().includes(trimmed.toLowerCase()))
     : []
   const getTenantFinance = (house: string) => {
     const tenantInvoices = invoices.filter(i => i.houseNumber === house)
@@ -1367,7 +1402,7 @@ function SearchTenantScreen({ go, config, tenantLogins, invoices }: {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">{results.length} result{results.length !== 1 ? 's' : ''}</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">{results.length} result{results.length !== 1 ? 's' : ''} found</p>
           {results.map((t, i) => {
             const fin = getTenantFinance(t.house)
             return (
@@ -1504,7 +1539,7 @@ export default function App() {
         supabase.from('estates').select('*').eq('manager_email', session.user.email).limit(1).then(({ data }) => {
           if (data && data.length > 0) {
             const e = data[0]
-            const dbData = { estateName: e.name, joinCode: e.join_code, monthlyDues: (e.monthly_dues || 1500000) / 100, estateAccountNumber: e.estate_account_number || '', estateAccountName: e.estate_account_name || '', estateBank: e.estate_bank || '' }
+            const dbData = { estateName: e.name, joinCode: e.join_code, monthlyDues: e.monthly_dues || 15000, estateAccountNumber: e.estate_account_number || '', estateAccountName: e.estate_account_name || '', estateBank: e.estate_bank || '' }
             setConfig(prev => ({ ...prev, ...dbData }))
             localStorage.setItem('ef_estate_data', JSON.stringify(dbData))
           }
@@ -1529,7 +1564,7 @@ export default function App() {
           const { data: estates } = await supabase.from('estates').select('*').eq('manager_email', session.user.email).limit(1)
           if (estates && estates.length > 0) {
             const e = estates[0]
-            const dbData = { estateName: e.name, joinCode: e.join_code, monthlyDues: (e.monthly_dues || 1500000) / 100, estateAccountNumber: e.estate_account_number || '', estateAccountName: e.estate_account_name || '', estateBank: e.estate_bank || '' }
+            const dbData = { estateName: e.name, joinCode: e.join_code, monthlyDues: e.monthly_dues || 15000, estateAccountNumber: e.estate_account_number || '', estateAccountName: e.estate_account_name || '', estateBank: e.estate_bank || '' }
             setConfig(prev => ({ ...prev, ...dbData }))
             localStorage.setItem('ef_estate_data', JSON.stringify(dbData))
             if (e.id) localStorage.setItem('ef_estate_id', e.id)
