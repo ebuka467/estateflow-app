@@ -447,7 +447,7 @@ function AnnouncementEditorScreen({ go, config, setNotifications, notifications 
     const notif: Notification = { id: 'n' + Date.now(), title: title.trim(), message: body.trim(), date: new Date().toLocaleDateString(), type: 'announcement', read: false }
     setNotifications([notif, ...notifications])
     // Save to Supabase so tenants see it on their devices
-    supabase.from('announcements').insert([{ estate_id: localStorage.getItem('ef_estate_id') || '', author_id: null, title: title.trim(), body: body.trim(), priority: 'normal' }]).then(() => {}).catch(() => {})
+    supabase.from('announcements').insert([{ estate_id: localStorage.getItem('ef_estate_id') || '', author_id: null, title: title.trim(), body: body.trim(), priority: 'normal' }]).then(() => { }, () => { })
     setTitle(''); setBody(''); setSent(true); setTimeout(() => setSent(false), 2000)
   }
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
@@ -508,7 +508,7 @@ function InvoicesScreen({ go, config, invoices, setInvoices, setNotifications, n
 // ============================================
 // THEME CUSTOMIZER SCREEN — Full Studio
 // ============================================
-function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => void; config: EstateConfig; setConfig: (c: EstateConfig) => void }) {
+function ThemeCustomizerScreen({ go, config, setConfig, userEmail }: { go: (s: Screen) => void; config: EstateConfig; setConfig: (c: EstateConfig) => void; userEmail?: string }) {
   const [activeTab, setActiveTab] = useState<'themes' | 'background' | 'fonts' | 'layout' | 'cards' | '3d' | 'preview'>('themes')
   const [bgColorPicker, setBgColorPicker] = useState(config.color)
   const [pendingBgColor, setPendingBgColor] = useState(config.solidBgColor || config.color)
@@ -636,7 +636,7 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
           <button onClick={() => setConfig({ ...config, solidBgColor: pendingBgColor })} className="w-full py-3 rounded-xl font-bold text-white active:scale-[0.98]" style={{ backgroundColor: currentTheme.primary }}>Apply Background Color</button>
           <div className="grid grid-cols-6 gap-2">
             {['#ffffff', '#f0f0f0', '#1a1a1a', '#000000', currentTheme.primary, currentTheme.secondary].map(c => (
-              <button key={c} onClick={() => { setBgColorPicker(c); setConfig({ ...config, background: c }) }} className="h-10 rounded-lg border-2 active:scale-90 transition-transform" style={{ backgroundColor: c, borderColor: bgColorPicker === c ? currentTheme.primary : currentTheme.border }} />
+              <button key={c} onClick={() => { setBgColorPicker(c); setConfig({ ...config, solidBgColor: c }) }} className="h-10 rounded-lg border-2 active:scale-90 transition-transform" style={{ backgroundColor: c, borderColor: bgColorPicker === c ? currentTheme.primary : currentTheme.border }} />
             ))}
           </div>
         </div>}
@@ -920,7 +920,7 @@ function TenantCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void; 
         layoutId: estate.layout_id || 'modern',
         backgroundType: estate.background_type || 'solid',
         gradientAngle: estate.gradient_angle || 135,
-        gradientColors: [estate.gradient_color1 || '#1B873F', estate.gradient_color2 || '#065f46'],
+        gradientColors: [estate.gradient_color1 || '#1B873F', estate.gradient_color2 || '#065f46'] as [string, string],
         bgImageUrl: estate.bg_image_url || '',
         enable3D: estate.enable_3d !== false,
       }
@@ -1119,7 +1119,7 @@ function TenantComplaintsScreen({ go, config, tenant, complaints, setComplaints,
     const newComplaint = { id: 'c' + Date.now(), tenantName: tenant.name, houseNumber: tenant.houseNumber, category: selected, description: desc.trim(), date: new Date().toLocaleDateString(), status: 'open' as const, priority: 'medium' as const }
     setComplaints([newComplaint, ...complaints])
     // Save to Supabase so manager sees it
-    supabase.from('complaints').insert([{ estate_id: localStorage.getItem('ef_estate_id') || '', tenant_name: tenant.name, house_number: tenant.houseNumber, category: selected, description: desc.trim(), status: 'open' }]).then(() => {}).catch(() => {})
+    supabase.from('complaints').insert([{ estate_id: localStorage.getItem('ef_estate_id') || '', tenant_name: tenant.name, house_number: tenant.houseNumber, category: selected, description: desc.trim(), status: 'open' }]).then(() => { }, () => { })
     setNotifications([{ id: 'n' + Date.now(), title: 'Report Submitted', message: 'Your ' + selected + ' report has been sent to management.', date: new Date().toLocaleDateString(), type: 'maintenance', read: false }, ...notifications])
     setDesc(''); setSelected(null); setSubmitted(true); setTimeout(() => setSubmitted(false), 2500)
   }
@@ -1409,7 +1409,7 @@ function SearchTenantScreen({ go, config, tenantLogins, invoices }: {
 // ============================================
 // MANAGER SETTINGS
 // ============================================
-function ManagerSettingsScreen({ go, config, tenantLogins }: { go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[] }) {
+function ManagerSettingsScreen({ go, config, tenantLogins, userEmail, clearSession }: { go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[]; userEmail?: string; clearSession: () => void }) {
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
     <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Settings</h2></div>
     <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-4">
@@ -1596,13 +1596,13 @@ export default function App() {
     'manager-home': <ManagerHomeScreen go={go} config={config} menuOpen={menuOpen} setMenuOpen={setMenuOpen} notifications={notifications} invoices={invoices} complaints={complaints} alerts={alerts} clearSession={clearSession} tenantLogins={tenantLogins} />,
     'search-tenant': <SearchTenantScreen go={go} config={config} tenantLogins={tenantLogins} invoices={invoices} />,
     'qr-share': <QRShareScreen go={go} config={config} />,
-    'theme-customizer': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} />,
+    'theme-customizer': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} userEmail={userEmail} />,
     'estate-profile': <EstateProfileScreen go={go} config={config} setConfig={setConfig} userEmail={userEmail} />,
     'payment-setup': <PaymentSetupScreen go={go} config={config} setConfig={setConfig} />,
     management: <ManagementScreen go={go} config={config} invoices={invoices} complaints={complaints} />,
     'announcement-editor': <AnnouncementEditorScreen go={go} config={config} setNotifications={setNotifications} notifications={notifications} />,
     invoices: <InvoicesScreen go={go} config={config} invoices={invoices} setInvoices={setInvoices} setNotifications={setNotifications} notifications={notifications} />,
-    'manager-settings': <ManagerSettingsScreen go={go} config={config} tenantLogins={tenantLogins} />,
+    'manager-settings': <ManagerSettingsScreen go={go} config={config} tenantLogins={tenantLogins} userEmail={userEmail} clearSession={clearSession} />,
     'tenant-code': <TenantCodeScreen go={go} config={config} setConfig={setConfig} />,
     'tenant-onboarding': <TenantOnboardingScreen go={go} config={config} setTenant={(t) => { setTenant(t); setRole('tenant') }} />,
     'tenant-home': <TenantHomeScreen go={go} config={config} tenant={tenant} notifications={notifications} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />,
@@ -1620,8 +1620,8 @@ export default function App() {
     'service-security': <ServiceSecurityScreen go={go} config={config} alerts={alerts} guestCodes={guestCodes} />,
     'service-worker': <ServiceWorkerScreen go={go} config={config} complaints={complaints} />,
     'ai-chatbot': <TenantHomeScreen go={go} config={config} tenant={tenant} notifications={notifications} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />,
-    'font-picker': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} />,
-    'logo-upload': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} />,
+    'font-picker': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} userEmail={userEmail} />,
+    'logo-upload': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} userEmail={userEmail} />,
     'privacy-policy': <PrivacyPolicy go={go} config={config} />,
     'terms-of-service': <TermsOfService go={go} config={config} />,
     'payment-refund-policy': <PaymentRefundPolicy go={go} config={config} />,

@@ -352,6 +352,8 @@ export const DEFAULT_CONFIG: EstateConfig = {
   estateBank: 'GTBank',
   enableAI: true,
   logoPosition: 'top-left',
+  solidBgColor: '',
+  backgroundPattern: 0,
 }
 
 export const APT_PHOTO = 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=900&h=1200&fit=crop&auto=format'
