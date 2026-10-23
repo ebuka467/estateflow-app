@@ -920,7 +920,7 @@ function TenantCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void; 
         layoutId: estate.layout_id || 'modern',
         backgroundType: estate.background_type || 'solid',
         gradientAngle: estate.gradient_angle || 135,
-        gradientColors: [estate.gradient_color1 || '#1B873F', estate.gradient_color2 || '#065f46'] as [string, string],
+        gradientColors: [estate.gradient_color1 || '#1B873F', estate.gradient_color2 || '#065f46'] as [string, string] as [string, string],
         bgImageUrl: estate.bg_image_url || '',
         enable3D: estate.enable_3d !== false,
       }
@@ -1056,8 +1056,8 @@ function TenantBillsScreen({ go, config, tenant, invoices, setInvoices, setNotif
   </div>
 }
 
-function TenantPayScreen({ go, config, invoices, setInvoices, setNotifications, notifications }: {
-  go: (s: Screen) => void; config: EstateConfig; invoices: Invoice[]; setInvoices: (i: Invoice[]) => void; setNotifications: (n: Notification[]) => void; notifications: Notification[]
+function TenantPayScreen({ go, config, tenant, invoices, setInvoices, setNotifications, notifications }: {
+  go: (s: Screen) => void; config: EstateConfig; tenant: TenantInfo | null; invoices: Invoice[]; setInvoices: (i: Invoice[]) => void; setNotifications: (n: Notification[]) => void; notifications: Notification[]
 }) {
   const [processing, setProcessing] = useState(false); const [paid, setPaid] = useState(false)
   const pending = invoices.find(i => i.status === 'pending')
@@ -1281,7 +1281,7 @@ function ServiceCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void;
         layoutId: estate.layout_id || 'modern',
         backgroundType: estate.background_type || 'solid',
         gradientAngle: estate.gradient_angle || 135,
-        gradientColors: [estate.gradient_color1 || '#1B873F', estate.gradient_color2 || '#065f46'],
+        gradientColors: [estate.gradient_color1 || '#1B873F', estate.gradient_color2 || '#065f46'] as [string, string],
         bgImageUrl: estate.bg_image_url || '',
         enable3D: estate.enable_3d !== false,
         solidBgColor: estate.solid_bg_color || ''
@@ -1315,7 +1315,7 @@ function ServiceWorkerScreen({ go, config, complaints }: { go: (s: Screen) => vo
 // TENANTS SCREEN (Manager view of estate tenants)
 // ============================================
 function TenantsScreen({ go, config, tenantLogins, invoices }: { go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[]; invoices: Invoice[] }) {
-  const [dbTenants, setDbTenants] = useState<{ name: string; house_number: string; joinedDate?: string }[]>([])
+  const [dbTenants, setDbTenants] = useState<{ name: string; house_number: string; joined_date?: string; created_at?: string }[]>([])
   const [loading, setLoading] = useState(true)
   const isGB = config.isGoldBlackTheme
   const currentLayout = LAYOUT_PRESETS.find(l => l.id === config.layoutId) || LAYOUT_PRESETS[0]
@@ -1327,34 +1327,18 @@ function TenantsScreen({ go, config, tenantLogins, invoices }: { go: (s: Screen)
   const gridGap = currentLayout.cardDensity === 'compact' ? 'gap-2' : currentLayout.cardDensity === 'spacious' ? 'gap-4' : 'gap-3'
 
   useEffect(() => {
-    const loadData = async () => {
-      const estateId = localStorage.getItem('ef_estate_id') || ''
-      // Load tenants
+    const loadTenants = async () => {
       try {
-        const { data: tData } = await supabase.from('tenants').select('*').eq('estate_id', estateId)
-        if (tData) setDbTenants(tData as any)
-      } catch {}
-      // Load announcements for tenant home
-      try {
-        const { data: aData } = await supabase.from('announcements').select('*').eq('estate_id', estateId).order('created_at', { ascending: false }).limit(20)
-        if (aData) {
-          const annNotifs: Notification[] = aData.map((a: any) => ({
-            id: a.id, title: a.title, message: a.body, date: a.created_at?.split('T')[0] || new Date().toLocaleDateString(),
-            type: 'announcement' as const, read: false
-          }))
-          setNotifications(prev => {
-            const existing = new Set(prev.map(n => n.id))
-            return [...annNotifs.filter(n => !existing.has(n.id)), ...prev]
-          })
-        }
+        const { data } = await supabase.from('tenants').select('*').eq('estate_id', localStorage.getItem('ef_estate_id') || '')
+        if (data) setDbTenants(data as any)
       } catch {}
       setLoading(false)
     }
-    loadData()
+    loadTenants()
   }, [])
 
   // Merge local and DB tenants
-  const allTenants = [...dbTenants.map((t: any) => ({ name: t.name || t.tenant_name, house: t.house_number || t.house, date: t.joined_date || t.created_at?.split('T')[0] || 'Unknown' })), ...tenantLogins]
+  const allTenants = [...dbTenants.map((t) => ({ name: t.name || 'Tenant', house: t.house_number || 'Unknown', date: t.joined_date || t.created_at?.split('T')[0] || 'Unknown' })), ...tenantLogins]
   // Remove duplicates by house number
   const uniqueTenants = allTenants.filter((t, i, arr) => arr.findIndex(x => x.house === t.house) === i)
 
@@ -1393,8 +1377,8 @@ function TenantsScreen({ go, config, tenantLogins, invoices }: { go: (s: Screen)
 // ============================================
 // SEARCH TENANT SCREEN (Patch §5, §9)
 // ============================================
-function SearchTenantScreen({ go, config, tenantLogins, invoices }: {
-  go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[]; invoices: Invoice[]
+function SearchTenantScreen({ go, config, tenantLogins, invoices, setNotifications }: {
+  go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[]; invoices: Invoice[]; setNotifications: (n: Notification[]) => void
 }) {
   const [query, setQuery] = useState('')
   const [dbTenants, setDbTenants] = useState<{ name: string; house_number: string }[]>([])
@@ -1411,7 +1395,7 @@ function SearchTenantScreen({ go, config, tenantLogins, invoices }: {
     loadTenants()
   }, [])
 
-  const allTenants = [...dbTenants.map((t: any) => ({ name: t.name || t.tenant_name, house: t.house_number || t.house })), ...tenantLogins]
+  const allTenants = [...dbTenants.map((t: any) => ({ name: t.name || t.tenant_name, house: t.house_number || t.house, date: t.joined_date || t.created_at?.split('T')[0] || 'Unknown' })), ...tenantLogins]
   const uniqueTenants = allTenants.filter((t, i, arr) => arr.findIndex(x => x.house === t.house) === i)
 
   const results = trimmed.length >= minQuery
@@ -1609,7 +1593,7 @@ export default function App() {
               layoutId: e.layout_id || 'modern',
               backgroundType: e.background_type || 'solid',
               gradientAngle: e.gradient_angle || 135,
-              gradientColors: [e.gradient_color1 || '#1B873F', e.gradient_color2 || '#065f46'],
+              gradientColors: [e.gradient_color1 || '#1B873F', e.gradient_color2 || '#065f46'] as [string, string],
               bgImageUrl: e.bg_image_url || '',
               enable3D: e.enable_3d !== false,
               solidBgColor: e.solid_bg_color || ''
@@ -1652,7 +1636,7 @@ export default function App() {
               layoutId: e.layout_id || 'modern',
               backgroundType: e.background_type || 'solid',
               gradientAngle: e.gradient_angle || 135,
-              gradientColors: [e.gradient_color1 || '#1B873F', e.gradient_color2 || '#065f46'],
+              gradientColors: [e.gradient_color1 || '#1B873F', e.gradient_color2 || '#065f46'] as [string, string],
               bgImageUrl: e.bg_image_url || '',
               enable3D: e.enable_3d !== false,
               solidBgColor: e.solid_bg_color || ''
@@ -1682,6 +1666,7 @@ export default function App() {
               houseNumber: d.house_number || 'Unknown',
               baseAmount: d.base_amount || 0,
               serviceFee: d.service_fee || 0,
+              processingFee: 0,
               totalAmount: d.total_amount || 0,
               estateSettlement: d.estate_settlement || d.base_amount || 0,
               estateflowShare: d.estateflow_share || d.service_fee || 0,
@@ -1780,7 +1765,7 @@ export default function App() {
     'manager-signup': <ManagerSignUpScreen go={go} config={config} />,
     'manager-login': <ManagerLoginScreen go={go} config={config} />,
     'manager-home': <ManagerHomeScreen go={go} config={config} menuOpen={menuOpen} setMenuOpen={setMenuOpen} notifications={notifications} invoices={invoices} complaints={complaints} alerts={alerts} clearSession={clearSession} tenantLogins={tenantLogins} />,
-    'search-tenant': <SearchTenantScreen go={go} config={config} tenantLogins={tenantLogins} invoices={invoices} />,
+    'search-tenant': <SearchTenantScreen go={go} config={config} tenantLogins={tenantLogins} invoices={invoices} setNotifications={setNotifications} />,
     'qr-share': <QRShareScreen go={go} config={config} />,
     'theme-customizer': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} userEmail={userEmail} />,
     'estate-profile': <EstateProfileScreen go={go} config={config} setConfig={setConfig} userEmail={userEmail} />,
@@ -1793,7 +1778,7 @@ export default function App() {
     'tenant-onboarding': <TenantOnboardingScreen go={go} config={config} setTenant={(t) => { setTenant(t); setRole('tenant') }} />,
     'tenant-home': <TenantHomeScreen go={go} config={config} tenant={tenant} notifications={notifications} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />,
     'tenant-bills': <TenantBillsScreen go={go} config={config} tenant={tenant} invoices={invoices} setInvoices={setInvoices} setNotifications={setNotifications} notifications={notifications} />,
-    'tenant-pay': <TenantPayScreen go={go} config={config} invoices={invoices} setInvoices={setInvoices} setNotifications={setNotifications} notifications={notifications} />,
+    'tenant-pay': <TenantPayScreen go={go} config={config} tenant={tenant} invoices={invoices} setInvoices={setInvoices} setNotifications={setNotifications} notifications={notifications} />,
     'tenant-receipts': <TenantReceiptsScreen go={go} config={config} invoices={invoices} tenant={tenant} />,
     'tenant-complaints': <TenantComplaintsScreen go={go} config={config} tenant={tenant} complaints={complaints} setComplaints={setComplaints} setNotifications={setNotifications} notifications={notifications} />,
     'tenant-profile': <TenantProfileScreen go={go} config={config} tenant={tenant} setTenant={setTenant} />,
