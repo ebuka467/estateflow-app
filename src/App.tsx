@@ -511,7 +511,11 @@ function InvoicesScreen({ go, config, invoices, setInvoices, setNotifications, n
 function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => void; config: EstateConfig; setConfig: (c: EstateConfig) => void }) {
   const [activeTab, setActiveTab] = useState<'themes' | 'background' | 'fonts' | 'layout' | 'cards' | '3d' | 'preview'>('themes')
   const [bgColorPicker, setBgColorPicker] = useState(config.color)
+  const [pendingBgColor, setPendingBgColor] = useState(config.solidBgColor || config.color)
   const [selectedPattern, setSelectedPattern] = useState(0)
+  const [pendingGradientAngle, setPendingGradientAngle] = useState(config.gradientAngle)
+  const [pendingGradientColors, setPendingGradientColors] = useState<[string,string]>([config.gradientColors[0], config.gradientColors[1]])
+  const [pendingImage, setPendingImage] = useState('')
   const [previewRole, setPreviewRole] = useState<'manager' | 'tenant' | 'staff'>('manager')
   const currentTheme = ESTATE_THEMES.find(t => t.id === config.themeId) || ESTATE_THEMES[0]
   const currentLayout = LAYOUT_PRESETS.find(l => l.id === config.layoutId) || LAYOUT_PRESETS[0]
@@ -626,9 +630,10 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
         {config.backgroundType === 'solid' && <div className="flex flex-col gap-3">
           <p className="text-xs font-bold" style={{ color: currentTheme.textSecondary }}>Choose background color:</p>
           <div className="flex items-center gap-3">
-            <input type="color" value={bgColorPicker} onChange={(e) => { setBgColorPicker(e.target.value); setConfig({ ...config, background: e.target.value }) }} className="w-16 h-12 rounded-lg cursor-pointer border-2" style={{ borderColor: currentTheme.border }} />
-            <div className="flex-1 h-12 rounded-lg" style={{ backgroundColor: bgColorPicker }} />
+            <input type="color" value={pendingBgColor} onChange={(e) => setPendingBgColor(e.target.value)} className="w-16 h-12 rounded-lg cursor-pointer border-2" style={{ borderColor: currentTheme.border }} />
+            <div className="flex-1 h-12 rounded-lg" style={{ backgroundColor: pendingBgColor }} />
           </div>
+          <button onClick={() => setConfig({ ...config, solidBgColor: pendingBgColor })} className="w-full py-3 rounded-xl font-bold text-white active:scale-[0.98]" style={{ backgroundColor: currentTheme.primary }}>Apply Background Color</button>
           <div className="grid grid-cols-6 gap-2">
             {['#ffffff', '#f0f0f0', '#1a1a1a', '#000000', currentTheme.primary, currentTheme.secondary].map(c => (
               <button key={c} onClick={() => { setBgColorPicker(c); setConfig({ ...config, background: c }) }} className="h-10 rounded-lg border-2 active:scale-90 transition-transform" style={{ backgroundColor: c, borderColor: bgColorPicker === c ? currentTheme.primary : currentTheme.border }} />
@@ -638,12 +643,13 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
         
         {/* Gradient controls */}
         {config.backgroundType === 'gradient' && <div className="flex flex-col gap-3">
-          <div><p className="text-xs font-bold mb-2" style={{ color: currentTheme.textSecondary }}>Angle: {config.gradientAngle}°</p><input type="range" min="0" max="360" value={config.gradientAngle} onChange={(e) => setConfig({ ...config, gradientAngle: parseInt(e.target.value) })} className="w-full" /></div>
+          <div><p className="text-xs font-bold mb-2" style={{ color: currentTheme.textSecondary }}>Angle: {config.gradientAngle}°</p><input type="range" min="0" max="360" value={pendingGradientAngle} onChange={(e) => setPendingGradientAngle(parseInt(e.target.value))} className="w-full" /></div>
           <div className="flex gap-3">
-            <div className="flex-1"><p className="text-xs font-bold mb-1" style={{ color: currentTheme.textSecondary }}>Color 1</p><input type="color" value={config.gradientColors[0]} onChange={(e) => setConfig({ ...config, gradientColors: [e.target.value, config.gradientColors[1]] })} className="w-full h-10 rounded-lg cursor-pointer" /></div>
-            <div className="flex-1"><p className="text-xs font-bold mb-1" style={{ color: currentTheme.textSecondary }}>Color 2</p><input type="color" value={config.gradientColors[1]} onChange={(e) => setConfig({ ...config, gradientColors: [config.gradientColors[0], e.target.value] })} className="w-full h-10 rounded-lg cursor-pointer" /></div>
+            <div className="flex-1"><p className="text-xs font-bold mb-1" style={{ color: currentTheme.textSecondary }}>Color 1</p><input type="color" value={config.gradientColors[0]} onChange={(e) => setPendingGradientColors([e.target.value, pendingGradientColors[1]])} className="w-full h-10 rounded-lg cursor-pointer" /></div>
+            <div className="flex-1"><p className="text-xs font-bold mb-1" style={{ color: currentTheme.textSecondary }}>Color 2</p><input type="color" value={config.gradientColors[1]} onChange={(e) => setPendingGradientColors([pendingGradientColors[0], e.target.value])} className="w-full h-10 rounded-lg cursor-pointer" /></div>
           </div>
-          <div className="h-20 rounded-xl" style={{ background: `linear-gradient(${config.gradientAngle}deg, ${config.gradientColors[0]}, ${config.gradientColors[1]})` }} />
+          <div className="h-20 rounded-xl" style={{ background: `linear-gradient(${pendingGradientAngle}deg, ${pendingGradientColors[0]}, ${pendingGradientColors[1]})` }} />
+          <button onClick={() => setConfig({ ...config, gradientAngle: pendingGradientAngle, gradientColors: pendingGradientColors })} className="w-full py-3 rounded-xl font-bold text-white active:scale-[0.98]" style={{ backgroundColor: currentTheme.primary }}>Apply Gradient</button>
         </div>}
         
         {/* Image upload from gallery */}
@@ -653,12 +659,13 @@ function ThemeCustomizerScreen({ go, config, setConfig }: { go: (s: Screen) => v
             <Icon icon="mdi:image-plus" width="48" height="48" style={{ color: currentTheme.primary }} />
             <p className="font-bold text-sm mt-2" style={{ color: currentTheme.textPrimary }}>Add Image</p>
             <p className="text-xs" style={{ color: currentTheme.textSecondary }}>Tap to choose from gallery</p>
-            <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+            <input type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) { const reader = new FileReader(); reader.onloadend = () => setPendingImage(reader.result as string); reader.readAsDataURL(file) }}} className="hidden" />
           </label>
-          {config.bgImageUrl && <div className="relative">
-            <div className="h-40 rounded-xl bg-cover bg-center" style={{ backgroundImage: `url(${config.bgImageUrl})` }} />
-            <button onClick={() => setConfig({ ...config, bgImageUrl: '' })} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center font-bold">×</button>
+          {pendingImage && <div className="relative">
+            <div className="h-40 rounded-xl bg-cover bg-center" style={{ backgroundImage: `url(${pendingImage})` }} />
+            <button onClick={() => setPendingImage('')} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center font-bold">×</button>
           </div>}
+          {pendingImage && <button onClick={() => setConfig({ ...config, bgImageUrl: pendingImage })} className="w-full py-3 rounded-xl font-bold text-white active:scale-[0.98]" style={{ backgroundColor: currentTheme.primary }}>Apply Image</button>}
           <div><p className="text-xs font-bold mb-2" style={{ color: currentTheme.textSecondary }}>Image Opacity: {Math.round(config.backgroundOpacity * 100)}%</p><input type="range" min="10" max="100" value={config.backgroundOpacity * 100} onChange={(e) => setConfig({ ...config, backgroundOpacity: parseInt(e.target.value) / 100 })} className="w-full" /></div>
         </div>}
         
@@ -1627,8 +1634,9 @@ export default function App() {
   const getBgStyle = () => {
     if (config.backgroundType === 'gradient') return { background: 'linear-gradient(' + config.gradientAngle + 'deg, ' + config.gradientColors[0] + ', ' + config.gradientColors[1] + ')' }
     if (config.backgroundType === 'image' && config.bgImageUrl) return { backgroundImage: 'url(' + config.bgImageUrl + ')', backgroundSize: 'cover', backgroundPosition: 'center' }
-    if (config.backgroundType === 'solid') return { backgroundColor: config.color }
-    return { backgroundColor: '#f5f5f5' }
+    if (config.backgroundType === 'solid' && config.solidBgColor) return { backgroundColor: config.solidBgColor }
+    if (config.backgroundType === 'pattern') return { backgroundColor: config.color + '06', backgroundImage: 'radial-gradient(circle, ' + config.color + '22 1px, transparent 1px)', backgroundSize: '20px 20px' }
+    return { backgroundColor: '#f8f9fa' }
   }
 
   return (
