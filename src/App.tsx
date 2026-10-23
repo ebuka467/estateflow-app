@@ -1062,18 +1062,33 @@ function TenantPayScreen({ go, config, invoices, setInvoices, setNotifications, 
   const [processing, setProcessing] = useState(false); const [paid, setPaid] = useState(false)
   const pending = invoices.find(i => i.status === 'pending')
   const breakdown = calculatePaymentBreakdown(config.monthlyDues)
-  const handlePay = () => {
-    // SECURITY: Real payment requires Paystack integration (backend Edge Function)
-    // This simulates the payment REQUEST being created (not verified)
-    // In production: call Edge Function → initialize Paystack → redirect to checkout
-    // Webhook will verify and mark as successful server-side
+  const handlePay = async () => {
     setProcessing(true)
-    setTimeout(() => {
+    setTimeout(async () => {
       setProcessing(false); setPaid(true)
       if (pending) {
-        // Mark as PENDING (not verified) — manager or webhook must verify
-        setInvoices(invoices.map(inv => inv.id === pending.id ? { ...inv, status: 'pending' as const, paymentReference: 'EF-PEND-' + Math.floor(10000000 + Math.random() * 90000000) } : inv))
-        setNotifications([{ id: 'n' + Date.now(), title: 'Payment Submitted', message: 'Your payment of ₦' + pending.totalAmount.toLocaleString() + ' is being processed. Awaiting verification.', date: new Date().toLocaleDateString(), type: 'payment', read: false }, ...notifications])
+        const ref = 'EF-PEND-' + Math.floor(10000000 + Math.random() * 90000000)
+        const updatedInv = { ...pending, status: 'pending' as const, paymentReference: ref }
+        setInvoices(invoices.map(inv => inv.id === pending.id ? updatedInv : inv))
+        setNotifications([{ id: 'n' + Date.now(), title: 'Payment Submitted', message: 'Your payment of ₦' + pending.totalAmount.toLocaleString() + ' is being processed.', date: new Date().toLocaleDateString(), type: 'payment', read: false }, ...notifications])
+        // SAVE TO SUPABASE so manager can see it
+        try {
+          await supabase.from('invoices').upsert([{
+            id: pending.id,
+            estate_id: localStorage.getItem('ef_estate_id') || '',
+            tenant_id: (await supabase.auth.getUser()).data.user?.id || null,
+            tenant_name: tenant?.name || 'Tenant',
+            house_number: tenant?.houseNumber || 'Unknown',
+            base_amount: pending.baseAmount,
+            service_fee: pending.serviceFee,
+            total_amount: pending.totalAmount,
+            status: 'pending',
+            payment_reference: ref,
+            date: new Date().toLocaleDateString(),
+            currency: 'NGN'
+          }], { onConflict: 'id' })
+          console.log('✅ Invoice saved to Supabase')
+        } catch (e) { console.log('❌ Invoice save failed:', e) }
       }
     }, 2500)
   }
@@ -1312,14 +1327,30 @@ function TenantsScreen({ go, config, tenantLogins, invoices }: { go: (s: Screen)
   const gridGap = currentLayout.cardDensity === 'compact' ? 'gap-2' : currentLayout.cardDensity === 'spacious' ? 'gap-4' : 'gap-3'
 
   useEffect(() => {
-    const loadTenants = async () => {
+    const loadData = async () => {
+      const estateId = localStorage.getItem('ef_estate_id') || ''
+      // Load tenants
       try {
-        const { data } = await supabase.from('tenants').select('*').eq('estate_id', localStorage.getItem('ef_estate_id') || '')
-        if (data) setDbTenants(data as any)
+        const { data: tData } = await supabase.from('tenants').select('*').eq('estate_id', estateId)
+        if (tData) setDbTenants(tData as any)
+      } catch {}
+      // Load announcements for tenant home
+      try {
+        const { data: aData } = await supabase.from('announcements').select('*').eq('estate_id', estateId).order('created_at', { ascending: false }).limit(20)
+        if (aData) {
+          const annNotifs: Notification[] = aData.map((a: any) => ({
+            id: a.id, title: a.title, message: a.body, date: a.created_at?.split('T')[0] || new Date().toLocaleDateString(),
+            type: 'announcement' as const, read: false
+          }))
+          setNotifications(prev => {
+            const existing = new Set(prev.map(n => n.id))
+            return [...annNotifs.filter(n => !existing.has(n.id)), ...prev]
+          })
+        }
       } catch {}
       setLoading(false)
     }
-    loadTenants()
+    loadData()
   }, [])
 
   // Merge local and DB tenants
@@ -1540,6 +1571,7 @@ export default function App() {
     { id: 'n2', title: 'Monthly Meeting', message: 'Residents meeting Sunday 20 July at community hall.', date: 'Jul 12, 2026', type: 'announcement', read: false },
   ])
   const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [invoicesLoaded, setInvoicesLoaded] = useState(false)
   const [complaints, setComplaints] = useState<Complaint[]>([])
   const [alerts, setAlerts] = useState<EmergencyAlert[]>([])
   const [guestCodes, setGuestCodes] = useState<GuestCode[]>([])
@@ -1634,6 +1666,65 @@ export default function App() {
       if (event === 'SIGNED_OUT') { localStorage.removeItem('ef_role'); localStorage.removeItem('ef_estate_id'); setActiveRole(''); setUserEmail('') }
       setAuthChecked(true)
     })
+
+  // Load invoices from Supabase when authenticated
+  useEffect(() => {
+    if (!authChecked || !userEmail) return
+    const loadInvoices = async () => {
+      try {
+        const estateId = localStorage.getItem('ef_estate_id')
+        if (estateId) {
+          const { data } = await supabase.from('invoices').select('*').eq('estate_id', estateId).order('created_at', { ascending: false })
+          if (data && data.length > 0) {
+            const mapped: Invoice[] = data.map((d: any) => ({
+              id: d.id,
+              tenantName: d.tenant_name || 'Tenant',
+              houseNumber: d.house_number || 'Unknown',
+              baseAmount: d.base_amount || 0,
+              serviceFee: d.service_fee || 0,
+              totalAmount: d.total_amount || 0,
+              estateSettlement: d.estate_settlement || d.base_amount || 0,
+              estateflowShare: d.estateflow_share || d.service_fee || 0,
+              date: d.date || new Date().toLocaleDateString(),
+              status: d.status || 'pending',
+              verifiedBy: d.verified_by,
+              verifiedDate: d.verified_date,
+              paymentReference: d.payment_reference,
+              currency: d.currency || 'NGN'
+            }))
+            setInvoices(mapped)
+          }
+        }
+      } catch (e) { console.log('Invoice load failed:', e) }
+      setInvoicesLoaded(true)
+    }
+    loadInvoices()
+
+    // Load complaints from Supabase
+    const loadComplaints = async () => {
+      try {
+        const estateId = localStorage.getItem('ef_estate_id')
+        if (estateId) {
+          const { data } = await supabase.from('complaints').select('*').eq('estate_id', estateId).order('created_at', { ascending: false })
+          if (data && data.length > 0) {
+            const mapped: Complaint[] = data.map((d: any) => ({
+              id: d.id,
+              tenantName: d.tenant_name || 'Tenant',
+              houseNumber: d.house_number || 'Unknown',
+              category: d.category || 'Other',
+              description: d.description || '',
+              date: d.created_at?.split('T')[0] || new Date().toLocaleDateString(),
+              status: d.status || 'open',
+              priority: d.priority || 'medium'
+            }))
+            setComplaints(mapped)
+            console.log('✅ Loaded', mapped.length, 'complaints from Supabase')
+          }
+        }
+      } catch (e) { console.log('Complaint load failed:', e) }
+    }
+    loadComplaints()
+  }, [authChecked, userEmail])
     return () => subscription.unsubscribe()
   }, [])
 
