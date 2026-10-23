@@ -1056,39 +1056,24 @@ function TenantBillsScreen({ go, config, tenant, invoices, setInvoices, setNotif
   </div>
 }
 
-function TenantPayScreen({ go, config, tenant, invoices, setInvoices, setNotifications, notifications }: {
-  go: (s: Screen) => void; config: EstateConfig; tenant: TenantInfo | null; invoices: Invoice[]; setInvoices: (i: Invoice[]) => void; setNotifications: (n: Notification[]) => void; notifications: Notification[]
+function TenantPayScreen({ go, config, invoices, setInvoices, setNotifications, notifications }: {
+  go: (s: Screen) => void; config: EstateConfig; invoices: Invoice[]; setInvoices: (i: Invoice[]) => void; setNotifications: (n: Notification[]) => void; notifications: Notification[]
 }) {
   const [processing, setProcessing] = useState(false); const [paid, setPaid] = useState(false)
   const pending = invoices.find(i => i.status === 'pending')
   const breakdown = calculatePaymentBreakdown(config.monthlyDues)
-  const handlePay = async () => {
+  const handlePay = () => {
+    // SECURITY: Real payment requires Paystack integration (backend Edge Function)
+    // This simulates the payment REQUEST being created (not verified)
+    // In production: call Edge Function → initialize Paystack → redirect to checkout
+    // Webhook will verify and mark as successful server-side
     setProcessing(true)
-    setTimeout(async () => {
+    setTimeout(() => {
       setProcessing(false); setPaid(true)
       if (pending) {
-        const ref = 'EF-PEND-' + Math.floor(10000000 + Math.random() * 90000000)
-        const updatedInv = { ...pending, status: 'pending' as const, paymentReference: ref }
-        setInvoices(invoices.map(inv => inv.id === pending.id ? updatedInv : inv))
-        setNotifications([{ id: 'n' + Date.now(), title: 'Payment Submitted', message: 'Your payment of ₦' + pending.totalAmount.toLocaleString() + ' is being processed.', date: new Date().toLocaleDateString(), type: 'payment', read: false }, ...notifications])
-        // SAVE TO SUPABASE so manager can see it
-        try {
-          await supabase.from('invoices').upsert([{
-            id: pending.id,
-            estate_id: localStorage.getItem('ef_estate_id') || '',
-            tenant_id: (await supabase.auth.getUser()).data.user?.id || null,
-            tenant_name: tenant?.name || 'Tenant',
-            house_number: tenant?.houseNumber || 'Unknown',
-            base_amount: pending.baseAmount,
-            service_fee: pending.serviceFee,
-            total_amount: pending.totalAmount,
-            status: 'pending',
-            payment_reference: ref,
-            date: new Date().toLocaleDateString(),
-            currency: 'NGN'
-          }], { onConflict: 'id' })
-          console.log('✅ Invoice saved to Supabase')
-        } catch (e) { console.log('❌ Invoice save failed:', e) }
+        // Mark as PENDING (not verified) — manager or webhook must verify
+        setInvoices(invoices.map(inv => inv.id === pending.id ? { ...inv, status: 'pending' as const, paymentReference: 'EF-PEND-' + Math.floor(10000000 + Math.random() * 90000000) } : inv))
+        setNotifications([{ id: 'n' + Date.now(), title: 'Payment Submitted', message: 'Your payment of ₦' + pending.totalAmount.toLocaleString() + ' is being processed. Awaiting verification.', date: new Date().toLocaleDateString(), type: 'payment', read: false }, ...notifications])
       }
     }, 2500)
   }
@@ -1315,7 +1300,7 @@ function ServiceWorkerScreen({ go, config, complaints }: { go: (s: Screen) => vo
 // TENANTS SCREEN (Manager view of estate tenants)
 // ============================================
 function TenantsScreen({ go, config, tenantLogins, invoices }: { go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[]; invoices: Invoice[] }) {
-  const [dbTenants, setDbTenants] = useState<{ name: string; house_number: string; joined_date?: string; created_at?: string }[]>([])
+  const [dbTenants, setDbTenants] = useState<{ name: string; house_number: string; joinedDate?: string }[]>([])
   const [loading, setLoading] = useState(true)
   const isGB = config.isGoldBlackTheme
   const currentLayout = LAYOUT_PRESETS.find(l => l.id === config.layoutId) || LAYOUT_PRESETS[0]
@@ -1338,7 +1323,7 @@ function TenantsScreen({ go, config, tenantLogins, invoices }: { go: (s: Screen)
   }, [])
 
   // Merge local and DB tenants
-  const allTenants = [...dbTenants.map((t) => ({ name: t.name || 'Tenant', house: t.house_number || 'Unknown', date: t.joined_date || t.created_at?.split('T')[0] || 'Unknown' })), ...tenantLogins]
+  const allTenants = [...dbTenants.map((t: any) => ({ name: t.name || t.tenant_name, house: t.house_number || t.house, date: t.joined_date || t.created_at?.split('T')[0] || 'Unknown' })), ...tenantLogins]
   // Remove duplicates by house number
   const uniqueTenants = allTenants.filter((t, i, arr) => arr.findIndex(x => x.house === t.house) === i)
 
@@ -1377,8 +1362,8 @@ function TenantsScreen({ go, config, tenantLogins, invoices }: { go: (s: Screen)
 // ============================================
 // SEARCH TENANT SCREEN (Patch §5, §9)
 // ============================================
-function SearchTenantScreen({ go, config, tenantLogins, invoices, setNotifications }: {
-  go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[]; invoices: Invoice[]; setNotifications: (n: Notification[]) => void
+function SearchTenantScreen({ go, config, tenantLogins, invoices }: {
+  go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[]; invoices: Invoice[]
 }) {
   const [query, setQuery] = useState('')
   const [dbTenants, setDbTenants] = useState<{ name: string; house_number: string }[]>([])
@@ -1555,7 +1540,6 @@ export default function App() {
     { id: 'n2', title: 'Monthly Meeting', message: 'Residents meeting Sunday 20 July at community hall.', date: 'Jul 12, 2026', type: 'announcement', read: false },
   ])
   const [invoices, setInvoices] = useState<Invoice[]>([])
-  const [invoicesLoaded, setInvoicesLoaded] = useState(false)
   const [complaints, setComplaints] = useState<Complaint[]>([])
   const [alerts, setAlerts] = useState<EmergencyAlert[]>([])
   const [guestCodes, setGuestCodes] = useState<GuestCode[]>([])
@@ -1650,66 +1634,6 @@ export default function App() {
       if (event === 'SIGNED_OUT') { localStorage.removeItem('ef_role'); localStorage.removeItem('ef_estate_id'); setActiveRole(''); setUserEmail('') }
       setAuthChecked(true)
     })
-
-  // Load invoices from Supabase when authenticated
-  useEffect(() => {
-    if (!authChecked || !userEmail) return
-    const loadInvoices = async () => {
-      try {
-        const estateId = localStorage.getItem('ef_estate_id')
-        if (estateId) {
-          const { data } = await supabase.from('invoices').select('*').eq('estate_id', estateId).order('created_at', { ascending: false })
-          if (data && data.length > 0) {
-            const mapped: Invoice[] = data.map((d: any) => ({
-              id: d.id,
-              tenantName: d.tenant_name || 'Tenant',
-              houseNumber: d.house_number || 'Unknown',
-              baseAmount: d.base_amount || 0,
-              serviceFee: d.service_fee || 0,
-              processingFee: 0,
-              totalAmount: d.total_amount || 0,
-              estateSettlement: d.estate_settlement || d.base_amount || 0,
-              estateflowShare: d.estateflow_share || d.service_fee || 0,
-              date: d.date || new Date().toLocaleDateString(),
-              status: d.status || 'pending',
-              verifiedBy: d.verified_by,
-              verifiedDate: d.verified_date,
-              paymentReference: d.payment_reference,
-              currency: d.currency || 'NGN'
-            }))
-            setInvoices(mapped)
-          }
-        }
-      } catch (e) { console.log('Invoice load failed:', e) }
-      setInvoicesLoaded(true)
-    }
-    loadInvoices()
-
-    // Load complaints from Supabase
-    const loadComplaints = async () => {
-      try {
-        const estateId = localStorage.getItem('ef_estate_id')
-        if (estateId) {
-          const { data } = await supabase.from('complaints').select('*').eq('estate_id', estateId).order('created_at', { ascending: false })
-          if (data && data.length > 0) {
-            const mapped: Complaint[] = data.map((d: any) => ({
-              id: d.id,
-              tenantName: d.tenant_name || 'Tenant',
-              houseNumber: d.house_number || 'Unknown',
-              category: d.category || 'Other',
-              description: d.description || '',
-              date: d.created_at?.split('T')[0] || new Date().toLocaleDateString(),
-              status: d.status || 'open',
-              priority: d.priority || 'medium'
-            }))
-            setComplaints(mapped)
-            console.log('✅ Loaded', mapped.length, 'complaints from Supabase')
-          }
-        }
-      } catch (e) { console.log('Complaint load failed:', e) }
-    }
-    loadComplaints()
-  }, [authChecked, userEmail])
     return () => subscription.unsubscribe()
   }, [])
 
@@ -1765,7 +1689,7 @@ export default function App() {
     'manager-signup': <ManagerSignUpScreen go={go} config={config} />,
     'manager-login': <ManagerLoginScreen go={go} config={config} />,
     'manager-home': <ManagerHomeScreen go={go} config={config} menuOpen={menuOpen} setMenuOpen={setMenuOpen} notifications={notifications} invoices={invoices} complaints={complaints} alerts={alerts} clearSession={clearSession} tenantLogins={tenantLogins} />,
-    'search-tenant': <SearchTenantScreen go={go} config={config} tenantLogins={tenantLogins} invoices={invoices} setNotifications={setNotifications} />,
+    'search-tenant': <SearchTenantScreen go={go} config={config} tenantLogins={tenantLogins} invoices={invoices} />,
     'qr-share': <QRShareScreen go={go} config={config} />,
     'theme-customizer': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} userEmail={userEmail} />,
     'estate-profile': <EstateProfileScreen go={go} config={config} setConfig={setConfig} userEmail={userEmail} />,
@@ -1778,7 +1702,7 @@ export default function App() {
     'tenant-onboarding': <TenantOnboardingScreen go={go} config={config} setTenant={(t) => { setTenant(t); setRole('tenant') }} />,
     'tenant-home': <TenantHomeScreen go={go} config={config} tenant={tenant} notifications={notifications} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />,
     'tenant-bills': <TenantBillsScreen go={go} config={config} tenant={tenant} invoices={invoices} setInvoices={setInvoices} setNotifications={setNotifications} notifications={notifications} />,
-    'tenant-pay': <TenantPayScreen go={go} config={config} tenant={tenant} invoices={invoices} setInvoices={setInvoices} setNotifications={setNotifications} notifications={notifications} />,
+    'tenant-pay': <TenantPayScreen go={go} config={config} invoices={invoices} setInvoices={setInvoices} setNotifications={setNotifications} notifications={notifications} />,
     'tenant-receipts': <TenantReceiptsScreen go={go} config={config} invoices={invoices} tenant={tenant} />,
     'tenant-complaints': <TenantComplaintsScreen go={go} config={config} tenant={tenant} complaints={complaints} setComplaints={setComplaints} setNotifications={setNotifications} notifications={notifications} />,
     'tenant-profile': <TenantProfileScreen go={go} config={config} tenant={tenant} setTenant={setTenant} />,
