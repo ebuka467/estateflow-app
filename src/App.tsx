@@ -1246,7 +1246,21 @@ function ServiceCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void;
       if (error || !data || data.length === 0) { setError('Invalid code.'); setLoading(false); return }
       const estate = data[0]
       setConfig({ ...config, estateName: estate.estate_name, joinCode: code.trim().toUpperCase(), monthlyDues: estate.monthly_dues || 15000 })
-      localStorage.setItem('ef_estate_data', JSON.stringify({ estateName: estate.estate_name, joinCode: code.trim().toUpperCase(), monthlyDues: estate.monthly_dues || 15000 }))
+      localStorage.setItem('ef_estate_data', JSON.stringify({
+        estateName: estate.estate_name,
+        joinCode: code.trim().toUpperCase(),
+        monthlyDues: estate.monthly_dues || 15000,
+        color: estate.primary_color || '#1B873F',
+        fontFamily: estate.font_family || "'Plus Jakarta Sans', sans-serif",
+        themeId: estate.theme_id || 'modern-green',
+        layoutId: estate.layout_id || 'modern',
+        backgroundType: estate.background_type || 'solid',
+        gradientAngle: estate.gradient_angle || 135,
+        gradientColors: [estate.gradient_color1 || '#1B873F', estate.gradient_color2 || '#065f46'],
+        bgImageUrl: estate.bg_image_url || '',
+        enable3D: estate.enable_3d !== false,
+        solidBgColor: estate.solid_bg_color || ''
+      }))
       go('service-role')
     } catch { setError('Network error.') }
     setLoading(false)
@@ -1539,7 +1553,25 @@ export default function App() {
         supabase.from('estates').select('*').eq('manager_email', session.user.email).limit(1).then(({ data }) => {
           if (data && data.length > 0) {
             const e = data[0]
-            const dbData = { estateName: e.name, joinCode: e.join_code, monthlyDues: e.monthly_dues || 15000, estateAccountNumber: e.estate_account_number || '', estateAccountName: e.estate_account_name || '', estateBank: e.estate_bank || '' }
+            const dbData = { 
+              estateName: e.name, 
+              joinCode: e.join_code, 
+              monthlyDues: e.monthly_dues || 15000, 
+              estateAccountNumber: e.estate_account_number || '', 
+              estateAccountName: e.estate_account_name || '', 
+              estateBank: e.estate_bank || '',
+              // Customization fields
+              color: e.primary_color || '#1B873F',
+              fontFamily: e.font_family || "'Plus Jakarta Sans', sans-serif",
+              themeId: e.theme_id || 'modern-green',
+              layoutId: e.layout_id || 'modern',
+              backgroundType: e.background_type || 'solid',
+              gradientAngle: e.gradient_angle || 135,
+              gradientColors: [e.gradient_color1 || '#1B873F', e.gradient_color2 || '#065f46'],
+              bgImageUrl: e.bg_image_url || '',
+              enable3D: e.enable_3d !== false,
+              solidBgColor: e.solid_bg_color || ''
+            }
             setConfig(prev => ({ ...prev, ...dbData }))
             localStorage.setItem('ef_estate_data', JSON.stringify(dbData))
           }
@@ -1564,7 +1596,25 @@ export default function App() {
           const { data: estates } = await supabase.from('estates').select('*').eq('manager_email', session.user.email).limit(1)
           if (estates && estates.length > 0) {
             const e = estates[0]
-            const dbData = { estateName: e.name, joinCode: e.join_code, monthlyDues: e.monthly_dues || 15000, estateAccountNumber: e.estate_account_number || '', estateAccountName: e.estate_account_name || '', estateBank: e.estate_bank || '' }
+            const dbData = { 
+              estateName: e.name, 
+              joinCode: e.join_code, 
+              monthlyDues: e.monthly_dues || 15000, 
+              estateAccountNumber: e.estate_account_number || '', 
+              estateAccountName: e.estate_account_name || '', 
+              estateBank: e.estate_bank || '',
+              // Customization fields
+              color: e.primary_color || '#1B873F',
+              fontFamily: e.font_family || "'Plus Jakarta Sans', sans-serif",
+              themeId: e.theme_id || 'modern-green',
+              layoutId: e.layout_id || 'modern',
+              backgroundType: e.background_type || 'solid',
+              gradientAngle: e.gradient_angle || 135,
+              gradientColors: [e.gradient_color1 || '#1B873F', e.gradient_color2 || '#065f46'],
+              bgImageUrl: e.bg_image_url || '',
+              enable3D: e.enable_3d !== false,
+              solidBgColor: e.solid_bg_color || ''
+            }
             setConfig(prev => ({ ...prev, ...dbData }))
             localStorage.setItem('ef_estate_data', JSON.stringify(dbData))
             if (e.id) localStorage.setItem('ef_estate_id', e.id)
