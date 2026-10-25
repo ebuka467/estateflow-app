@@ -1158,6 +1158,20 @@ function TenantPayScreen({ go, config, invoices, setInvoices, setNotifications, 
   const [processing, setProcessing] = useState(false); const [paid, setPaid] = useState(false)
   const pending = invoices.find(i => i.status === 'pending')
   const breakdown = calculatePaymentBreakdown(config.monthlyDues)
+  
+  // Check if returning from Paystack payment
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const reference = urlParams.get('reference')
+    if (reference) {
+      // Payment completed - reload invoices to get updated status
+      setPaid(true)
+      // Clear URL params
+      window.history.replaceState({}, document.title, window.location.pathname)
+      // Reload invoices from Supabase after 2 seconds
+      setTimeout(() => window.location.reload(), 2000)
+    }
+  }, [])
   const handlePay = () => {
     // SECURITY: Real payment requires Paystack integration (backend Edge Function)
     // This simulates the payment REQUEST being created (not verified)
