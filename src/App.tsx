@@ -472,6 +472,43 @@ function InvoicesScreen({ go, config, invoices, setInvoices, setNotifications, n
   go: (s: Screen) => void; config: EstateConfig; invoices: Invoice[]; setInvoices: (i: Invoice[]) => void; setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>; notifications: Notification[]
 }) {
   const [filter, setFilter] = useState<'all' | 'pending' | 'verified'>('all')
+  const [loading, setLoading] = useState(true)
+
+  // Load invoices from Supabase
+  useEffect(() => {
+    const loadInvoices = async () => {
+      try {
+        const estateId = localStorage.getItem('ef_estate_id')
+        if (estateId) {
+          const { data, error } = await supabase.from('invoices').select('*').eq('estate_id', estateId).order('created_at', { ascending: false })
+          if (data && !error) {
+            const mapped: Invoice[] = data.map((d: any) => ({
+              id: d.id,
+              tenantName: d.tenant_name || 'Tenant',
+              houseNumber: d.house_number || 'Unknown',
+              baseAmount: d.base_amount || 0,
+              serviceFee: d.service_fee || 0,
+              processingFee: 0,
+              totalAmount: d.total_amount || 0,
+              estateSettlement: d.estate_settlement || d.base_amount || 0,
+              estateflowShare: d.estateflow_share || d.service_fee || 0,
+              date: d.date || new Date().toLocaleDateString(),
+              status: d.status || 'pending',
+              verifiedBy: d.verified_by,
+              verifiedDate: d.verified_date,
+              paymentReference: d.payment_reference,
+              currency: d.currency || 'NGN'
+            }))
+            setInvoices(mapped)
+          }
+        }
+      } catch (e) {
+        console.log('Invoice load failed:', e)
+      }
+      setLoading(false)
+    }
+    loadInvoices()
+  }, [])
   const verifyInvoice = (id: string) => {
     const updated = invoices.map(inv => inv.id === id ? { ...inv, status: 'verified' as const, verifiedBy: config.estateName, verifiedDate: new Date().toLocaleDateString() } : inv)
     setInvoices(updated)
@@ -486,7 +523,7 @@ function InvoicesScreen({ go, config, invoices, setInvoices, setNotifications, n
     <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Invoices</h2>{pendingCount > 0 && <span className="ml-auto text-xs font-bold text-white bg-red-500 px-2 py-1 rounded-full">{pendingCount} pending</span>}</div>
     <div className="flex-1 overflow-y-auto px-5 py-4 pb-8">
       <div className="flex bg-gray-200 rounded-xl p-1 gap-1 mb-4">{(['all', 'pending', 'verified'] as const).map((f) => (<button key={f} onClick={() => setFilter(f)} className="flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all" style={{ backgroundColor: filter === f ? 'white' : 'transparent', color: filter === f ? '#111' : '#6b7280' }}>{f}</button>))}</div>
-      {filtered.length === 0 ? <EmptyState icon="mdi:receipt" title="No invoices" message="Invoices will appear here when tenants make payments." /> :
+      {loading ? <div className="text-center py-16"><p className="text-gray-400">Loading invoices...</p></div> : filtered.length === 0 ? <EmptyState icon="mdi:receipt" title="No invoices" message="Invoices will appear here when tenants make payments." /> :
       filtered.map((inv) => <div key={inv.id} className="bg-white rounded-2xl p-4 shadow-sm mb-3">
         <div className="flex items-start justify-between mb-2"><div><p className="font-bold text-gray-900">{inv.tenantName}</p><p className="text-gray-400 text-xs">{inv.houseNumber} — {inv.date}</p></div><StatusBadge status={inv.status} /></div>
         <div className="border-t pt-2 mt-2">
