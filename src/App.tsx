@@ -440,7 +440,7 @@ function ManagementScreen({ go, config, invoices, complaints }: { go: (s: Screen
 // ============================================
 // ANNOUNCEMENT EDITOR
 // ============================================
-function AnnouncementEditorScreen({ go, config, setNotifications, notifications }: { go: (s: Screen) => void; config: EstateConfig; setNotifications: (n: Notification[]) => void; notifications: Notification[] }) {
+function AnnouncementEditorScreen({ go, config, setNotifications, notifications }: { go: (s: Screen) => void; config: EstateConfig; setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>; notifications: Notification[] }) {
   const [title, setTitle] = useState(''); const [body, setBody] = useState(''); const [sent, setSent] = useState(false)
   const handleSend = () => {
     if (!title.trim() || !body.trim()) return
@@ -469,7 +469,7 @@ function AnnouncementEditorScreen({ go, config, setNotifications, notifications 
 // INVOICES SCREEN (with proper payment breakdown)
 // ============================================
 function InvoicesScreen({ go, config, invoices, setInvoices, setNotifications, notifications }: {
-  go: (s: Screen) => void; config: EstateConfig; invoices: Invoice[]; setInvoices: (i: Invoice[]) => void; setNotifications: (n: Notification[]) => void; notifications: Notification[]
+  go: (s: Screen) => void; config: EstateConfig; invoices: Invoice[]; setInvoices: (i: Invoice[]) => void; setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>; notifications: Notification[]
 }) {
   const [filter, setFilter] = useState<'all' | 'pending' | 'verified'>('all')
   const verifyInvoice = (id: string) => {
@@ -967,9 +967,40 @@ function TenantOnboardingScreen({ go, config, setTenant }: { go: (s: Screen) => 
   </div>
 }
 
-function TenantHomeScreen({ go, config, tenant, notifications, menuOpen, setMenuOpen }: {
-  go: (s: Screen) => void; config: EstateConfig; tenant: TenantInfo | null; notifications: Notification[]; menuOpen: boolean; setMenuOpen: (v: boolean) => void
+function TenantHomeScreen({ go, config, tenant, notifications, setNotifications, menuOpen, setMenuOpen }: {
+  go: (s: Screen) => void; config: EstateConfig; tenant: TenantInfo | null; notifications: Notification[]; setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>; menuOpen: boolean; setMenuOpen: (v: boolean) => void
 }) {
+  // Load announcements from Supabase
+  useEffect(() => {
+    const loadAnnouncements = async () => {
+      try {
+        const estateId = localStorage.getItem('ef_estate_id')
+        if (estateId) {
+          const { data, error } = await supabase.from('announcements').select('*').eq('estate_id', estateId).order('created_at', { ascending: false }).limit(10)
+          if (data && !error) {
+            const annNotifs: Notification[] = data.map((a: any) => ({
+              id: a.id,
+              title: a.title || 'Announcement',
+              message: a.body || '',
+              date: a.created_at?.split('T')[0] || new Date().toLocaleDateString(),
+              type: 'announcement' as const,
+              read: false
+            }))
+            // Merge with existing, avoid duplicates
+            setNotifications((prev: Notification[]) => {
+              const existingIds = new Set(prev.map((n: Notification) => n.id))
+              const newOnes = annNotifs.filter(n => !existingIds.has(n.id))
+              return [...newOnes, ...prev]
+            })
+          }
+        }
+      } catch (e) {
+        console.log('Announcement load failed:', e)
+      }
+    }
+    loadAnnouncements()
+  }, [])
+
   const isGB = config.isGoldBlackTheme
   const bgColor = isGB ? '#000000' : (config.color + '18')
   const cardBg = isGB ? '#1a1a1a' : 'white'
@@ -1026,7 +1057,7 @@ function TenantHomeScreen({ go, config, tenant, notifications, menuOpen, setMenu
 }
 
 function TenantBillsScreen({ go, config, tenant, invoices, setInvoices, setNotifications, notifications }: {
-  go: (s: Screen) => void; config: EstateConfig; tenant: TenantInfo | null; invoices: Invoice[]; setInvoices: (i: Invoice[]) => void; setNotifications: (n: Notification[]) => void; notifications: Notification[]
+  go: (s: Screen) => void; config: EstateConfig; tenant: TenantInfo | null; invoices: Invoice[]; setInvoices: (i: Invoice[]) => void; setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>; notifications: Notification[]
 }) {
   const breakdown = calculatePaymentBreakdown(config.monthlyDues)
   const myInvoices = invoices.filter(i => i.houseNumber === tenant?.houseNumber)
@@ -1057,7 +1088,7 @@ function TenantBillsScreen({ go, config, tenant, invoices, setInvoices, setNotif
 }
 
 function TenantPayScreen({ go, config, invoices, setInvoices, setNotifications, notifications }: {
-  go: (s: Screen) => void; config: EstateConfig; invoices: Invoice[]; setInvoices: (i: Invoice[]) => void; setNotifications: (n: Notification[]) => void; notifications: Notification[]
+  go: (s: Screen) => void; config: EstateConfig; invoices: Invoice[]; setInvoices: (i: Invoice[]) => void; setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>; notifications: Notification[]
 }) {
   const [processing, setProcessing] = useState(false); const [paid, setPaid] = useState(false)
   const pending = invoices.find(i => i.status === 'pending')
@@ -1116,7 +1147,7 @@ function TenantReceiptsScreen({ go, config, invoices, tenant }: { go: (s: Screen
 }
 
 function TenantComplaintsScreen({ go, config, tenant, complaints, setComplaints, setNotifications, notifications }: {
-  go: (s: Screen) => void; config: EstateConfig; tenant: TenantInfo | null; complaints: Complaint[]; setComplaints: (c: Complaint[]) => void; setNotifications: (n: Notification[]) => void; notifications: Notification[]
+  go: (s: Screen) => void; config: EstateConfig; tenant: TenantInfo | null; complaints: Complaint[]; setComplaints: (c: Complaint[]) => void; setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>; notifications: Notification[]
 }) {
   const [selected, setSelected] = useState<string | null>(null); const [desc, setDesc] = useState(''); const [submitted, setSubmitted] = useState(false)
   const handleSubmit = () => {
@@ -1700,7 +1731,7 @@ export default function App() {
     'manager-settings': <ManagerSettingsScreen go={go} config={config} tenantLogins={tenantLogins} userEmail={userEmail} clearSession={clearSession} />,
     'tenant-code': <TenantCodeScreen go={go} config={config} setConfig={setConfig} />,
     'tenant-onboarding': <TenantOnboardingScreen go={go} config={config} setTenant={(t) => { setTenant(t); setRole('tenant') }} />,
-    'tenant-home': <TenantHomeScreen go={go} config={config} tenant={tenant} notifications={notifications} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />,
+    'tenant-home': <TenantHomeScreen go={go} config={config} tenant={tenant} notifications={notifications} setNotifications={setNotifications} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />,
     'tenant-bills': <TenantBillsScreen go={go} config={config} tenant={tenant} invoices={invoices} setInvoices={setInvoices} setNotifications={setNotifications} notifications={notifications} />,
     'tenant-pay': <TenantPayScreen go={go} config={config} invoices={invoices} setInvoices={setInvoices} setNotifications={setNotifications} notifications={notifications} />,
     'tenant-receipts': <TenantReceiptsScreen go={go} config={config} invoices={invoices} tenant={tenant} />,
@@ -1714,7 +1745,7 @@ export default function App() {
     'service-role': <ServiceRoleScreen go={go} />,
     'service-security': <ServiceSecurityScreen go={go} config={config} alerts={alerts} guestCodes={guestCodes} />,
     'service-worker': <ServiceWorkerScreen go={go} config={config} complaints={complaints} />,
-    'ai-chatbot': <TenantHomeScreen go={go} config={config} tenant={tenant} notifications={notifications} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />,
+    'ai-chatbot': <TenantHomeScreen go={go} config={config} tenant={tenant} notifications={notifications} setNotifications={setNotifications} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />,
     'font-picker': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} userEmail={userEmail} />,
     'logo-upload': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} userEmail={userEmail} />,
     'privacy-policy': <PrivacyPolicy go={go} config={config} />,
