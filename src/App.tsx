@@ -387,7 +387,7 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
 // ============================================
 // MANAGEMENT SCREEN
 // ============================================
-function ManagementScreen({ go, config, invoices, complaints }: { go: (s: Screen) => void; config: EstateConfig; invoices: Invoice[]; complaints: Complaint[] }) {
+function ManagementScreen({ go, config, invoices, complaints, setComplaints }: { go: (s: Screen) => void; config: EstateConfig; invoices: Invoice[]; complaints: Complaint[]; setComplaints: (c: Complaint[]) => void }) {
   const [activeTab, setActiveTab] = useState(0)
   const tabs = ['Collection', 'Maintenance', 'Overview']
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
@@ -399,6 +399,34 @@ function ManagementScreen({ go, config, invoices, complaints }: { go: (s: Screen
   const totalCollected = invoices.filter(i => i.status === 'verified').reduce((s, i) => s + i.baseAmount, 0)
   const totalFees = invoices.filter(i => i.status === 'verified').reduce((s, i) => s + i.serviceFee, 0)
   const totalOutstanding = invoices.filter(i => i.status === 'pending').reduce((s, i) => s + i.baseAmount, 0)
+
+  // Load complaints from Supabase
+  useEffect(() => {
+    const loadComplaints = async () => {
+      try {
+        const estateId = localStorage.getItem('ef_estate_id')
+        if (estateId) {
+          const { data, error } = await supabase.from('complaints').select('*').eq('estate_id', estateId).order('created_at', { ascending: false })
+          if (data && !error) {
+            const mapped: Complaint[] = data.map((d: any) => ({
+              id: d.id,
+              tenantName: d.tenant_name || 'Tenant',
+              houseNumber: d.house_number || 'Unknown',
+              category: d.category || 'Other',
+              description: d.description || '',
+              date: d.created_at?.split('T')[0] || new Date().toLocaleDateString(),
+              status: d.status || 'open',
+              priority: d.priority || 'medium'
+            }))
+            setComplaints(mapped)
+          }
+        }
+      } catch (e) {
+        console.log('Complaint load failed:', e)
+      }
+    }
+    loadComplaints()
+  }, [])
 
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
     <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Management</h2></div>
@@ -1762,7 +1790,7 @@ export default function App() {
     'theme-customizer': <ThemeCustomizerScreen go={go} config={config} setConfig={setConfig} userEmail={userEmail} />,
     'estate-profile': <EstateProfileScreen go={go} config={config} setConfig={setConfig} userEmail={userEmail} />,
     'payment-setup': <PaymentSetupScreen go={go} config={config} setConfig={setConfig} />,
-    management: <ManagementScreen go={go} config={config} invoices={invoices} complaints={complaints} />,
+    management: <ManagementScreen go={go} config={config} invoices={invoices} complaints={complaints} setComplaints={setComplaints} />,
     'announcement-editor': <AnnouncementEditorScreen go={go} config={config} setNotifications={setNotifications} notifications={notifications} />,
     invoices: <InvoicesScreen go={go} config={config} invoices={invoices} setInvoices={setInvoices} setNotifications={setNotifications} notifications={notifications} />,
     'manager-settings': <ManagerSettingsScreen go={go} config={config} tenantLogins={tenantLogins} userEmail={userEmail} clearSession={clearSession} />,
@@ -1790,7 +1818,7 @@ export default function App() {
     'payment-refund-policy': <PaymentRefundPolicy go={go} config={config} />,
     'emergency-disclaimer': <EmergencyDisclaimer go={go} config={config} />,
     tenants: <TenantsScreen go={go} config={config} tenantLogins={tenantLogins} invoices={invoices} />,
-    reports: <ManagementScreen go={go} config={config} invoices={invoices} complaints={complaints} />,
+    reports: <ManagementScreen go={go} config={config} invoices={invoices} complaints={complaints} setComplaints={setComplaints} />,
   }
 
   // Background ONLY applies to outer container, never affects text/fonts
