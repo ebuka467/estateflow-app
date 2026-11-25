@@ -300,7 +300,7 @@ export const ESTATE_THEMES: EstateTheme[] = [
 ]
 
 // ============================================
-// 10 LAYOUT PRESETS (Master §19)
+// 14 LAYOUT PRESETS (Master §19) — includes morphic, neumorphic, bold, glass
 // ============================================
 export const LAYOUT_PRESETS: LayoutPreset[] = [
   { id: 'modern', name: 'Modern', description: 'Large summary cards + clean sections', cardDensity: 'normal', showWelcomeHero: true, prioritizeFinance: false, prioritizeCommunity: false, prioritizeOperations: false, gridColumns: 2 },
@@ -313,6 +313,11 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
   { id: 'minimal', name: 'Minimal', description: 'Simple, low-distraction dashboard', cardDensity: 'compact', showWelcomeHero: false, prioritizeFinance: false, prioritizeCommunity: false, prioritizeOperations: false, gridColumns: 2 },
   { id: 'widget', name: 'Widget Grid', description: 'Dense information with widget cards', cardDensity: 'compact', showWelcomeHero: false, prioritizeFinance: true, prioritizeCommunity: false, prioritizeOperations: true, gridColumns: 3 },
   { id: 'magazine', name: 'Magazine', description: 'Card grid with featured content', cardDensity: 'spacious', showWelcomeHero: true, prioritizeFinance: false, prioritizeCommunity: true, prioritizeOperations: false, gridColumns: 2 },
+  // NEW: Morphic / Neumorphic / Bold / Ultra Glass
+  { id: 'morphic', name: 'Morphic', description: 'Soft glass + depth shadows, Apple-like', cardDensity: 'normal', showWelcomeHero: true, prioritizeFinance: false, prioritizeCommunity: false, prioritizeOperations: false, gridColumns: 2 },
+  { id: 'neumorphic', name: 'Neumorphic', description: 'Soft UI with pressed/raised elements', cardDensity: 'normal', showWelcomeHero: true, prioritizeFinance: false, prioritizeCommunity: false, prioritizeOperations: false, gridColumns: 2 },
+  { id: 'bold', name: 'Bold', description: 'Thick borders + drop shadows, brutalist', cardDensity: 'normal', showWelcomeHero: true, prioritizeFinance: true, prioritizeCommunity: false, prioritizeOperations: false, gridColumns: 2 },
+  { id: 'ultra-glass', name: 'Ultra Glass', description: 'Maximum blur + saturation, premium', cardDensity: 'normal', showWelcomeHero: true, prioritizeFinance: false, prioritizeCommunity: true, prioritizeOperations: false, gridColumns: 2 },
 ]
 
 // ============================================

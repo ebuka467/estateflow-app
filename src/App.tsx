@@ -542,6 +542,32 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
   const cardPadding = currentLayout.cardDensity === 'compact' ? 'p-2' : currentLayout.cardDensity === 'spacious' ? 'p-5' : 'p-3'
   const gridGap = currentLayout.cardDensity === 'compact' ? 'gap-2' : currentLayout.cardDensity === 'spacious' ? 'gap-4' : 'gap-3'
 
+  // Layout-specific card styles
+  const layoutId = currentLayout.id
+  const getCardClass = (idx: number) => {
+    const base = 'rounded-2xl p-3 text-center'
+    const stagger = `stagger-${Math.min(idx + 1, 6)}`
+    if (layoutId === 'morphic') return `${base} ${stagger} morphic-card`
+    if (layoutId === 'neumorphic') return `${base} ${stagger} neumorphic-btn`
+    if (layoutId === 'bold') return `${base} ${stagger} bold-card`
+    if (layoutId === 'ultra-glass') return `${base} ${stagger} glass-card-ultra`
+    return `${base} ${stagger} shadow-sm`
+  }
+  const getCardStyle2 = () => {
+    if (layoutId === 'morphic') return { backgroundColor: isGB ? 'rgba(30,30,30,0.8)' : 'rgba(255,255,255,0.7)', border: isGB ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(255,255,255,0.6)' }
+    if (layoutId === 'neumorphic') return { backgroundColor: '#f0f0f0', border: 'none' }
+    if (layoutId === 'bold') return { backgroundColor: cardBg, border: `3px solid ${config.color}`, boxShadow: `6px 6px 0px ${config.color}33` }
+    if (layoutId === 'ultra-glass') return { backgroundColor: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)' }
+    return { backgroundColor: cardBg, border: '1px solid ' + borderColor }
+  }
+  const getWelcomeStyle = () => {
+    if (layoutId === 'morphic') return { background: isGB ? 'linear-gradient(135deg, rgba(30,30,30,0.9), rgba(50,50,50,0.9))' : 'linear-gradient(135deg, ' + config.color + 'ee, ' + config.color + '99)', backdropFilter: 'blur(20px)', border: isGB ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(255,255,255,0.3)', boxShadow: '8px 8px 16px rgba(0,0,0,0.1), -8px -8px 16px rgba(255,255,255,0.05)' }
+    if (layoutId === 'neumorphic') return { background: '#f0f0f0', boxShadow: '8px 8px 16px rgba(0,0,0,0.08), -8px -8px 16px rgba(255,255,255,0.9)', border: 'none' }
+    if (layoutId === 'bold') return { background: 'linear-gradient(135deg, ' + config.color + ', ' + config.color + 'bb)', border: `3px solid ${config.color}`, boxShadow: `8px 8px 0px ${config.color}44` }
+    if (layoutId === 'ultra-glass') return { background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(30px) saturate(180%)', WebkitBackdropFilter: 'blur(30px) saturate(180%)', border: '1px solid rgba(255,255,255,0.3)', boxShadow: '0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.4)' }
+    return { background: isGB ? 'linear-gradient(135deg, #1a1a1a, #333)' : 'linear-gradient(135deg, ' + config.color + ', ' + config.color + 'bb)' }
+  }
+
   const verifiedInvoices = invoices.filter(i => i.status === 'verified')
   const pendingInvoices = invoices.filter(i => i.status === 'pending')
   const totalCollected = verifiedInvoices.reduce((sum, i) => sum + i.baseAmount, 0)
@@ -553,7 +579,7 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
   return <div className="flex flex-col h-full relative" style={{ backgroundColor: bgColor }}>
     <House3DOverlay config={config} />
     {/* Header */}
-    <div className="flex items-center justify-between px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b relative z-10" style={{ backgroundColor: isGB ? '#000000' : 'white', borderColor }}>
+    <div className="flex items-center justify-between px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b relative z-10 stagger-1" style={{ backgroundColor: isGB ? '#000000' : (layoutId === 'ultra-glass' ? 'rgba(255,255,255,0.1)' : 'white'), borderColor, backdropFilter: layoutId === 'ultra-glass' ? 'blur(20px)' : 'none' }}>
       <button onClick={() => setMenuOpen(true)} className="flex flex-col gap-[5px] p-1">
         {[0,1,2].map(i => <span key={i} className={'block w-6 h-[2.5px] rounded-full ' + (isGB ? 'bg-yellow-500' : 'bg-black')} />)}
       </button>
@@ -563,42 +589,42 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
     {/* Content */}
     <div className="flex-1 overflow-y-auto px-5 py-5 pb-32 relative z-10">
       {/* Welcome Card */}
-      <div className="rounded-2xl p-5 mb-5 text-white" style={{ background: isGB ? 'linear-gradient(135deg, #1a1a1a, #333)' : 'linear-gradient(135deg, ' + config.color + ', ' + config.color + 'bb)' }}>
+      <div className="rounded-2xl p-5 mb-5 text-white stagger-1" style={getWelcomeStyle()}>
         <p className="text-white/80 text-sm font-medium mb-0.5">Good morning</p>
         <h3 className="text-xl font-black mb-2">{config.estateName}</h3>
         <div className="grid grid-cols-2 gap-3 mt-3">
-          <div className="bg-white/15 rounded-xl p-3"><p className="text-white/70 text-xs">Collected</p><p className="font-black text-lg">₦{totalCollected.toLocaleString()}</p></div>
-          <div className="bg-white/15 rounded-xl p-3"><p className="text-white/70 text-xs">Outstanding</p><p className="font-black text-lg">₦{totalOutstanding.toLocaleString()}</p></div>
+          <div className={layoutId === 'ultra-glass' ? 'bg-white/15 rounded-xl p-3 backdrop-blur-sm' : 'bg-white/15 rounded-xl p-3'}><p className="text-white/70 text-xs">Collected</p><p className="font-black text-lg">₦{totalCollected.toLocaleString()}</p></div>
+          <div className={layoutId === 'ultra-glass' ? 'bg-white/15 rounded-xl p-3 backdrop-blur-sm' : 'bg-white/15 rounded-xl p-3'}><p className="text-white/70 text-xs">Outstanding</p><p className="font-black text-lg">₦{totalOutstanding.toLocaleString()}</p></div>
         </div>
         <p className="text-white/60 text-xs mt-3">EstateFlow Service Fee: ₦{totalFees.toLocaleString()}</p>
       </div>
       {/* Search Bar (Patch §7, §9) */}
-      <button onClick={() => go('search-tenant')} className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-3 shadow-sm mb-4 active:scale-[0.99] transition-transform" style={{ border: '1px solid ' + borderColor }}>
+      <button onClick={() => go('search-tenant')} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 mb-4 stagger-2" style={layoutId === 'morphic' ? { ...getCardStyle2(), padding: '12px 16px' } : layoutId === 'ultra-glass' ? { background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.3)', padding: '12px 16px' } : { backgroundColor: cardBg, border: '1px solid ' + borderColor, padding: '12px 16px' }}>
         <Icon icon="mdi:magnify" width="20" height="20" style={{ color: '#9ca3af' }} />
-        <span className="text-gray-400 text-sm font-medium">Search tenant by name or unit...</span>
+        <span className={layoutId === 'ultra-glass' ? 'text-white/70 text-sm font-medium' : 'text-gray-400 text-sm font-medium'}>Search tenant by name or unit...</span>
         <span className="ml-auto text-xs font-bold px-2 py-1 rounded-lg" style={{ backgroundColor: config.color + '15', color: config.color }}>QR</span>
       </button>
       {/* Stats Grid */}
-      <div className="grid grid-cols-3 gap-3 mb-5">
+      <div className={"grid grid-cols-3 " + gridGap + " mb-5"}>
         {[
           { label: 'Paid', value: verifiedInvoices.length.toString(), c: '#1B873F' },
           { label: 'Pending', value: pendingInvoices.length.toString(), c: '#f59e0b' },
           { label: 'Units', value: tenantLogins.length > 0 ? tenantLogins.length.toString() : '—', c: isGB ? '#d4af37' : '#2563eb' },
-        ].map((s) => (
-          <div key={s.label} className="rounded-2xl p-3 text-center shadow-sm" style={{ backgroundColor: cardBg, border: '1px solid ' + borderColor }}>
+        ].map((s, i) => (
+          <div key={s.label} className={getCardClass(i)} style={getCardStyle2()}>
             <p className="text-2xl font-black" style={{ color: s.c }}>{s.value}</p>
             <p className="text-xs font-medium mt-0.5" style={{ color: textS }}>{s.label}</p>
           </div>
         ))}
       </div>
       {/* Operational Overview */}
-      <div className="grid grid-cols-3 gap-3 mb-5">
+      <div className={"grid grid-cols-3 " + gridGap + " mb-5"}>
         {[
           { label: 'Maintenance', value: openMaintenance.toString(), c: '#f59e0b', icon: 'mdi:wrench' },
           { label: 'Complaints', value: complaints.filter(c => c.status === 'open').length.toString(), c: '#ef4444', icon: 'mdi:alert-circle' },
           { label: 'Alerts', value: activeAlerts.toString(), c: '#8b5cf6', icon: 'mdi:alarm-light' },
-        ].map((s) => (
-          <div key={s.label} className="rounded-2xl p-3 text-center shadow-sm" style={{ backgroundColor: cardBg, border: '1px solid ' + borderColor }}>
+        ].map((s, i) => (
+          <div key={s.label} className={getCardClass(i + 3)} style={getCardStyle2()}>
             <Icon icon={s.icon} width="18" height="18" style={{ color: s.c }} className="mx-auto mb-1" />
             <p className="text-lg font-black" style={{ color: s.c }}>{s.value}</p>
             <p className="text-xs font-medium mt-0.5" style={{ color: textS }}>{s.label}</p>
@@ -606,14 +632,14 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
         ))}
       </div>
 
-      <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: textS }}>Quick Actions</p>
+      <p className="text-xs font-bold uppercase tracking-wide mb-3 stagger-3" style={{ color: textS }}>Quick Actions</p>
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: 'Tenants', icon: 'mdi:account-group', s: 'tenants' as Screen },
           { label: 'Settings', icon: 'mdi:cog', s: 'manager-settings' as Screen },
           { label: 'Estate', icon: 'mdi:office-building', s: 'estate-profile' as Screen },
-        ].map((a) => (
-          <button key={a.label} onClick={() => go(a.s)} className="flex flex-col items-center gap-2 py-4 rounded-2xl shadow-sm active:scale-[0.98] transition-transform" style={{ backgroundColor: cardBg, border: '1px solid ' + borderColor }}>
+        ].map((a, i) => (
+          <button key={a.label} onClick={() => go(a.s)} className={`flex flex-col items-center gap-2 py-4 rounded-2xl stagger-${i + 4}`} style={getCardStyle2()}>
             <Icon icon={a.icon} width="26" height="26" style={{ color: textP }} /><span className="text-xs font-bold" style={{ color: textP }}>{a.label}</span>
           </button>
         ))}
