@@ -76,32 +76,32 @@ function RoleSelectScreen({ go }: { go: (s: Screen) => void }) {
           backgroundImage: `url(${LOGIN_BG})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'brightness(0.7)'
+          filter: 'brightness(0.65)'
         }} />
       </div>
       {/* Gradient overlay */}
       <div className="absolute inset-0" style={{
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.6) 100%)'
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.65) 100%)'
       }} />
 
       <div className="relative z-10 h-full flex flex-col" style={{ animation: 'fade-up 0.5s ease both' }}>
         {/* Top branding */}
         <div className="pt-[max(3.5rem,env(safe-area-inset-top))] px-8 pb-6">
           <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
-          <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
+          <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
         </div>
 
         {/* Center content */}
         <div className="px-6 flex-1 flex flex-col justify-center">
           <div className="rounded-3xl p-7" style={{
-            background: 'rgba(255,255,255,0.12)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
+            background: 'rgba(255,255,255,0.20)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.35)'
           }}>
             <h2 className="text-2xl font-black text-white mb-1">Welcome.</h2>
-            <p className="text-white/60 text-sm mb-6">Select your role to continue.</p>
+            <p className="text-white/70 text-sm mb-6">Select your role to continue.</p>
 
             <div className="flex flex-col gap-3">
               {[
@@ -110,7 +110,7 @@ function RoleSelectScreen({ go }: { go: (s: Screen) => void }) {
                 { label: 'Service Staff', icon: 'mdi:wrench', screen: 'service-code' as Screen, desc: 'Work in an estate' },
               ].map((btn) => (
                 <button key={btn.label} onClick={() => go(btn.screen)}
-                  className="w-full py-4 px-5 bg-white/95 rounded-xl font-bold text-gray-800 text-sm flex items-center gap-4 shadow-lg active:scale-[0.98] transition-all hover:shadow-xl text-left">
+                  className="w-full py-4 px-5 bg-white rounded-xl font-bold text-gray-800 text-sm flex items-center gap-4 shadow-lg active:scale-[0.98] transition-all hover:shadow-xl text-left">
                   <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #1B873F, #065f46)' }}>
                     <Icon icon={btn.icon} width="22" height="22" style={{ color: 'white' }} />
                   </div>
@@ -118,13 +118,13 @@ function RoleSelectScreen({ go }: { go: (s: Screen) => void }) {
                     <p className="font-bold text-gray-900">{btn.label}</p>
                     <p className="text-xs text-gray-500 font-medium">{btn.desc}</p>
                   </div>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+                  <Icon icon="mdi:chevron-right" width="22" height="22" style={{ color: '#9ca3af' }} />
                 </button>
               ))}
             </div>
           </div>
 
-          <p className="text-center text-white/40 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
+          <p className="text-center text-white/50 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
         </div>
       </div>
     </div>
@@ -147,19 +147,19 @@ function ManagerAuthScreen({ go }: { go: (s: Screen) => void }) {
           backgroundImage: `url(${LOGIN_BG})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'brightness(0.7)'
+          filter: 'brightness(0.65)'
         }} />
       </div>
       {/* Gradient overlay */}
       <div className="absolute inset-0" style={{
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.6) 100%)'
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.65) 100%)'
       }} />
       
       <div className="relative z-10 h-full flex flex-col" style={{ animation: 'fade-up 0.5s ease both' }}>
         {/* Brand header */}
         <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-5 px-8 flex items-center justify-between">
-          <button onClick={() => go('role-select')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+          <button onClick={() => go('role-select')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full">
+            <Icon icon="mdi:arrow-left" width="16" height="16" />
             Back
           </button>
         </div>
@@ -167,59 +167,54 @@ function ManagerAuthScreen({ go }: { go: (s: Screen) => void }) {
         {/* Top branding */}
         <div className="px-8 mb-auto">
           <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
-          <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
+          <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
         </div>
 
         {/* Main content area with glassmorphism card */}
         <div className="px-6 pb-10">
           <div className="rounded-3xl p-7 mb-6" style={{
-            background: 'rgba(255,255,255,0.12)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
+            background: 'rgba(255,255,255,0.20)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.35)'
           }}>
             <h2 className="text-2xl font-black text-white mb-1">Welcome home.</h2>
-            <p className="text-white/60 text-sm mb-6">Log in to find your next chapter.</p>
+            <p className="text-white/70 text-sm mb-6">Log in to find your next chapter.</p>
             
             <div className="flex flex-col gap-3">
               {/* Google Sign In */}
               <button onClick={async () => { try { await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } }) } catch { alert('Enable Google provider in Supabase Dashboard') } }}
                 className="w-full py-3.5 px-5 bg-white rounded-xl font-bold text-gray-800 text-sm flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all hover:shadow-xl">
-                <svg width="20" height="20" viewBox="0 0 24 24">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
+                <Icon icon="mdi:google" width="20" height="20" style={{ color: '#4285F4' }} />
                 Continue with Google
               </button>
               
               <div className="flex items-center gap-3 my-1">
-                <div className="flex-1 h-px bg-white/20" />
-                <span className="text-white/40 text-xs font-medium">or</span>
-                <div className="flex-1 h-px bg-white/20" />
+                <div className="flex-1 h-px bg-white/25" />
+                <span className="text-white/50 text-xs font-medium">or</span>
+                <div className="flex-1 h-px bg-white/25" />
               </div>
               
               {/* Email/Password Login */}
               <button onClick={() => go('manager-login')}
                 className="w-full py-3.5 px-5 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
-                style={{ background: 'linear-gradient(135deg, #1B873F, #065f46)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <Icon icon="mdi:email" width="18" height="18" />
+                style={{ background: 'linear-gradient(135deg, #1B873F, #065f46)', border: '1px solid rgba(255,255,255,0.15)' }}>
+                <Icon icon="mdi:email-outline" width="18" height="18" />
                 Sign in with Email
               </button>
               
               {/* Sign Up */}
               <button onClick={() => go('manager-signup')}
-                className="w-full py-3.5 px-5 bg-white/10 backdrop-blur-sm rounded-xl font-bold text-white text-sm flex items-center justify-center gap-3 border border-white/20 active:scale-[0.98] transition-all">
-                <Icon icon="mdi:account-plus" width="18" height="18" />
+                className="w-full py-3.5 px-5 bg-white/15 backdrop-blur-sm rounded-xl font-bold text-white text-sm flex items-center justify-center gap-3 border border-white/25 active:scale-[0.98] transition-all">
+                <Icon icon="mdi:account-plus-outline" width="18" height="18" />
                 Create New Account
               </button>
             </div>
           </div>
           
           {/* Bottom text */}
-          <p className="text-center text-white/40 text-xs font-bold uppercase tracking-[0.15em]">Your next chapter starts here</p>
+          <p className="text-center text-white/50 text-xs font-bold uppercase tracking-[0.15em]">Your next chapter starts here</p>
         </div>
       </div>
     </div>
@@ -250,19 +245,19 @@ function ManagerSignUpScreen({ go, config }: { go: (s: Screen) => void; config: 
           backgroundImage: `url(${LOGIN_BG})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'brightness(0.7)'
+          filter: 'brightness(0.65)'
         }} />
       </div>
       {/* Gradient overlay */}
       <div className="absolute inset-0" style={{
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.7) 100%)'
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.7) 100%)'
       }} />
       
       <div className="relative z-10 h-full flex flex-col" style={{ animation: 'fade-up 0.5s ease both' }}>
         {/* Back button */}
         <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4 px-8">
-          <button onClick={() => go('manager-auth')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+          <button onClick={() => go('manager-auth')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full">
+            <Icon icon="mdi:arrow-left" width="16" height="16" />
             Back
           </button>
         </div>
@@ -270,36 +265,35 @@ function ManagerSignUpScreen({ go, config }: { go: (s: Screen) => void; config: 
         {/* Top branding */}
         <div className="px-8 mb-4">
           <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
-          <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
+          <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
         </div>
 
         {/* Glassmorphism card */}
         <div className="px-6 flex-1 flex flex-col justify-center">
           <div className="rounded-3xl p-7" style={{
-            background: 'rgba(255,255,255,0.12)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
+            background: 'rgba(255,255,255,0.20)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.35)'
           }}>
             <h2 className="text-2xl font-black text-white mb-1">Create Account</h2>
-            <p className="text-white/60 text-sm mb-6">Set up your estate platform</p>
+            <p className="text-white/70 text-sm mb-6">Set up your estate platform</p>
             
             <div className="flex flex-col gap-3 overflow-y-auto max-h-[50vh] pb-2">
-              {/* Custom field styles for glass card */}
               <input type="text" placeholder="First Name" value={f.name} onChange={(e) => set('name')(e.target.value)}
-                className="w-full py-3.5 px-5 bg-white/95 rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
+                className="w-full py-3.5 px-5 bg-white rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
               <input type="text" placeholder="Surname" value={f.surname} onChange={(e) => set('surname')(e.target.value)}
-                className="w-full py-3.5 px-5 bg-white/95 rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
+                className="w-full py-3.5 px-5 bg-white rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
               <input type="tel" placeholder="Phone Number" value={f.phone} onChange={(e) => set('phone')(e.target.value)}
-                className="w-full py-3.5 px-5 bg-white/95 rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
+                className="w-full py-3.5 px-5 bg-white rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
               <input type="email" placeholder="Email Address" value={f.email} onChange={(e) => set('email')(e.target.value)}
-                className="w-full py-3.5 px-5 bg-white/95 rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
+                className="w-full py-3.5 px-5 bg-white rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
               <input type="password" placeholder="Password" value={f.pw} onChange={(e) => set('pw')(e.target.value)}
-                className="w-full py-3.5 px-5 bg-white/95 rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
+                className="w-full py-3.5 px-5 bg-white rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
               
               {error && (
-                <div className="bg-red-500/20 backdrop-blur-sm rounded-xl px-4 py-3 border border-red-400/30">
+                <div className="bg-red-500/25 backdrop-blur-sm rounded-xl px-4 py-3 border border-red-400/40">
                   <p className="text-white text-sm font-semibold">{error}</p>
                 </div>
               )}
@@ -312,7 +306,7 @@ function ManagerSignUpScreen({ go, config }: { go: (s: Screen) => void; config: 
             </div>
           </div>
           
-          <p className="text-center text-white/40 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
+          <p className="text-center text-white/50 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
         </div>
       </div>
     </div>
@@ -345,19 +339,19 @@ function ManagerLoginScreen({ go, config }: { go: (s: Screen) => void; config: E
           backgroundImage: `url(${LOGIN_BG})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'brightness(0.7)'
+          filter: 'brightness(0.65)'
         }} />
       </div>
       {/* Gradient overlay */}
       <div className="absolute inset-0" style={{
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.7) 100%)'
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.7) 100%)'
       }} />
       
       <div className="relative z-10 h-full flex flex-col" style={{ animation: 'fade-up 0.5s ease both' }}>
         {/* Back button */}
         <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4 px-8">
-          <button onClick={() => go('manager-auth')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+          <button onClick={() => go('manager-auth')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full">
+            <Icon icon="mdi:arrow-left" width="16" height="16" />
             Back
           </button>
         </div>
@@ -365,40 +359,41 @@ function ManagerLoginScreen({ go, config }: { go: (s: Screen) => void; config: E
         {/* Top branding */}
         <div className="px-8 mb-4">
           <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
-          <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
+          <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
         </div>
 
         {/* Glassmorphism card */}
         <div className="px-6 flex-1 flex flex-col justify-center">
           <div className="rounded-3xl p-7" style={{
-            background: 'rgba(255,255,255,0.12)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
+            background: 'rgba(255,255,255,0.20)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.35)'
           }}>
             <h2 className="text-2xl font-black text-white mb-1">Welcome home.</h2>
-            <p className="text-white/60 text-sm mb-6">Log in to find your next chapter.</p>
+            <p className="text-white/70 text-sm mb-6">Log in to find your next chapter.</p>
             
             <div className="flex flex-col gap-3">
               {/* Email field */}
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                  <Icon icon="mdi:email-outline" width="18" height="18" className="text-gray-400" />
+                  <Icon icon="mdi:email-outline" width="18" height="18" style={{ color: '#9ca3af' }} />
                 </div>
                 <input type="email" placeholder="you@example.com" value={email} onChange={(e) => { setEmail(e.target.value); setError('') }}
-                  className="w-full py-3.5 pl-12 pr-5 bg-white/95 rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
+                  className="w-full py-3.5 pl-12 pr-5 bg-white rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
               </div>
               
               {/* Password field with show/hide toggle */}
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                  <Icon icon="mdi:lock-outline" width="18" height="18" className="text-gray-400" />
+                  <Icon icon="mdi:lock-outline" width="18" height="18" style={{ color: '#9ca3af' }} />
                 </div>
                 <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={pw} onChange={(e) => { setPw(e.target.value); setError('') }}
-                  className="w-full py-3.5 pl-12 pr-12 bg-white/95 rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
+                  className="w-full py-3.5 pl-12 pr-12 bg-white rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                  className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
+                  style={{ color: '#9ca3af' }}>
                   <Icon icon={showPassword ? 'mdi:eye-outline' : 'mdi:eye-off-outline'} width="18" height="18" />
                 </button>
               </div>
@@ -411,7 +406,7 @@ function ManagerLoginScreen({ go, config }: { go: (s: Screen) => void; config: E
               </div>
               
               {error && (
-                <div className="bg-red-500/20 backdrop-blur-sm rounded-xl px-4 py-3 border border-red-400/30">
+                <div className="bg-red-500/25 backdrop-blur-sm rounded-xl px-4 py-3 border border-red-400/40">
                   <p className="text-white text-sm font-semibold">{error}</p>
                 </div>
               )}
@@ -424,7 +419,7 @@ function ManagerLoginScreen({ go, config }: { go: (s: Screen) => void; config: E
               </button>
               
               {/* Sign up link */}
-              <p className="text-center text-white/60 text-sm mt-3">
+              <p className="text-center text-white/70 text-sm mt-3">
                 New here?{' '}
                 <button onClick={() => go('manager-signup')} className="text-emerald-400 font-bold hover:text-emerald-300 transition-colors">
                   Create an account
@@ -433,7 +428,7 @@ function ManagerLoginScreen({ go, config }: { go: (s: Screen) => void; config: E
             </div>
           </div>
           
-          <p className="text-center text-white/40 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
+          <p className="text-center text-white/50 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
         </div>
       </div>
     </div>
@@ -1282,19 +1277,19 @@ function TenantCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void; 
           backgroundImage: `url(${LOGIN_BG})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'brightness(0.7)'
+          filter: 'brightness(0.65)'
         }} />
       </div>
       {/* Gradient overlay */}
       <div className="absolute inset-0" style={{
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.7) 100%)'
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.7) 100%)'
       }} />
 
       <div className="relative z-10 h-full flex flex-col" style={{ animation: 'fade-up 0.5s ease both' }}>
         {/* Back button */}
         <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4 px-8">
-          <button onClick={() => go('role-select')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+          <button onClick={() => go('role-select')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full">
+            <Icon icon="mdi:arrow-left" width="16" height="16" />
             Back
           </button>
         </div>
@@ -1302,20 +1297,20 @@ function TenantCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void; 
         {/* Top branding */}
         <div className="px-8 mb-4">
           <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
-          <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
+          <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
         </div>
 
         {/* Glassmorphism card */}
         <div className="px-6 flex-1 flex flex-col justify-center">
           <div className="rounded-3xl p-7" style={{
-            background: 'rgba(255,255,255,0.12)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
+            background: 'rgba(255,255,255,0.20)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.35)'
           }}>
             <h2 className="text-2xl font-black text-white mb-1">Welcome home.</h2>
-            <p className="text-white/60 text-sm mb-6">Enter the join code from your manager.</p>
+            <p className="text-white/70 text-sm mb-6">Enter the join code from your manager.</p>
 
             <div className="flex flex-col gap-4">
               {/* Estate icon */}
@@ -1328,14 +1323,14 @@ function TenantCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void; 
               {/* Code input */}
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                  <Icon icon="mdi:key-variant" width="18" height="18" className="text-gray-400" />
+                  <Icon icon="mdi:key-variant" width="18" height="18" style={{ color: '#9ca3af' }} />
                 </div>
                 <input type="text" placeholder={'Code (e.g. ' + config.joinCode + ')'} value={code} onChange={(e) => { setCode(e.target.value); setError('') }}
-                  className="w-full py-3.5 pl-12 pr-5 bg-white/95 rounded-xl border-0 font-bold text-black text-center text-lg tracking-widest placeholder-gray-400 text-sm outline-none shadow-sm" />
+                  className="w-full py-3.5 pl-12 pr-5 bg-white rounded-xl border-0 font-bold text-black text-center text-lg tracking-widest placeholder-gray-400 text-sm outline-none shadow-sm" />
               </div>
 
               {error && (
-                <div className="bg-red-500/20 backdrop-blur-sm rounded-xl px-4 py-3 border border-red-400/30">
+                <div className="bg-red-500/25 backdrop-blur-sm rounded-xl px-4 py-3 border border-red-400/40">
                   <p className="text-white text-sm font-semibold">{error}</p>
                 </div>
               )}
@@ -1348,7 +1343,7 @@ function TenantCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void; 
             </div>
           </div>
 
-          <p className="text-center text-white/40 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
+          <p className="text-center text-white/50 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
         </div>
       </div>
     </div>
@@ -1738,19 +1733,19 @@ function ServiceCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void;
           backgroundImage: `url(${LOGIN_BG})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'brightness(0.7)'
+          filter: 'brightness(0.65)'
         }} />
       </div>
       {/* Gradient overlay */}
       <div className="absolute inset-0" style={{
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.7) 100%)'
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.7) 100%)'
       }} />
 
       <div className="relative z-10 h-full flex flex-col" style={{ animation: 'fade-up 0.5s ease both' }}>
         {/* Back button */}
         <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4 px-8">
-          <button onClick={() => go('role-select')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+          <button onClick={() => go('role-select')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full">
+            <Icon icon="mdi:arrow-left" width="16" height="16" />
             Back
           </button>
         </div>
@@ -1758,20 +1753,20 @@ function ServiceCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void;
         {/* Top branding */}
         <div className="px-8 mb-4">
           <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
-          <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
+          <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
         </div>
 
         {/* Glassmorphism card */}
         <div className="px-6 flex-1 flex flex-col justify-center">
           <div className="rounded-3xl p-7" style={{
-            background: 'rgba(255,255,255,0.12)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
+            background: 'rgba(255,255,255,0.20)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.35)'
           }}>
             <h2 className="text-2xl font-black text-white mb-1">Service Staff</h2>
-            <p className="text-white/60 text-sm mb-6">Enter the code from the estate manager.</p>
+            <p className="text-white/70 text-sm mb-6">Enter the code from the estate manager.</p>
 
             <div className="flex flex-col gap-4">
               {/* Wrench icon */}
@@ -1784,14 +1779,14 @@ function ServiceCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void;
               {/* Code input */}
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                  <Icon icon="mdi:key-variant" width="18" height="18" className="text-gray-400" />
+                  <Icon icon="mdi:key-variant" width="18" height="18" style={{ color: '#9ca3af' }} />
                 </div>
                 <input type="text" placeholder={'Code (e.g. ' + config.joinCode + ')'} value={code} onChange={(e) => { setCode(e.target.value); setError('') }}
-                  className="w-full py-3.5 pl-12 pr-5 bg-white/95 rounded-xl border-0 font-bold text-black text-center text-lg tracking-widest placeholder-gray-400 text-sm outline-none shadow-sm" />
+                  className="w-full py-3.5 pl-12 pr-5 bg-white rounded-xl border-0 font-bold text-black text-center text-lg tracking-widest placeholder-gray-400 text-sm outline-none shadow-sm" />
               </div>
 
               {error && (
-                <div className="bg-red-500/20 backdrop-blur-sm rounded-xl px-4 py-3 border border-red-400/30">
+                <div className="bg-red-500/25 backdrop-blur-sm rounded-xl px-4 py-3 border border-red-400/40">
                   <p className="text-white text-sm font-semibold">{error}</p>
                 </div>
               )}
@@ -1804,7 +1799,7 @@ function ServiceCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void;
             </div>
           </div>
 
-          <p className="text-center text-white/40 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
+          <p className="text-center text-white/50 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
         </div>
       </div>
     </div>
