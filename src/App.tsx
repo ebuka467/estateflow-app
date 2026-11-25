@@ -70,41 +70,160 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
 function RoleSelectScreen({ go }: { go: (s: Screen) => void }) {
   return (
     <div className="relative h-full overflow-hidden">
-      <div className="absolute inset-0"><div className="h-1/2" style={{ backgroundColor: '#1B873F' }} /><div className="h-1/2" style={{ backgroundImage: 'url(' + APT_PHOTO + ')', backgroundSize: 'cover', backgroundPosition: 'center' }} /></div>
-      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} />
-      <div className="relative z-10 h-full flex flex-col items-center justify-center px-8 gap-4" style={{ animation: 'fade-up 0.5s ease both' }}>
-        <div className="flex flex-col items-center gap-3 mb-2">
-          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm"><HouseIcon stroke="white" size={36} /></div>
-          <h1 className="text-4xl font-black text-white tracking-tight">EstateFlow</h1>
-          <p className="text-white/70 text-sm font-medium">Select your role</p>
+      {/* Full background image */}
+      <div className="absolute inset-0">
+        <div className="w-full h-full" style={{
+          backgroundImage: `url(${LOGIN_BG})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'brightness(0.7)'
+        }} />
+      </div>
+      {/* Gradient overlay */}
+      <div className="absolute inset-0" style={{
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.6) 100%)'
+      }} />
+
+      <div className="relative z-10 h-full flex flex-col" style={{ animation: 'fade-up 0.5s ease both' }}>
+        {/* Top branding */}
+        <div className="pt-[max(3.5rem,env(safe-area-inset-top))] px-8 pb-6">
+          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
+          <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
         </div>
-        {[
-          { label: 'Estate Manager', icon: 'mdi:office-building', screen: 'manager-auth' as Screen },
-          { label: 'Tenant', icon: 'mdi:account', screen: 'tenant-code' as Screen },
-          { label: 'Service Staff', icon: 'mdi:wrench', screen: 'service-code' as Screen },
-        ].map((btn) => (
-          <button key={btn.label} onClick={() => go(btn.screen)} className="w-full py-4 px-5 bg-white rounded-xl border-2 border-black/10 font-bold text-black text-base flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all hover:shadow-xl">
-            <Icon icon={btn.icon} width="22" height="22" style={{ color: '#1B873F' }} />{btn.label}
-          </button>
-        ))}
+
+        {/* Center content */}
+        <div className="px-6 flex-1 flex flex-col justify-center">
+          <div className="rounded-3xl p-7" style={{
+            background: 'rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
+          }}>
+            <h2 className="text-2xl font-black text-white mb-1">Welcome.</h2>
+            <p className="text-white/60 text-sm mb-6">Select your role to continue.</p>
+
+            <div className="flex flex-col gap-3">
+              {[
+                { label: 'Estate Manager', icon: 'mdi:office-building', screen: 'manager-auth' as Screen, desc: 'Manage your estate' },
+                { label: 'Tenant', icon: 'mdi:account', screen: 'tenant-code' as Screen, desc: 'Join your estate' },
+                { label: 'Service Staff', icon: 'mdi:wrench', screen: 'service-code' as Screen, desc: 'Work in an estate' },
+              ].map((btn) => (
+                <button key={btn.label} onClick={() => go(btn.screen)}
+                  className="w-full py-4 px-5 bg-white/95 rounded-xl font-bold text-gray-800 text-sm flex items-center gap-4 shadow-lg active:scale-[0.98] transition-all hover:shadow-xl text-left">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #1B873F, #065f46)' }}>
+                    <Icon icon={btn.icon} width="22" height="22" style={{ color: 'white' }} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-gray-900">{btn.label}</p>
+                    <p className="text-xs text-gray-500 font-medium">{btn.desc}</p>
+                  </div>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-center text-white/40 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
+        </div>
       </div>
     </div>
   )
 }
 
 // ============================================
-// MANAGER AUTH SCREENS
+// MANAGER AUTH SCREENS (Redesigned with Modern UI)
 // ============================================
+
+// Background image for login screens (tropical/resort style)
+const LOGIN_BG = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80'
+
 function ManagerAuthScreen({ go }: { go: (s: Screen) => void }) {
-  return <SplitBg><div className="px-8 flex flex-col h-full">
-    <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-5"><button onClick={() => go('role-select')} className="flex items-center gap-1 text-white font-semibold text-sm">← Back</button></div>
-    <h2 className="text-3xl font-black text-white mb-1">Estate Manager</h2><p className="text-white/70 text-sm mb-8">Choose how to continue</p>
-    <div className="flex flex-col gap-3">
-      <WhiteBtn onClick={async () => { try { await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } }) } catch { alert('Enable Google provider in Supabase Dashboard') } }}><svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Sign in with Google</WhiteBtn>
-      <WhiteBtn onClick={() => go('manager-signup')}>Sign Up</WhiteBtn>
-      <WhiteBtn onClick={() => go('manager-login')}>Log In</WhiteBtn>
+  return (
+    <div className="relative h-full overflow-hidden">
+      {/* Full background image */}
+      <div className="absolute inset-0">
+        <div className="w-full h-full" style={{
+          backgroundImage: `url(${LOGIN_BG})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'brightness(0.7)'
+        }} />
+      </div>
+      {/* Gradient overlay */}
+      <div className="absolute inset-0" style={{
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.6) 100%)'
+      }} />
+      
+      <div className="relative z-10 h-full flex flex-col" style={{ animation: 'fade-up 0.5s ease both' }}>
+        {/* Brand header */}
+        <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-5 px-8 flex items-center justify-between">
+          <button onClick={() => go('role-select')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Back
+          </button>
+        </div>
+        
+        {/* Top branding */}
+        <div className="px-8 mb-auto">
+          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
+          <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
+        </div>
+
+        {/* Main content area with glassmorphism card */}
+        <div className="px-6 pb-10">
+          <div className="rounded-3xl p-7 mb-6" style={{
+            background: 'rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
+          }}>
+            <h2 className="text-2xl font-black text-white mb-1">Welcome home.</h2>
+            <p className="text-white/60 text-sm mb-6">Log in to find your next chapter.</p>
+            
+            <div className="flex flex-col gap-3">
+              {/* Google Sign In */}
+              <button onClick={async () => { try { await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } }) } catch { alert('Enable Google provider in Supabase Dashboard') } }}
+                className="w-full py-3.5 px-5 bg-white rounded-xl font-bold text-gray-800 text-sm flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all hover:shadow-xl">
+                <svg width="20" height="20" viewBox="0 0 24 24">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Continue with Google
+              </button>
+              
+              <div className="flex items-center gap-3 my-1">
+                <div className="flex-1 h-px bg-white/20" />
+                <span className="text-white/40 text-xs font-medium">or</span>
+                <div className="flex-1 h-px bg-white/20" />
+              </div>
+              
+              {/* Email/Password Login */}
+              <button onClick={() => go('manager-login')}
+                className="w-full py-3.5 px-5 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
+                style={{ background: 'linear-gradient(135deg, #1B873F, #065f46)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <Icon icon="mdi:email" width="18" height="18" />
+                Sign in with Email
+              </button>
+              
+              {/* Sign Up */}
+              <button onClick={() => go('manager-signup')}
+                className="w-full py-3.5 px-5 bg-white/10 backdrop-blur-sm rounded-xl font-bold text-white text-sm flex items-center justify-center gap-3 border border-white/20 active:scale-[0.98] transition-all">
+                <Icon icon="mdi:account-plus" width="18" height="18" />
+                Create New Account
+              </button>
+            </div>
+          </div>
+          
+          {/* Bottom text */}
+          <p className="text-center text-white/40 text-xs font-bold uppercase tracking-[0.15em]">Your next chapter starts here</p>
+        </div>
+      </div>
     </div>
-  </div></SplitBg>
+  )
 }
 
 function ManagerSignUpScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
@@ -118,29 +237,95 @@ function ManagerSignUpScreen({ go, config }: { go: (s: Screen) => void; config: 
     try {
       const { error: signUpError } = await supabase.auth.signUp({ email: f.email.trim(), password: f.pw, options: { data: { first_name: f.name, surname: f.surname, phone: f.phone } } })
       if (signUpError) { setError(signUpError.message); setLoading(false); return }
-      // Note: Manager screens now require active Supabase session (auth gate)
       go('manager-home')
     } catch { setError('Something went wrong. Please try again.') }
     setLoading(false)
   }
-  return <SplitBg color={config.color} bg={config.bgImageUrl}><div className="px-8 flex flex-col h-full">
-    <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4"><button onClick={() => go('manager-auth')} className="flex items-center gap-1 text-white font-semibold text-sm">← Back</button></div>
-    <h2 className="text-3xl font-black text-white mb-1">Create Account</h2><p className="text-white/70 text-sm mb-6">Set up your estate platform</p>
-    <div className="flex flex-col gap-3 overflow-y-auto pb-8">
-      <Field placeholder="First Name" value={f.name} onChange={set('name')} /><Field placeholder="Surname" value={f.surname} onChange={set('surname')} />
-      <Field placeholder="Phone Number" type="tel" value={f.phone} onChange={set('phone')} /><Field placeholder="Email Address" type="email" value={f.email} onChange={set('email')} />
-      <Field placeholder="Password" type="password" value={f.pw} onChange={set('pw')} />
-      {error && <div className="bg-red-500/30 rounded-xl px-4 py-3"><p className="text-white text-sm font-semibold">{error}</p></div>}
-      <ThemedBtn onClick={handleSignUp} color={config.color} disabled={false} className="mt-2">
-        {loading ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Creating Account...</> : 'Create Account →'}
-      </ThemedBtn>
+  
+  return (
+    <div className="relative h-full overflow-hidden">
+      {/* Full background image */}
+      <div className="absolute inset-0">
+        <div className="w-full h-full" style={{
+          backgroundImage: `url(${LOGIN_BG})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'brightness(0.7)'
+        }} />
+      </div>
+      {/* Gradient overlay */}
+      <div className="absolute inset-0" style={{
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.7) 100%)'
+      }} />
+      
+      <div className="relative z-10 h-full flex flex-col" style={{ animation: 'fade-up 0.5s ease both' }}>
+        {/* Back button */}
+        <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4 px-8">
+          <button onClick={() => go('manager-auth')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Back
+          </button>
+        </div>
+        
+        {/* Top branding */}
+        <div className="px-8 mb-4">
+          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
+          <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
+        </div>
+
+        {/* Glassmorphism card */}
+        <div className="px-6 flex-1 flex flex-col justify-center">
+          <div className="rounded-3xl p-7" style={{
+            background: 'rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
+          }}>
+            <h2 className="text-2xl font-black text-white mb-1">Create Account</h2>
+            <p className="text-white/60 text-sm mb-6">Set up your estate platform</p>
+            
+            <div className="flex flex-col gap-3 overflow-y-auto max-h-[50vh] pb-2">
+              {/* Custom field styles for glass card */}
+              <input type="text" placeholder="First Name" value={f.name} onChange={(e) => set('name')(e.target.value)}
+                className="w-full py-3.5 px-5 bg-white/95 rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
+              <input type="text" placeholder="Surname" value={f.surname} onChange={(e) => set('surname')(e.target.value)}
+                className="w-full py-3.5 px-5 bg-white/95 rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
+              <input type="tel" placeholder="Phone Number" value={f.phone} onChange={(e) => set('phone')(e.target.value)}
+                className="w-full py-3.5 px-5 bg-white/95 rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
+              <input type="email" placeholder="Email Address" value={f.email} onChange={(e) => set('email')(e.target.value)}
+                className="w-full py-3.5 px-5 bg-white/95 rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
+              <input type="password" placeholder="Password" value={f.pw} onChange={(e) => set('pw')(e.target.value)}
+                className="w-full py-3.5 px-5 bg-white/95 rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
+              
+              {error && (
+                <div className="bg-red-500/20 backdrop-blur-sm rounded-xl px-4 py-3 border border-red-400/30">
+                  <p className="text-white text-sm font-semibold">{error}</p>
+                </div>
+              )}
+              
+              <button onClick={handleSignUp} disabled={loading}
+                className="w-full py-3.5 rounded-xl font-bold text-white text-sm shadow-lg active:scale-[0.98] transition-all mt-2 flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #1B873F, #065f46)' }}>
+                {loading ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Creating Account...</> : 'Create Account →'}
+              </button>
+            </div>
+          </div>
+          
+          <p className="text-center text-white/40 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
+        </div>
+      </div>
     </div>
-  </div></SplitBg>
+  )
 }
 
 function ManagerLoginScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
-  const [email, setEmail] = useState(''); const [pw, setPw] = useState('')
-  const [loading, setLoading] = useState(false); const [error, setError] = useState('')
+  const [email, setEmail] = useState('')
+  const [pw, setPw] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  
   const handleLogin = async () => {
     if (!email.trim() || !pw.trim()) { setError('Please fill in email and password'); return }
     setLoading(true); setError('')
@@ -151,17 +336,108 @@ function ManagerLoginScreen({ go, config }: { go: (s: Screen) => void; config: E
       go('manager-home')
     } catch (e) { setError('Error: ' + (e as Error).message); setLoading(false) }
   }
-  return <SplitBg color={config.color} bg={config.bgImageUrl}><div className="px-8 flex flex-col h-full">
-    <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4"><button onClick={() => go('manager-auth')} className="flex items-center gap-1 text-white font-semibold text-sm">← Back</button></div>
-    <h2 className="text-3xl font-black text-white mb-1">Welcome Back</h2><p className="text-white/70 text-sm mb-8">Sign in to your estate platform</p>
-    <div className="flex flex-col gap-3">
-      <Field placeholder="Email Address" type="email" value={email} onChange={setEmail} /><Field placeholder="Password" type="password" value={pw} onChange={setPw} />
-      {error && <div className="bg-red-500/30 rounded-xl px-4 py-3"><p className="text-white text-sm font-semibold">{error}</p></div>}
-      <ThemedBtn onClick={handleLogin} color={config.color} disabled={false} className="mt-2">
-        {loading ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Signing In...</> : 'Log In →'}
-      </ThemedBtn>
+  
+  return (
+    <div className="relative h-full overflow-hidden">
+      {/* Full background image */}
+      <div className="absolute inset-0">
+        <div className="w-full h-full" style={{
+          backgroundImage: `url(${LOGIN_BG})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'brightness(0.7)'
+        }} />
+      </div>
+      {/* Gradient overlay */}
+      <div className="absolute inset-0" style={{
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.7) 100%)'
+      }} />
+      
+      <div className="relative z-10 h-full flex flex-col" style={{ animation: 'fade-up 0.5s ease both' }}>
+        {/* Back button */}
+        <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4 px-8">
+          <button onClick={() => go('manager-auth')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Back
+          </button>
+        </div>
+        
+        {/* Top branding */}
+        <div className="px-8 mb-4">
+          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
+          <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
+        </div>
+
+        {/* Glassmorphism card */}
+        <div className="px-6 flex-1 flex flex-col justify-center">
+          <div className="rounded-3xl p-7" style={{
+            background: 'rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
+          }}>
+            <h2 className="text-2xl font-black text-white mb-1">Welcome home.</h2>
+            <p className="text-white/60 text-sm mb-6">Log in to find your next chapter.</p>
+            
+            <div className="flex flex-col gap-3">
+              {/* Email field */}
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                  <Icon icon="mdi:email-outline" width="18" height="18" className="text-gray-400" />
+                </div>
+                <input type="email" placeholder="you@example.com" value={email} onChange={(e) => { setEmail(e.target.value); setError('') }}
+                  className="w-full py-3.5 pl-12 pr-5 bg-white/95 rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
+              </div>
+              
+              {/* Password field with show/hide toggle */}
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                  <Icon icon="mdi:lock-outline" width="18" height="18" className="text-gray-400" />
+                </div>
+                <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={pw} onChange={(e) => { setPw(e.target.value); setError('') }}
+                  className="w-full py-3.5 pl-12 pr-12 bg-white/95 rounded-xl border-0 font-semibold text-black placeholder-gray-400 text-sm outline-none shadow-sm" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                  <Icon icon={showPassword ? 'mdi:eye-outline' : 'mdi:eye-off-outline'} width="18" height="18" />
+                </button>
+              </div>
+              
+              {/* Forgot password */}
+              <div className="flex justify-end">
+                <button className="text-white/70 text-xs font-semibold hover:text-white transition-colors">
+                  Forgot password?
+                </button>
+              </div>
+              
+              {error && (
+                <div className="bg-red-500/20 backdrop-blur-sm rounded-xl px-4 py-3 border border-red-400/30">
+                  <p className="text-white text-sm font-semibold">{error}</p>
+                </div>
+              )}
+              
+              {/* Login button */}
+              <button onClick={handleLogin} disabled={loading}
+                className="w-full py-3.5 rounded-xl font-bold text-white text-sm shadow-lg active:scale-[0.98] transition-all mt-2 flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #1B873F, #065f46)' }}>
+                {loading ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Signing In...</> : 'Log In →'}
+              </button>
+              
+              {/* Sign up link */}
+              <p className="text-center text-white/60 text-sm mt-3">
+                New here?{' '}
+                <button onClick={() => go('manager-signup')} className="text-emerald-400 font-bold hover:text-emerald-300 transition-colors">
+                  Create an account
+                </button>
+              </p>
+            </div>
+          </div>
+          
+          <p className="text-center text-white/40 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
+        </div>
+      </div>
     </div>
-  </div></SplitBg>
+  )
 }
 
 // ============================================
@@ -998,16 +1274,85 @@ function TenantCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void; 
     }
     setLoading(false)
   }
-  return <div className="relative h-full overflow-hidden"><div className="absolute inset-0"><div className="h-1/2" style={{ backgroundColor: config.color }} /><div className="h-1/2" style={{ backgroundImage: 'url(' + (config.bgImageUrl || APT_PHOTO) + ')', backgroundSize: 'cover' }} /></div><div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} />
-    <div className="relative z-10 h-full flex flex-col px-8"><div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4"><button onClick={() => go('role-select')} className="flex items-center gap-1 text-white font-semibold text-sm">← Back</button></div>
-      <div className="flex-1 flex flex-col justify-center gap-5" style={{ animation: 'fade-up 0.5s ease both' }}>
-        <div className="flex flex-col items-center gap-3"><div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: config.color }}><HouseIcon stroke="white" size={36} /></div><h2 className="text-3xl font-black text-white text-center">{config.estateName}</h2><p className="text-white/70 text-sm text-center">Enter the join code from your manager</p></div>
-        <input type="text" placeholder={'Code (e.g. ' + config.joinCode + ')'} value={code} onChange={(e) => { setCode(e.target.value); setError('') }} className="w-full py-4 px-5 bg-white rounded-xl border-2 border-black/10 font-bold text-black text-center text-lg tracking-widest outline-none shadow-sm" />
-        {error && <div className="bg-red-500/30 rounded-xl px-4 py-3"><p className="text-white text-sm font-semibold">{error}</p></div>}
-        <button onClick={handleJoin} disabled={loading} className="w-full py-4 rounded-xl font-bold text-white shadow-lg active:scale-[0.98]" style={{ backgroundColor: config.color }}>{loading ? 'Looking up estate...' : 'Enter Estate →'}</button>
+  return (
+    <div className="relative h-full overflow-hidden">
+      {/* Full background image */}
+      <div className="absolute inset-0">
+        <div className="w-full h-full" style={{
+          backgroundImage: `url(${LOGIN_BG})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'brightness(0.7)'
+        }} />
+      </div>
+      {/* Gradient overlay */}
+      <div className="absolute inset-0" style={{
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.7) 100%)'
+      }} />
+
+      <div className="relative z-10 h-full flex flex-col" style={{ animation: 'fade-up 0.5s ease both' }}>
+        {/* Back button */}
+        <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4 px-8">
+          <button onClick={() => go('role-select')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Back
+          </button>
+        </div>
+
+        {/* Top branding */}
+        <div className="px-8 mb-4">
+          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
+          <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
+        </div>
+
+        {/* Glassmorphism card */}
+        <div className="px-6 flex-1 flex flex-col justify-center">
+          <div className="rounded-3xl p-7" style={{
+            background: 'rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
+          }}>
+            <h2 className="text-2xl font-black text-white mb-1">Welcome home.</h2>
+            <p className="text-white/60 text-sm mb-6">Enter the join code from your manager.</p>
+
+            <div className="flex flex-col gap-4">
+              {/* Estate icon */}
+              <div className="flex justify-center mb-2">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #1B873F, #065f46)' }}>
+                  <HouseIcon stroke="white" size={32} />
+                </div>
+              </div>
+
+              {/* Code input */}
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                  <Icon icon="mdi:key-variant" width="18" height="18" className="text-gray-400" />
+                </div>
+                <input type="text" placeholder={'Code (e.g. ' + config.joinCode + ')'} value={code} onChange={(e) => { setCode(e.target.value); setError('') }}
+                  className="w-full py-3.5 pl-12 pr-5 bg-white/95 rounded-xl border-0 font-bold text-black text-center text-lg tracking-widest placeholder-gray-400 text-sm outline-none shadow-sm" />
+              </div>
+
+              {error && (
+                <div className="bg-red-500/20 backdrop-blur-sm rounded-xl px-4 py-3 border border-red-400/30">
+                  <p className="text-white text-sm font-semibold">{error}</p>
+                </div>
+              )}
+
+              <button onClick={handleJoin} disabled={loading}
+                className="w-full py-3.5 rounded-xl font-bold text-white text-sm shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #1B873F, #065f46)' }}>
+                {loading ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Looking up estate...</> : 'Enter Estate →'}
+              </button>
+            </div>
+          </div>
+
+          <p className="text-center text-white/40 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
+        </div>
       </div>
     </div>
-  </div>
+  )
 }
 
 function TenantOnboardingScreen({ go, config, setTenant }: { go: (s: Screen) => void; config: EstateConfig; setTenant: (t: TenantInfo) => void }) {
@@ -1385,7 +1730,85 @@ function ServiceCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void;
     } catch { setError('Network error.') }
     setLoading(false)
   }
-  return <div className="relative h-full overflow-hidden"><div className="absolute inset-0"><div className="h-1/2" style={{ backgroundColor: config.color }} /><div className="h-1/2" style={{ backgroundImage: 'url(' + (config.bgImageUrl || APT_PHOTO) + ')', backgroundSize: 'cover' }} /></div><div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} /><div className="relative z-10 h-full flex flex-col px-8"><div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4"><button onClick={() => go('role-select')} className="flex items-center gap-1 text-white font-semibold text-sm">← Back</button></div><div className="flex-1 flex flex-col justify-center gap-5" style={{ animation: 'fade-up 0.5s ease both' }}><div className="flex flex-col items-center gap-3"><div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: config.color }}><Icon icon="mdi:wrench" width="36" height="36" style={{ color: 'white' }} /></div><h2 className="text-3xl font-black text-white text-center">Service Staff</h2><p className="text-white/70 text-sm text-center">Enter the code from the estate manager</p></div><input type="text" placeholder={'Code (e.g. ' + config.joinCode + ')'} value={code} onChange={(e) => { setCode(e.target.value); setError('') }} className="w-full py-4 px-5 bg-white rounded-xl border-2 border-black/10 font-bold text-black text-center text-lg tracking-widest outline-none" />{error && <div className="bg-red-500/30 rounded-xl px-4 py-3"><p className="text-white text-sm font-semibold">{error}</p></div>}<button onClick={handleJoin} disabled={loading} className="w-full py-4 rounded-xl font-bold text-white shadow-lg active:scale-[0.98]" style={{ backgroundColor: config.color }}>{loading ? 'Looking up...' : 'Continue →'}</button></div></div></div>
+  return (
+    <div className="relative h-full overflow-hidden">
+      {/* Full background image */}
+      <div className="absolute inset-0">
+        <div className="w-full h-full" style={{
+          backgroundImage: `url(${LOGIN_BG})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'brightness(0.7)'
+        }} />
+      </div>
+      {/* Gradient overlay */}
+      <div className="absolute inset-0" style={{
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.7) 100%)'
+      }} />
+
+      <div className="relative z-10 h-full flex flex-col" style={{ animation: 'fade-up 0.5s ease both' }}>
+        {/* Back button */}
+        <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4 px-8">
+          <button onClick={() => go('role-select')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Back
+          </button>
+        </div>
+
+        {/* Top branding */}
+        <div className="px-8 mb-4">
+          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
+          <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
+        </div>
+
+        {/* Glassmorphism card */}
+        <div className="px-6 flex-1 flex flex-col justify-center">
+          <div className="rounded-3xl p-7" style={{
+            background: 'rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
+          }}>
+            <h2 className="text-2xl font-black text-white mb-1">Service Staff</h2>
+            <p className="text-white/60 text-sm mb-6">Enter the code from the estate manager.</p>
+
+            <div className="flex flex-col gap-4">
+              {/* Wrench icon */}
+              <div className="flex justify-center mb-2">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #1B873F, #065f46)' }}>
+                  <Icon icon="mdi:wrench" width="32" height="32" style={{ color: 'white' }} />
+                </div>
+              </div>
+
+              {/* Code input */}
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                  <Icon icon="mdi:key-variant" width="18" height="18" className="text-gray-400" />
+                </div>
+                <input type="text" placeholder={'Code (e.g. ' + config.joinCode + ')'} value={code} onChange={(e) => { setCode(e.target.value); setError('') }}
+                  className="w-full py-3.5 pl-12 pr-5 bg-white/95 rounded-xl border-0 font-bold text-black text-center text-lg tracking-widest placeholder-gray-400 text-sm outline-none shadow-sm" />
+              </div>
+
+              {error && (
+                <div className="bg-red-500/20 backdrop-blur-sm rounded-xl px-4 py-3 border border-red-400/30">
+                  <p className="text-white text-sm font-semibold">{error}</p>
+                </div>
+              )}
+
+              <button onClick={handleJoin} disabled={loading}
+                className="w-full py-3.5 rounded-xl font-bold text-white text-sm shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #1B873F, #065f46)' }}>
+                {loading ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Looking up...</> : 'Continue →'}
+              </button>
+            </div>
+          </div>
+
+          <p className="text-center text-white/40 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function ServiceRoleScreen({ go }: { go: (s: Screen) => void }) {
