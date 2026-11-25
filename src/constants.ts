@@ -321,6 +321,149 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
 ]
 
 // ============================================
+// LAYOUT VISUAL PRESETS — background, gradient & color per layout
+// Applied when user selects a layout in the customizer
+// ============================================
+export interface LayoutVisualPreset {
+  backgroundType: 'solid' | 'gradient' | 'image' | 'pattern'
+  gradientAngle: number
+  gradientColors: [string, string]
+  solidBgColor: string
+  bgImageUrl: string
+  backgroundOpacity: number
+  accentColor: string
+}
+
+export const LAYOUT_VISUAL_PRESETS: Record<string, LayoutVisualPreset> = {
+  modern: {
+    backgroundType: 'gradient',
+    gradientAngle: 135,
+    gradientColors: ['#1B873F', '#065f46'],
+    solidBgColor: '',
+    bgImageUrl: '',
+    backgroundOpacity: 1,
+    accentColor: '#1B873F',
+  },
+  classic: {
+    backgroundType: 'gradient',
+    gradientAngle: 180,
+    gradientColors: ['#1e3a5f', '#0f2440'],
+    solidBgColor: '',
+    bgImageUrl: '',
+    backgroundOpacity: 1,
+    accentColor: '#2563eb',
+  },
+  compact: {
+    backgroundType: 'solid',
+    gradientAngle: 135,
+    gradientColors: ['#1B873F', '#065f46'],
+    solidBgColor: '#f8fafc',
+    bgImageUrl: '',
+    backgroundOpacity: 1,
+    accentColor: '#1B873F',
+  },
+  spacious: {
+    backgroundType: 'gradient',
+    gradientAngle: 160,
+    gradientColors: ['#0f766e', '#134e4a'],
+    solidBgColor: '',
+    bgImageUrl: '',
+    backgroundOpacity: 1,
+    accentColor: '#0d9488',
+  },
+  'finance-first': {
+    backgroundType: 'gradient',
+    gradientAngle: 135,
+    gradientColors: ['#1a1a2e', '#16213e'],
+    solidBgColor: '',
+    bgImageUrl: '',
+    backgroundOpacity: 1,
+    accentColor: '#f59e0b',
+  },
+  community: {
+    backgroundType: 'gradient',
+    gradientAngle: 135,
+    gradientColors: ['#7c3aed', '#5b21b6'],
+    solidBgColor: '',
+    bgImageUrl: '',
+    backgroundOpacity: 1,
+    accentColor: '#8b5cf6',
+  },
+  operations: {
+    backgroundType: 'solid',
+    gradientAngle: 135,
+    gradientColors: ['#1B873F', '#065f46'],
+    solidBgColor: '#f1f5f9',
+    bgImageUrl: '',
+    backgroundOpacity: 1,
+    accentColor: '#475569',
+  },
+  minimal: {
+    backgroundType: 'solid',
+    gradientAngle: 135,
+    gradientColors: ['#1B873F', '#065f46'],
+    solidBgColor: '#ffffff',
+    bgImageUrl: '',
+    backgroundOpacity: 1,
+    accentColor: '#000000',
+  },
+  widget: {
+    backgroundType: 'pattern',
+    gradientAngle: 135,
+    gradientColors: ['#1B873F', '#065f46'],
+    solidBgColor: '#0f172a',
+    bgImageUrl: '',
+    backgroundOpacity: 1,
+    accentColor: '#38bdf8',
+  },
+  magazine: {
+    backgroundType: 'image',
+    gradientAngle: 135,
+    gradientColors: ['#1B873F', '#065f46'],
+    solidBgColor: '',
+    bgImageUrl: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
+    backgroundOpacity: 0.3,
+    accentColor: '#1B873F',
+  },
+  morphic: {
+    backgroundType: 'gradient',
+    gradientAngle: 145,
+    gradientColors: ['#e8eaf6', '#c5cae9'],
+    solidBgColor: '',
+    bgImageUrl: '',
+    backgroundOpacity: 1,
+    accentColor: '#5c6bc0',
+  },
+  neumorphic: {
+    backgroundType: 'solid',
+    gradientAngle: 135,
+    gradientColors: ['#1B873F', '#065f46'],
+    solidBgColor: '#e0e5ec',
+    bgImageUrl: '',
+    backgroundOpacity: 1,
+    accentColor: '#6b7fa3',
+  },
+  bold: {
+    backgroundType: 'gradient',
+    gradientAngle: 135,
+    gradientColors: ['#dc2626', '#991b1b'],
+    solidBgColor: '',
+    bgImageUrl: '',
+    backgroundOpacity: 1,
+    accentColor: '#ffffff',
+  },
+  'ultra-glass': {
+    backgroundType: 'image',
+    gradientAngle: 135,
+    gradientColors: ['#1B873F', '#065f46'],
+    solidBgColor: '',
+    bgImageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
+    backgroundOpacity: 0.25,
+    accentColor: '#06b6d4',
+  },
+}
+
+// ============================================
 // DEFAULT CONFIG
 // ============================================
 export const DEFAULT_CONFIG: EstateConfig = {

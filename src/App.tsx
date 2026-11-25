@@ -12,7 +12,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import type { Screen, EstateConfig, TenantInfo, Notification, Invoice, Complaint, EmergencyAlert, GuestCode } from './types'
 import { meetsWCAG_AA } from './types'
 import { calculatePaymentBreakdown } from './types'
-import { DEFAULT_CONFIG, APT_PHOTO, AVATAR_SVGS, AVATARS, BANKS, THEME_COLORS, FONT_OPTIONS, MAINTENANCE_CATEGORIES, EMERGENCY_TYPES, GUEST_TYPES, SERVICE_FEE_PERCENT, ESTATE_THEMES, LAYOUT_PRESETS } from './constants'
+import { DEFAULT_CONFIG, APT_PHOTO, AVATAR_SVGS, AVATARS, BANKS, THEME_COLORS, FONT_OPTIONS, MAINTENANCE_CATEGORIES, EMERGENCY_TYPES, GUEST_TYPES, SERVICE_FEE_PERCENT, ESTATE_THEMES, LAYOUT_PRESETS, LAYOUT_VISUAL_PRESETS } from './constants'
 import { PageTransition, PageBack, HouseIcon, SplitBg, Field, ThemedBtn, WhiteBtn, PaymentBreakdown, StatusBadge, EmptyState, House3DOverlay, SuccessAnimation } from './components'
 import { PrivacyPolicy, TermsOfService, PaymentRefundPolicy, EmergencyDisclaimer } from './legal'
 
@@ -1068,23 +1068,49 @@ function ThemeCustomizerScreen({ go, config, setConfig, userEmail }: { go: (s: S
 
       {/* === LAYOUT TAB with mini previews === */}
       {activeTab === 'layout' && <div className="flex flex-col gap-4">
-        <p className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>10 Layout Presets</p>
+        <div className="flex items-center justify-between">
+          <p className="font-bold text-sm" style={{ color: currentTheme.textPrimary }}>14 Layout Presets</p>
+          <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ backgroundColor: currentTheme.primary + '15', color: currentTheme.primary }}>Each changes bg + colors</span>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           {LAYOUT_PRESETS.map(layout => {
             const isActive = config.layoutId === layout.id
+            const visual = LAYOUT_VISUAL_PRESETS[layout.id]
+            const previewBg = visual
+              ? (visual.backgroundType === 'gradient' ? `linear-gradient(${visual.gradientAngle}deg, ${visual.gradientColors[0]}, ${visual.gradientColors[1]})`
+                : visual.backgroundType === 'image' && visual.bgImageUrl ? `linear-gradient(rgba(0,0,0,${1 - visual.backgroundOpacity}), rgba(0,0,0,${1 - visual.backgroundOpacity})), url(${visual.bgImageUrl}) center/cover`
+                : visual.backgroundType === 'pattern' ? visual.solidBgColor || '#0f172a'
+                : visual.solidBgColor || '#f8f9fa')
+              : currentTheme.background
+            const previewAccent = visual?.accentColor || currentTheme.primary
             return (
-              <button key={layout.id} onClick={() => setConfig({ ...config, layoutId: layout.id })} className="rounded-xl border-2 p-3 text-left transition-all active:scale-[0.97]" style={{ borderColor: isActive ? currentTheme.primary : currentTheme.border, backgroundColor: isActive ? currentTheme.primary + '10' : currentTheme.surface }}>
-                {/* Mini preview */}
-                <div className="h-16 rounded-lg mb-2 overflow-hidden border" style={{ borderColor: currentTheme.border, backgroundColor: currentTheme.background }}>
-                  <div className="h-3 mx-1 mt-1 rounded" style={{ backgroundColor: currentTheme.primary, width: '60%' }} />
-                  <div className="flex gap-1 mx-1 mt-1">
-                    <div className="h-6 flex-1 rounded" style={{ backgroundColor: currentTheme.surface, border: '1px solid ' + currentTheme.border }} />
-                    <div className="h-6 flex-1 rounded" style={{ backgroundColor: currentTheme.surface, border: '1px solid ' + currentTheme.border }} />
-                  </div>
-                  <div className="flex gap-1 mx-1 mt-1">
-                    {Array.from({length: layout.gridColumns}).map((_, i) => (
-                      <div key={i} className="h-4 rounded flex-1" style={{ backgroundColor: currentTheme.primary + '30' }} />
-                    ))}
+              <button key={layout.id} onClick={() => {
+                if (visual) {
+                  setConfig({
+                    ...config,
+                    layoutId: layout.id,
+                    backgroundType: visual.backgroundType,
+                    gradientAngle: visual.gradientAngle,
+                    gradientColors: visual.gradientColors,
+                    solidBgColor: visual.solidBgColor,
+                    bgImageUrl: visual.bgImageUrl,
+                    backgroundOpacity: visual.backgroundOpacity,
+                    color: visual.accentColor,
+                  })
+                } else {
+                  setConfig({ ...config, layoutId: layout.id })
+                }
+              }} className="rounded-xl border-2 p-3 text-left transition-all active:scale-[0.97]" style={{ borderColor: isActive ? currentTheme.primary : currentTheme.border, backgroundColor: isActive ? currentTheme.primary + '10' : currentTheme.surface }}>
+                {/* Mini preview with layout-specific colors */}
+                <div className="h-16 rounded-lg mb-2 overflow-hidden border relative" style={{ borderColor: currentTheme.border, background: previewBg }}>
+                  {visual?.backgroundType === 'image' && visual.bgImageUrl && <div className="absolute inset-0" style={{ backgroundImage: `url(${visual.bgImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: visual.backgroundOpacity }} />}
+                  <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
+                    <div className="h-2 rounded-full" style={{ backgroundColor: previewAccent, width: '55%' }} />
+                    <div className="flex gap-1">
+                      {Array.from({length: layout.gridColumns}).map((_, i) => (
+                        <div key={i} className="h-5 rounded flex-1" style={{ backgroundColor: previewAccent + '40', border: `1px solid ${previewAccent}20` }} />
+                      ))}
+                    </div>
                   </div>
                 </div>
                 <p className="font-bold text-xs" style={{ color: currentTheme.textPrimary }}>{layout.name}</p>
