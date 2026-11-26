@@ -229,10 +229,21 @@ html, body, #root {
   scroll-behavior: smooth;
 }
 
-/* Hide scrollbar but keep functionality */
+/* Hide scrollbar but keep functionality — WebKit (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
   width: 0px;
   background: transparent;
+}
+
+/* Firefox scrollbar fix */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Ensure smooth scrolling on all platforms */
+html {
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Touch target minimum */

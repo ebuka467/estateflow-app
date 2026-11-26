@@ -165,22 +165,37 @@ export function StatusBadge({ status }: { status: string }) {
     'responded': 'bg-blue-100 text-blue-700',
   }
 
+  const icons: Record<string, string> = {
+    'pending': 'mdi:clock-outline',
+    'verified': 'mdi:check-circle',
+    'rejected': 'mdi:close-circle',
+    'open': 'mdi:alert-circle-outline',
+    'assigned': 'mdi:account-check',
+    'in-progress': 'mdi:loading',
+    'awaiting-tenant': 'mdi:account-clock',
+    'resolved': 'mdi:check-circle',
+    'closed': 'mdi:archive',
+    'active': 'mdi:alarm-light',
+    'responded': 'mdi:check-circle',
+  }
+
   const labels: Record<string, string> = {
-    'pending': '⏳ Pending',
-    'verified': '✓ Verified',
-    'rejected': '✗ Rejected',
+    'pending': 'Pending',
+    'verified': 'Verified',
+    'rejected': 'Rejected',
     'open': 'Open',
     'assigned': 'Assigned',
     'in-progress': 'In Progress',
     'awaiting-tenant': 'Awaiting Tenant',
-    'resolved': '✓ Resolved',
+    'resolved': 'Resolved',
     'closed': 'Closed',
-    'active': '🔴 Active',
-    'responded': '✓ Responded',
+    'active': 'Active',
+    'responded': 'Responded',
   }
 
   return (
-    <span className={'text-xs font-bold px-2.5 py-1 rounded-full ' + (styles[status] || 'bg-gray-100 text-gray-700')}>
+    <span className={'text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 ' + (styles[status] || 'bg-gray-100 text-gray-700')}>
+      <Icon icon={icons[status] || 'mdi:circle-outline'} width="12" height="12" />
       {labels[status] || status}
     </span>
   )

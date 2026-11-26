@@ -87,7 +87,7 @@ function RoleSelectScreen({ go }: { go: (s: Screen) => void }) {
       <div className="relative z-10 h-full flex flex-col" style={{ animation: 'fade-up 0.5s ease both' }}>
         {/* Top branding */}
         <div className="pt-[max(3.5rem,env(safe-area-inset-top))] px-8 pb-6">
-          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
+          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estateflow<span className="text-emerald-400">.</span></h1>
           <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
         </div>
 
@@ -166,7 +166,7 @@ function ManagerAuthScreen({ go }: { go: (s: Screen) => void }) {
         
         {/* Top branding */}
         <div className="px-8 mb-auto">
-          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
+          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estateflow<span className="text-emerald-400">.</span></h1>
           <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
         </div>
 
@@ -264,7 +264,7 @@ function ManagerSignUpScreen({ go, config }: { go: (s: Screen) => void; config: 
         
         {/* Top branding */}
         <div className="px-8 mb-4">
-          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
+          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estateflow<span className="text-emerald-400">.</span></h1>
           <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
         </div>
 
@@ -358,7 +358,7 @@ function ManagerLoginScreen({ go, config }: { go: (s: Screen) => void; config: E
         
         {/* Top branding */}
         <div className="px-8 mb-4">
-          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
+          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estateflow<span className="text-emerald-400">.</span></h1>
           <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
         </div>
 
@@ -501,7 +501,7 @@ function PaymentSetupScreen({ go, config, setConfig }: { go: (s: Screen) => void
         <p className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-3">Estate Settlement Account</p>
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: config.color + '15' }}><Icon icon="mdi:bank" width="24" height="24" style={{ color: config.color }} /></div>
-          <div><p className="font-bold text-gray-900">{config.estateAccountName || 'Not set'}</p><p className="text-gray-400 text-sm">{config.estateBank} • • • •{config.estateAccountNumber.slice(-4)}</p></div>
+          <div><p className="font-bold text-gray-900">{config.estateAccountName || 'Not set'}</p><p className="text-gray-400 text-sm">{config.estateBank} • • • •{config.estateAccountNumber ? config.estateAccountNumber.slice(-4) : '••••'}</p></div>
         </div>
         <button onClick={() => setVerified(true)} className="w-full py-3 rounded-xl font-bold text-white active:scale-[0.98] transition-transform" style={{ backgroundColor: verified ? '#10b981' : config.color }}>
           {verified ? '✓ Account Verified' : 'Verify Account'}
@@ -1303,7 +1303,7 @@ function ThemeCustomizerScreen({ go, config, setConfig, userEmail }: { go: (s: S
         </div>
         <ThemedBtn onClick={async () => {
         // Save customization to Supabase so tenants/staff inherit it
-        try { await supabase.from('estates').update({ primary_color: config.color, font_family: config.fontFamily, theme_id: config.themeId, layout_id: config.layoutId, background_type: config.backgroundType, gradient_angle: config.gradientAngle, gradient_color1: config.gradientColors[0], gradient_color2: config.gradientColors[1], bg_image_url: config.bgImageUrl, enable_3d: config.enable3D }).eq('manager_email', userEmail) } catch {}
+        try { await supabase.from('estates').update({ primary_color: config.color, font_family: config.fontFamily, theme_id: config.themeId, layout_id: config.layoutId, background_type: config.backgroundType, gradient_angle: config.gradientAngle, gradient_color1: config.gradientColors[0], gradient_color2: config.gradientColors[1], bg_image_url: config.bgImageUrl, enable_3d: config.enable3D }).eq('manager_email', userEmail) } catch (e) { console.error('Theme save failed:', e) }
         go('manager-home')
       }} color={currentTheme.primary}>Apply & Save ✓</ThemedBtn>
         <button onClick={() => setConfig(DEFAULT_CONFIG)} className="w-full py-3 text-sm font-semibold text-center" style={{ color: currentTheme.textSecondary }}>Reset to Default</button>
@@ -1407,7 +1407,7 @@ function TenantCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void; 
 
         {/* Top branding */}
         <div className="px-8 mb-4">
-          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
+          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estateflow<span className="text-emerald-400">.</span></h1>
           <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
         </div>
 
@@ -1467,7 +1467,7 @@ function TenantOnboardingScreen({ go, config, setTenant }: { go: (s: Screen) => 
     const newTenant = { name: name.trim(), houseNumber: house.trim(), avatar, email: email.trim(), joinedDate: new Date().toLocaleDateString(), phone: '' }
     setTenant(newTenant)
     // Save to Supabase so manager can see this tenant
-    try { await supabase.from('tenants').insert([{ estate_id: localStorage.getItem('ef_estate_id') || '', name: name.trim(), house_number: house.trim(), email: email.trim(), joined_date: new Date().toLocaleDateString(), user_id: (await supabase.auth.getUser()).data.user?.id || null }]) } catch {}
+    try { await supabase.from('tenants').insert([{ estate_id: localStorage.getItem('ef_estate_id') || '', name: name.trim(), house_number: house.trim(), email: email.trim(), joined_date: new Date().toLocaleDateString(), user_id: (await supabase.auth.getUser()).data.user?.id || null }]) } catch (e) { console.error('Tenant save failed:', e) }
     go('tenant-home') }
   return <div className="flex flex-col h-full relative overflow-hidden" style={{ backgroundColor: config.color + '18' }}>
     <House3DOverlay config={config} />
@@ -1896,7 +1896,7 @@ function ServiceCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void;
 
         {/* Top branding */}
         <div className="px-8 mb-4">
-          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estate<span className="text-emerald-400">.</span></h1>
+          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estateflow<span className="text-emerald-400">.</span></h1>
           <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">A little closer to home</p>
         </div>
 
@@ -1950,22 +1950,93 @@ function ServiceCodeScreen({ go, config, setConfig }: { go: (s: Screen) => void;
   )
 }
 
-function ServiceRoleScreen({ go }: { go: (s: Screen) => void }) {
+function ServiceRoleScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
   const roles = [{ label: 'Security', icon: 'mdi:shield-account', screen: 'service-security' as Screen, desc: 'Emergency alerts & guest codes' }, { label: 'Plumber', icon: 'mdi:wrench', screen: 'service-worker' as Screen, desc: 'Plumbing requests' }, { label: 'Cleaner', icon: 'mdi:broom', screen: 'service-worker' as Screen, desc: 'Cleaning requests' }, { label: 'Electrician', icon: 'mdi:flash', screen: 'service-worker' as Screen, desc: 'Electrical requests' }]
-  return <div className="flex flex-col h-full bg-gray-50"><div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('service-code')} /><h2 className="font-black text-xl">Select Your Role</h2></div><div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-3">{roles.map((r) => (<button key={r.label} onClick={() => go(r.screen)} className="flex items-center gap-4 bg-white rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-transform text-left"><div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 bg-green-50"><Icon icon={r.icon} width="28" height="28" style={{ color: '#1B873F' }} /></div><div><p className="font-bold text-gray-900 text-base">{r.label}</p><p className="text-gray-400 text-xs mt-0.5">{r.desc}</p></div><svg className="ml-auto" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2.5"><path d="M9 18l6-6-6-6" /></svg></button>))}</div></div>
+  return (
+    <div className="relative h-full overflow-hidden">
+      <div className="absolute inset-0">
+        <div className="w-full h-full" style={{ backgroundImage: `url(${LOGIN_BG})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'brightness(0.65)' }} />
+      </div>
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.7) 100%)' }} />
+      <div className="relative z-10 h-full flex flex-col" style={{ animation: 'fade-up 0.5s ease both' }}>
+        <div className="pt-[max(3.5rem,env(safe-area-inset-top))] pb-4 px-8">
+          <button onClick={() => go('service-code')} className="flex items-center gap-1.5 text-white/90 font-semibold text-sm bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full">
+            <Icon icon="mdi:arrow-left" width="16" height="16" /> Back
+          </button>
+        </div>
+        <div className="px-8 mb-4">
+          <h1 className="text-5xl font-black text-white tracking-tight mb-1">estateflow<span className="text-emerald-400">.</span></h1>
+          <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">Service Staff</p>
+        </div>
+        <div className="px-6 flex-1 flex flex-col justify-center">
+          <div className="rounded-3xl p-7" style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.25)', boxShadow: '0 25px 50px rgba(0,0,0,0.35)' }}>
+            <h2 className="text-2xl font-black text-white mb-1">Select Your Role</h2>
+            <p className="text-white/70 text-sm mb-6">Choose your service type</p>
+            <div className="flex flex-col gap-3">
+              {roles.map((r) => (
+                <button key={r.label} onClick={() => go(r.screen)} className="w-full py-4 px-5 bg-white rounded-xl font-bold text-gray-800 text-sm flex items-center gap-4 shadow-lg active:scale-[0.98] transition-all text-left">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #1B873F, #065f46)' }}>
+                    <Icon icon={r.icon} width="22" height="22" style={{ color: 'white' }} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-gray-900">{r.label}</p>
+                    <p className="text-xs text-gray-500 font-medium">{r.desc}</p>
+                  </div>
+                  <Icon icon="mdi:chevron-right" width="22" height="22" style={{ color: '#9ca3af' }} />
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="text-center text-white/50 text-xs font-bold uppercase tracking-[0.15em] mt-6">Your next chapter starts here</p>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function ServiceSecurityScreen({ go, config, alerts, guestCodes }: { go: (s: Screen) => void; config: EstateConfig; alerts: EmergencyAlert[]; guestCodes: GuestCode[] }) {
   const [scanCode, setScanCode] = useState(''); const [scanned, setScanned] = useState<{ code: string; type: string; name: string; house: string } | null>(null)
   const handleScan = () => { const found = guestCodes.find(g => g.code.toUpperCase() === scanCode.toUpperCase()); if (found) setScanned({ code: found.code, type: found.type, name: found.name, house: found.house }); else setScanned({ code: scanCode, type: 'Unknown', name: 'Not Found', house: 'N/A' }) }
-  return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}><div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('service-role')} /><h2 className="font-black text-xl">Security Dashboard</h2></div><div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5">
-    {alerts.filter(a => a.status === 'active').length > 0 && <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-4"><p className="text-red-800 text-sm font-bold mb-2">Active Emergency ({alerts.filter(a => a.status === 'active').length})</p>{alerts.filter(a => a.status === 'active').map((a) => <div key={a.id} className="bg-white rounded-xl p-3 mb-2"><p className="font-bold text-red-600">{a.type} — {a.houseNumber}</p><p className="text-gray-500 text-xs">{a.date}</p></div>)}</div>}
-    <div className="bg-white rounded-2xl p-5 shadow-sm"><p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Scan Guest Code</p><input type="text" placeholder="Enter guest code" value={scanCode} onChange={(e) => setScanCode(e.target.value)} className="w-full py-3 px-4 bg-gray-50 rounded-xl border-2 border-gray-200 font-bold text-center text-lg tracking-widest outline-none" /><button onClick={handleScan} className="w-full py-3 mt-3 rounded-xl font-bold text-white active:scale-[0.98]" style={{ backgroundColor: config.color }}>Scan Code</button>{scanned && <div className="mt-4 bg-gray-50 rounded-xl p-4 border-2 border-gray-200"><p className="text-xs font-bold text-gray-400 uppercase mb-2">Result</p><div className="space-y-1 text-sm"><p><strong>Code:</strong> {scanned.code}</p><p><strong>Type:</strong> {scanned.type}</p><p><strong>Guest:</strong> {scanned.name}</p><p><strong>Unit:</strong> <span className="font-bold text-green-600">{scanned.house}</span></p></div></div>}</div>
-  </div></div>
+  return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}>
+      <PageBack onClick={() => go('service-role')} light /><h2 className="font-black text-xl text-white">Security Dashboard</h2>
+    </div>
+    <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5">
+      {alerts.filter(a => a.status === 'active').length > 0 && (
+        <div className="rounded-2xl p-4" style={{ backgroundColor: '#ef444415', border: '2px solid #ef444440' }}>
+          <p className="text-red-800 text-sm font-bold mb-2">Active Emergency ({alerts.filter(a => a.status === 'active').length})</p>
+          {alerts.filter(a => a.status === 'active').map((a) => <div key={a.id} className="bg-white rounded-xl p-3 mb-2 shadow-sm"><p className="font-bold text-red-600">{a.type} — {a.houseNumber}</p><p className="text-gray-500 text-xs">{a.date}</p></div>)}
+        </div>
+      )}
+      <div className="rounded-2xl p-5 shadow-sm" style={{ backgroundColor: 'white', border: '1px solid ' + config.color + '20' }}>
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Scan Guest Code</p>
+        <input type="text" placeholder="Enter guest code" value={scanCode} onChange={(e) => setScanCode(e.target.value)} className="w-full py-3 px-4 bg-gray-50 rounded-xl border-2 border-gray-200 font-bold text-center text-lg tracking-widest outline-none" />
+        <button onClick={handleScan} className="w-full py-3 mt-3 rounded-xl font-bold text-white active:scale-[0.98] transition-transform" style={{ backgroundColor: config.color }}>Scan Code</button>
+        {scanned && <div className="mt-4 rounded-xl p-4" style={{ backgroundColor: config.color + '08', border: '2px solid ' + config.color + '30' }}><p className="text-xs font-bold uppercase mb-2" style={{ color: config.color }}>Result</p><div className="space-y-1 text-sm"><p><strong>Code:</strong> {scanned.code}</p><p><strong>Type:</strong> {scanned.type}</p><p><strong>Guest:</strong> {scanned.name}</p><p><strong>Unit:</strong> <span className="font-bold text-green-600">{scanned.house}</span></p></div></div>}
+      </div>
+    </div>
+  </div>
 }
 
 function ServiceWorkerScreen({ go, config, complaints }: { go: (s: Screen) => void; config: EstateConfig; complaints: Complaint[] }) {
-  return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}><div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('service-role')} /><h2 className="font-black text-xl">My Jobs</h2></div><div className="flex-1 overflow-y-auto px-5 py-5">{complaints.length === 0 ? <EmptyState icon="mdi:inbox" title="No jobs assigned" message="New jobs will appear here." color={config.color} /> : complaints.map((c) => <div key={c.id} className="bg-white rounded-2xl p-4 shadow-sm mb-3"><div className="flex items-start justify-between mb-2"><div><p className="font-bold text-gray-900">{c.category}</p><p className="text-gray-400 text-xs">{c.houseNumber} — {c.date}</p></div><StatusBadge status={c.status} /></div><p className="text-gray-600 text-sm">{c.description}</p><div className="mt-3 pt-3 border-t text-xs text-gray-400"><p>Tenant: {c.tenantName}</p><p>Unit: <strong className="text-gray-700">{c.houseNumber}</strong></p></div></div>)}</div></div>
+  return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}>
+      <PageBack onClick={() => go('service-role')} light /><h2 className="font-black text-xl text-white">My Jobs</h2>
+    </div>
+    <div className="flex-1 overflow-y-auto px-5 py-5">
+      {complaints.length === 0 ? <EmptyState icon="mdi:inbox" title="No jobs assigned" message="New jobs will appear here." color={config.color} /> :
+      complaints.map((c) => (
+        <div key={c.id} className="rounded-2xl p-4 shadow-sm mb-3" style={{ backgroundColor: 'white', borderLeft: '4px solid ' + config.color }}>
+          <div className="flex items-start justify-between mb-2">
+            <div><p className="font-bold text-gray-900">{c.category}</p><p className="text-gray-400 text-xs">{c.houseNumber} — {c.date}</p></div>
+            <StatusBadge status={c.status} />
+          </div>
+          <p className="text-gray-600 text-sm">{c.description}</p>
+          <div className="mt-3 pt-3 border-t text-xs text-gray-400"><p>Tenant: {c.tenantName}</p><p>Unit: <strong className="text-gray-700">{c.houseNumber}</strong></p></div>
+        </div>
+      ))}
+    </div>
+  </div>
 }
 
 // ============================================
@@ -2141,54 +2212,57 @@ function SearchTenantScreen({ go, config, tenantLogins, invoices }: {
 // MANAGER SETTINGS
 // ============================================
 function ManagerSettingsScreen({ go, config, tenantLogins, userEmail, clearSession }: { go: (s: Screen) => void; config: EstateConfig; tenantLogins: { name: string; house: string; date: string }[]; userEmail?: string; clearSession: () => void }) {
+  const layoutId = config.layoutId
+  const cardStyle = layoutId === 'morphic' ? { background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: '8px 8px 16px rgba(0,0,0,0.08), -8px -8px 16px rgba(255,255,255,0.9)' }
+    : layoutId === 'neumorphic' ? { background: '#f0f0f0', boxShadow: '5px 5px 10px rgba(0,0,0,0.1), -5px -5px 10px rgba(255,255,255,0.8)' }
+    : layoutId === 'ultra-glass' ? { background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(30px) saturate(180%)', border: '1px solid rgba(255,255,255,0.3)' }
+    : { backgroundColor: 'white', border: '1px solid #f3f4f6' }
+
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Settings</h2></div>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}>
+      <PageBack onClick={() => go('manager-home')} light /><h2 className="font-black text-xl text-white">Settings</h2>
+    </div>
     <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-4">
-      <div className="bg-white rounded-2xl p-5 shadow-sm">
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Tenant Logins: {tenantLogins.length}</p>
-        {tenantLogins.length === 0 ? <p className="text-gray-400 text-sm text-center py-4">No tenants yet.</p> : tenantLogins.map((t, i) => (<div key={i} className="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0"><div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl">{t.name[0] || ''}</div><div className="flex-1"><p className="font-bold text-gray-900 text-sm">{t.name}</p><p className="text-gray-400 text-xs">{t.house} — Joined {t.date}</p></div></div>))}
+      <div className="rounded-2xl p-5 shadow-sm" style={cardStyle}>
+        <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: config.color }}>Tenant Logins: {tenantLogins.length}</p>
+        {tenantLogins.length === 0 ? <p className="text-sm text-center py-4" style={{ color: '#9ca3af' }}>No tenants yet.</p> : tenantLogins.map((t, i) => (<div key={i} className="flex items-center gap-3 py-3 border-b last:border-0" style={{ borderColor: '#f3f4f6' }}><div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: config.color }}>{t.name[0] || ''}</div><div className="flex-1"><p className="font-bold text-sm" style={{ color: '#111827' }}>{t.name}</p><p className="text-xs" style={{ color: '#9ca3af' }}>{t.house} — Joined {t.date}</p></div></div>))}
       </div>
-      <div className="bg-white rounded-2xl p-5 shadow-sm">
-        <p className="text-xs font-bold text-red-400 uppercase tracking-wide mb-3">Account</p>
+      <div className="rounded-2xl p-5 shadow-sm" style={cardStyle}>
+        <p className="text-xs font-bold text-red-500 uppercase tracking-wide mb-3">Account</p>
         <div className="flex flex-col gap-2">
-          <button onClick={async () => { if (confirm('Sign out of your account?')) { await clearSession(); go('role-select') } }} className="w-full py-3 rounded-xl font-bold text-red-600 bg-red-50 active:scale-[0.98] transition-transform text-left px-4">
-            <Icon icon="mdi:logout" width="18" height="18" className="inline mr-2 -mt-1" />Sign Out
+          <button onClick={async () => { if (confirm('Sign out of your account?')) { await clearSession(); go('role-select') } }} className="w-full py-3 rounded-xl font-bold text-red-600 bg-red-50 active:scale-[0.98] transition-transform text-left px-4 flex items-center gap-2">
+            <Icon icon="mdi:logout" width="18" height="18" style={{ color: '#dc2626' }} />Sign Out
           </button>
-          <button onClick={async () => { if (confirm('Delete your account and estate data? This cannot be undone.')) { try { const { data: { user } } = await supabase.auth.getUser(); if (user) { await supabase.from('estates').delete().eq('manager_email', userEmail); await supabase.auth.signOut(); } } catch {} clearSession(); go('role-select') } }} className="w-full py-3 rounded-xl font-bold text-red-700 bg-red-100 active:scale-[0.98] transition-transform text-left px-4">
-            <Icon icon="mdi:delete" width="18" height="18" className="inline mr-2 -mt-1" />Delete Account
+          <button onClick={async () => { if (confirm('Delete your account and estate data? This cannot be undone.')) { try { const { data: { user } } = await supabase.auth.getUser(); if (user) { await supabase.from('estates').delete().eq('manager_email', userEmail); await supabase.auth.signOut(); } } catch (e) { console.error('Delete failed:', e); alert('Failed to delete account. Please try again.') } clearSession(); go('role-select') } }} className="w-full py-3 rounded-xl font-bold text-red-700 bg-red-100 active:scale-[0.98] transition-transform text-left px-4 flex items-center gap-2">
+            <Icon icon="mdi:delete" width="18" height="18" style={{ color: '#b91c1c' }} />Delete Account
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-5 shadow-sm">
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Estate Information</p>
-        <div className="text-sm text-gray-600 space-y-2">
-          <div className="flex justify-between"><span>Estate</span><span className="font-bold">{config.estateName}</span></div>
-          <div className="flex justify-between"><span>Monthly Dues</span><span className="font-bold">₦{config.monthlyDues.toLocaleString()}</span></div>
+      <div className="rounded-2xl p-5 shadow-sm" style={cardStyle}>
+        <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: config.color }}>Estate Information</p>
+        <div className="text-sm space-y-2" style={{ color: '#4b5563' }}>
+          <div className="flex justify-between"><span>Estate</span><span className="font-bold" style={{ color: '#111827' }}>{config.estateName}</span></div>
+          <div className="flex justify-between"><span>Monthly Dues</span><span className="font-bold" style={{ color: '#111827' }}>₦{config.monthlyDues.toLocaleString()}</span></div>
           <div className="flex justify-between"><span>Service Fee ({SERVICE_FEE_PERCENT}%)</span><span className="font-bold text-green-600">₦{Math.round(config.monthlyDues * 0.1).toLocaleString()}</span></div>
-          <div className="flex justify-between"><span>Bank</span><span className="font-bold">{config.estateBank}</span></div>
-          <div className="flex justify-between"><span>Account</span><span className="font-bold">{config.estateAccountNumber}</span></div>
+          <div className="flex justify-between"><span>Bank</span><span className="font-bold" style={{ color: '#111827' }}>{config.estateBank}</span></div>
+          <div className="flex justify-between"><span>Account</span><span className="font-bold" style={{ color: '#111827' }}>{config.estateAccountNumber || 'Not set'}</span></div>
         </div>
       </div>
-      <div className="bg-white rounded-2xl p-5 shadow-sm">
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Legal</p>
+      <div className="rounded-2xl p-5 shadow-sm" style={cardStyle}>
+        <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: config.color }}>Legal</p>
         <div className="flex flex-col gap-2">
-          <button onClick={() => go('privacy-policy')} className="w-full text-left py-3 px-4 rounded-xl hover:bg-gray-50 active:scale-[0.98] transition-all border border-gray-100">
-            <p className="font-bold text-sm text-gray-800">Privacy Policy</p>
-            <p className="text-xs text-gray-500">How we handle your data</p>
-          </button>
-          <button onClick={() => go('terms-of-service')} className="w-full text-left py-3 px-4 rounded-xl hover:bg-gray-50 active:scale-[0.98] transition-all border border-gray-100">
-            <p className="font-bold text-sm text-gray-800">Terms of Service</p>
-            <p className="text-xs text-gray-500">Rules for using EstateFlow</p>
-          </button>
-          <button onClick={() => go('payment-refund-policy')} className="w-full text-left py-3 px-4 rounded-xl hover:bg-gray-50 active:scale-[0.98] transition-all border border-gray-100">
-            <p className="font-bold text-sm text-gray-800">Payment & Refund Policy</p>
-            <p className="text-xs text-gray-500">Fees and refund process</p>
-          </button>
-          <button onClick={() => go('emergency-disclaimer')} className="w-full text-left py-3 px-4 rounded-xl hover:bg-gray-50 active:scale-[0.98] transition-all border border-gray-100">
-            <p className="font-bold text-sm text-gray-800">Emergency Disclaimer</p>
-            <p className="text-xs text-gray-500">Important safety information</p>
-          </button>
+          {[
+            { label: 'Privacy Policy', desc: 'How we handle your data', screen: 'privacy-policy' as Screen },
+            { label: 'Terms of Service', desc: 'Rules for using EstateFlow', screen: 'terms-of-service' as Screen },
+            { label: 'Payment & Refund Policy', desc: 'Fees and refund process', screen: 'payment-refund-policy' as Screen },
+            { label: 'Emergency Disclaimer', desc: 'Important safety information', screen: 'emergency-disclaimer' as Screen },
+          ].map((item) => (
+            <button key={item.label} onClick={() => go(item.screen)} className="w-full text-left py-3 px-4 rounded-xl active:scale-[0.98] transition-all flex items-center justify-between" style={{ backgroundColor: config.color + '08', border: '1px solid ' + config.color + '20' }}>
+              <div><p className="font-bold text-sm" style={{ color: '#111827' }}>{item.label}</p><p className="text-xs" style={{ color: '#6b7280' }}>{item.desc}</p></div>
+              <Icon icon="mdi:chevron-right" width="18" height="18" style={{ color: '#9ca3af' }} />
+            </button>
+          ))}
         </div>
       </div>
     </div>
@@ -2269,7 +2343,7 @@ export default function App() {
             const parsed = JSON.parse(saved)
             setConfig(prev => ({ ...prev, ...parsed }))
           }
-        } catch {}
+        } catch (e) { console.error('Local estate load failed:', e) }
         // Also try database (may fail due to RLS)
         try {
           const { data: estates } = await supabase.from('estates').select('*').eq('manager_email', session.user.email).limit(1)
@@ -2380,7 +2454,7 @@ export default function App() {
     emergency: <EmergencyScreen go={go} config={config} tenant={tenant} alerts={alerts} setAlerts={setAlerts} />,
     guest: <GuestScreen go={go} config={config} tenant={tenant} guestCodes={guestCodes} setGuestCodes={setGuestCodes} />,
     'service-code': <ServiceCodeScreen go={go} config={config} setConfig={setConfig} />,
-    'service-role': <ServiceRoleScreen go={go} />,
+    'service-role': <ServiceRoleScreen go={go} config={config} />,
     'service-security': <ServiceSecurityScreen go={go} config={config} alerts={alerts} guestCodes={guestCodes} />,
     'service-worker': <ServiceWorkerScreen go={go} config={config} complaints={complaints} />,
     'ai-chatbot': <TenantHomeScreen go={go} config={config} tenant={tenant} notifications={notifications} setNotifications={setNotifications} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />,
@@ -2404,8 +2478,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-400 flex items-center justify-center p-0 sm:p-6">
-      <div className="relative overflow-hidden w-full sm:max-w-[420px] md:max-w-[480px] lg:max-w-[500px] mx-auto" style={{ height: '100dvh', maxHeight: '900px', fontFamily: config.fontFamily, boxShadow: '0 30px 80px rgba(0,0,0,0.4)', borderRadius: 'clamp(0px, 2vw, 36px)', ...getBgStyle() }}>
+    <div className="min-h-screen flex items-center justify-center p-0" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+      <div className="relative overflow-hidden w-full sm:max-w-[420px] md:max-w-[480px] lg:max-w-[500px] xl:max-w-[520px] mx-auto" style={{ height: '100dvh', maxHeight: '920px', fontFamily: config.fontFamily, boxShadow: '0 30px 80px rgba(0,0,0,0.4)', borderRadius: 'clamp(0px, 2vw, 36px)', ...getBgStyle() }}>
         <PageTransition>{screens[screen]}</PageTransition>
       </div>
     </div>
