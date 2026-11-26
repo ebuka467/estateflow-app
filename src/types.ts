@@ -118,6 +118,8 @@ export interface Notification {
   date: string
   type: 'announcement' | 'payment' | 'maintenance' | 'emergency' | 'complaint' | 'guest' | 'system'
   read: boolean
+  expiresAt?: string | null
+  durationHours?: number | null
 }
 
 export interface Invoice {

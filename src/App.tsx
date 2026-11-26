@@ -767,12 +767,42 @@ function ManagementScreen({ go, config, invoices, complaints, setComplaints }: {
 // ============================================
 function AnnouncementEditorScreen({ go, config, setNotifications, notifications }: { go: (s: Screen) => void; config: EstateConfig; setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>; notifications: Notification[] }) {
   const [title, setTitle] = useState(''); const [body, setBody] = useState(''); const [sent, setSent] = useState(false)
+  const [duration, setDuration] = useState('24') // hours — default 1 day
+
+  // Calculate expiry date from duration
+  const getExpiryDate = (hours: string): string => {
+    const h = parseInt(hours) || 24
+    const expiry = new Date(Date.now() + h * 60 * 60 * 1000)
+    return expiry.toISOString()
+  }
+
+  const durationOptions = [
+    { label: '6 Hours', value: '6', icon: 'mdi:clock-outline' },
+    { label: '1 Day', value: '24', icon: 'mdi:calendar-today' },
+    { label: '3 Days', value: '72', icon: 'mdi:calendar-week' },
+    { label: '1 Week', value: '168', icon: 'mdi:calendar-weekend' },
+    { label: '2 Weeks', value: '336', icon: 'mdi:calendar-month' },
+    { label: '1 Month', value: '720', icon: 'mdi:calendar' },
+    { label: 'Forever', value: '0', icon: 'mdi:infinity' },
+  ]
+
   const handleSend = () => {
     if (!title.trim() || !body.trim()) return
+    const hours = parseInt(duration) || 0
+    const expiresAt = hours > 0 ? getExpiryDate(duration) : null
+
     const notif: Notification = { id: 'n' + Date.now(), title: title.trim(), message: body.trim(), date: new Date().toLocaleDateString(), type: 'announcement', read: false }
     setNotifications([notif, ...notifications])
-    // Save to Supabase so tenants see it on their devices
-    supabase.from('announcements').insert([{ estate_id: localStorage.getItem('ef_estate_id') || '', author_id: null, title: title.trim(), body: body.trim(), priority: 'normal' }]).then(() => { }, () => { })
+    // Save to Supabase with expiry
+    supabase.from('announcements').insert([{
+      estate_id: localStorage.getItem('ef_estate_id') || '',
+      author_id: null,
+      title: title.trim(),
+      body: body.trim(),
+      priority: 'normal',
+      expires_at: expiresAt,
+      duration_hours: hours
+    }]).then(() => { }, () => { })
     setTitle(''); setBody(''); setSent(true); setTimeout(() => setSent(false), 2000)
   }
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
@@ -780,11 +810,40 @@ function AnnouncementEditorScreen({ go, config, setNotifications, notifications 
     <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5">
       {!sent ? <>
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3"><p className="text-xs text-blue-800 font-bold">Announcements reach all tenants</p><p className="text-xs text-blue-700 mt-1">Appears on tenant home screen notification area.</p></div>
-        <button onClick={handleSend} disabled={!title.trim() || !body.trim()} className="w-full py-28 rounded-3xl font-bold text-white text-xl active:scale-[0.98] transition-transform shadow-lg flex flex-col items-center justify-center gap-3" style={{ backgroundColor: (title.trim() && body.trim()) ? config.color : '#d1d5db' }}>
-          <Icon icon="mdi:bullhorn" width="48" height="48" /><span>{title.trim() ? 'Send Announcement' : 'Tap to Start'}</span>
-        </button>
         <Field placeholder="Announcement Title" value={title} onChange={setTitle} />
         <textarea placeholder="Write your announcement here..." value={body} onChange={(e) => setBody(e.target.value)} rows={4} className="w-full py-4 px-5 bg-white rounded-xl border-2 border-black/10 font-semibold text-black placeholder-gray-400 text-base outline-none resize-none shadow-sm" />
+
+        {/* Duration / Expiry Picker */}
+        <div className="mt-1">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Disappear after</p>
+          <div className="grid grid-cols-4 gap-2">
+            {durationOptions.map((opt) => (
+              <button key={opt.value} onClick={() => setDuration(opt.value)}
+                className="flex flex-col items-center gap-1 py-3 rounded-xl border-2 text-xs font-bold transition-all active:scale-[0.97]"
+                style={{
+                  borderColor: duration === opt.value ? config.color : '#e5e7eb',
+                  backgroundColor: duration === opt.value ? config.color + '12' : 'white',
+                  color: duration === opt.value ? config.color : '#6b7280'
+                }}>
+                <Icon icon={opt.icon} width="18" height="18" />
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {duration !== '0' && (
+            <p className="text-xs text-gray-400 mt-2 text-center">
+              Expires: {new Date(Date.now() + (parseInt(duration) || 24) * 60 * 60 * 1000).toLocaleString()}
+            </p>
+          )}
+          {duration === '0' && (
+            <p className="text-xs text-gray-400 mt-2 text-center">Announcement will not expire</p>
+          )}
+        </div>
+
+        <button onClick={handleSend} disabled={!title.trim() || !body.trim()} className="w-full py-4 rounded-2xl font-bold text-white text-base active:scale-[0.98] transition-transform shadow-lg flex items-center justify-center gap-3" style={{ backgroundColor: (title.trim() && body.trim()) ? config.color : '#d1d5db' }}>
+          <Icon icon="mdi:bullhorn" width="22" height="22" />
+          <span>{title.trim() ? 'Send to All Tenants' : 'Fill in title & message'}</span>
+        </button>
       </> : <div className="flex flex-col items-center justify-center flex-1 gap-4"><SuccessAnimation message="Announcement Sent!" subtext="All tenants have been notified." color={config.color} /><ThemedBtn onClick={() => go('manager-home')} color={config.color}>Back to Home</ThemedBtn></div>}
     </div>
   </div>
@@ -1427,13 +1486,20 @@ function TenantOnboardingScreen({ go, config, setTenant }: { go: (s: Screen) => 
 function TenantHomeScreen({ go, config, tenant, notifications, setNotifications, menuOpen, setMenuOpen }: {
   go: (s: Screen) => void; config: EstateConfig; tenant: TenantInfo | null; notifications: Notification[]; setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>; menuOpen: boolean; setMenuOpen: (v: boolean) => void
 }) {
-  // Load announcements from Supabase
+  // Load announcements from Supabase (filter out expired)
   useEffect(() => {
     const loadAnnouncements = async () => {
       try {
         const estateId = localStorage.getItem('ef_estate_id')
         if (estateId) {
-          const { data, error } = await supabase.from('announcements').select('*').eq('estate_id', estateId).order('created_at', { ascending: false }).limit(10)
+          const now = new Date().toISOString()
+          // Fetch only non-expired announcements (expires_at is null OR in the future)
+          const { data, error } = await supabase.from('announcements')
+            .select('*')
+            .eq('estate_id', estateId)
+            .or(`expires_at.is.null,expires_at.gt.${now}`)
+            .order('created_at', { ascending: false })
+            .limit(20)
           if (data && !error) {
             const annNotifs: Notification[] = data.map((a: any) => ({
               id: a.id,
@@ -1441,13 +1507,14 @@ function TenantHomeScreen({ go, config, tenant, notifications, setNotifications,
               message: a.body || '',
               date: a.created_at?.split('T')[0] || new Date().toLocaleDateString(),
               type: 'announcement' as const,
-              read: false
+              read: false,
+              expiresAt: a.expires_at || null,
+              durationHours: a.duration_hours || null,
             }))
-            // Merge with existing, avoid duplicates
+            // Replace announcements entirely (no merge with stale data)
             setNotifications((prev: Notification[]) => {
-              const existingIds = new Set(prev.map((n: Notification) => n.id))
-              const newOnes = annNotifs.filter(n => !existingIds.has(n.id))
-              return [...newOnes, ...prev]
+              const nonAnnouncements = prev.filter((n: Notification) => n.type !== 'announcement')
+              return [...annNotifs, ...nonAnnouncements]
             })
           }
         }
@@ -1489,7 +1556,32 @@ function TenantHomeScreen({ go, config, tenant, notifications, setNotifications,
       </div>
       {/* Notifications */}
       {unread > 0 && <div className="bg-red-50 border border-red-200 rounded-2xl p-3 mb-4 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white font-bold">{unread}</div><div><p className="font-bold text-red-800 text-sm">{unread} new notification{unread > 1 ? 's' : ''}</p></div></div>}
-      {notifications.slice(0, 5).map((n) => <div key={n.id} className="rounded-2xl p-4 shadow-sm mb-3" style={{ backgroundColor: cardBg, borderLeft: '4px solid ' + (n.type === 'payment' ? '#1B873F' : n.type === 'emergency' ? '#ef4444' : n.type === 'complaint' ? '#f59e0b' : config.color) }}><p className="text-xs font-medium mb-1" style={{ color: textS }}>{n.date} — {n.type}</p><h5 className="font-bold text-sm mb-1" style={{ color: textP }}>{n.title}</h5><p className="text-xs" style={{ color: textS }}>{n.message}</p></div>)}
+      {notifications.slice(0, 8).map((n) => {
+        // Calculate expiry display
+        let expiryLabel = ''
+        let isExpiringSoon = false
+        if (n.type === 'announcement' && n.expiresAt) {
+          const expTime = new Date(n.expiresAt).getTime()
+          const now = Date.now()
+          const hoursLeft = Math.round((expTime - now) / (1000 * 60 * 60))
+          if (hoursLeft <= 0) { expiryLabel = 'Expired' }
+          else if (hoursLeft < 24) { expiryLabel = `Expires in ${hoursLeft}h`; isExpiringSoon = true }
+          else if (hoursLeft < 168) { expiryLabel = `Expires in ${Math.round(hoursLeft / 24)}d` }
+          else { expiryLabel = `Expires in ${Math.round(hoursLeft / 168)}w` }
+        } else if (n.type === 'announcement' && !n.expiresAt && n.durationHours === 0) {
+          expiryLabel = 'Permanent'
+        }
+        return (
+          <div key={n.id} className="rounded-2xl p-4 shadow-sm mb-3" style={{ backgroundColor: cardBg, borderLeft: '4px solid ' + (n.type === 'payment' ? '#1B873F' : n.type === 'emergency' ? '#ef4444' : n.type === 'complaint' ? '#f59e0b' : n.type === 'announcement' && isExpiringSoon ? '#f59e0b' : config.color) }}>
+            <div className="flex items-start justify-between mb-1">
+              <p className="text-xs font-medium" style={{ color: textS }}>{n.date} — {n.type}</p>
+              {expiryLabel && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: isExpiringSoon ? '#fef3c7' : config.color + '15', color: isExpiringSoon ? '#92400e' : config.color }}>{expiryLabel}</span>}
+            </div>
+            <h5 className="font-bold text-sm mb-1" style={{ color: textP }}>{n.title}</h5>
+            <p className="text-xs" style={{ color: textS }}>{n.message}</p>
+          </div>
+        )
+      })}
     </div>
     {/* Bottom Nav */}
     <div className="absolute bottom-0 left-0 right-0 px-3 z-10" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}><div className="flex rounded-2xl overflow-hidden shadow-xl" style={{ backgroundColor: isGB ? '#1a1a1a' : config.color }}>
@@ -2115,10 +2207,7 @@ export default function App() {
   const [userEmail, setUserEmail] = useState<string>('')
   const [authChecked, setAuthChecked] = useState(false)
   const [tenantLogins, setTenantLogins] = useState<{ name: string; house: string; date: string }[]>([])
-  const [notifications, setNotifications] = useState<Notification[]>([
-    { id: 'n1', title: 'Estate Fumigation', message: 'Estate-wide fumigation Saturday 19 July at 8am.', date: 'Jul 14, 2026', type: 'announcement', read: false },
-    { id: 'n2', title: 'Monthly Meeting', message: 'Residents meeting Sunday 20 July at community hall.', date: 'Jul 12, 2026', type: 'announcement', read: false },
-  ])
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [complaints, setComplaints] = useState<Complaint[]>([])
   const [alerts, setAlerts] = useState<EmergencyAlert[]>([])
