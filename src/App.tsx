@@ -443,9 +443,9 @@ function EstateProfileScreen({ go, config, setConfig, userEmail }: { go: (s: Scr
   const set = (k: keyof typeof form) => (v: string) => setForm({ ...form, [k]: v })
   const breakdown = calculatePaymentBreakdown(parseInt(form.dues) || 15000)
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Estate Profile</h2></div>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Estate Profile</h2></div>
     <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-3 pb-8">
-      <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+      <div className="rounded-xl p-3" style={{ backgroundColor: config.color + "10", border: "1px solid " + config.color + "30" }}>
         <p className="text-xs text-green-800 font-bold">Your estate platform is free</p>
         <p className="text-xs text-green-700 mt-1">EstateFlow earns through a transparent {SERVICE_FEE_PERCENT}% service fee added on top of estate dues.</p>
       </div>
@@ -454,7 +454,7 @@ function EstateProfileScreen({ go, config, setConfig, userEmail }: { go: (s: Scr
       <Field placeholder="Size of Estate" value={form.size} onChange={set('size')} />
       <Field placeholder="Number of Units" value={form.occupants} onChange={set('occupants')} />
       <Field placeholder="Monthly Estate Dues (₦)" type="number" value={form.dues} onChange={set('dues')} />
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-2">
+      <div className="rounded-xl p-4 mt-2" style={{ backgroundColor: config.color + "08", border: "1px solid " + config.color + "25" }}>
         <p className="text-xs text-blue-800 font-bold mb-2">What tenants will pay</p>
         <div className="space-y-1 text-sm">
           <div className="flex justify-between"><span className="text-gray-600">Estate Dues</span><span className="font-bold">₦{breakdown.baseAmount.toLocaleString()}</span></div>
@@ -464,7 +464,7 @@ function EstateProfileScreen({ go, config, setConfig, userEmail }: { go: (s: Scr
           <div className="flex justify-between text-xs text-gray-500 mt-1"><span>Estate receives</span><span>₦{breakdown.estateSettlement.toLocaleString()}</span></div>
         </div>
       </div>
-      <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 mt-2">
+      <div className="rounded-xl p-3 mt-2" style={{ backgroundColor: config.color + "08", border: "1px solid " + config.color + "25" }}>
         <p className="text-xs text-purple-800 font-bold mb-2">Payment Setup — Estate Bank Account</p>
         <Field placeholder="Account Number" value={form.accountNum} onChange={set('accountNum')} /><div className="h-2" />
         <Field placeholder="Account Name" value={form.accountName} onChange={set('accountName')} /><div className="h-2" />
@@ -472,7 +472,7 @@ function EstateProfileScreen({ go, config, setConfig, userEmail }: { go: (s: Scr
           <option value="">Select Bank</option>{BANKS.map(b => <option key={b} value={b}>{b}</option>)}
         </select>
       </div>
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 mt-2">
+      <div className="rounded-xl p-3 mt-2" style={{ backgroundColor: config.color + "06", border: "1px solid " + config.color + "20" }}>
         <p className="text-xs text-gray-800 font-bold mb-2">Estate Picture (optional)</p>
         <Field placeholder="Estate picture URL" value={form.picUrl} onChange={set('picUrl')} />
       </div>
@@ -495,9 +495,9 @@ function PaymentSetupScreen({ go, config, setConfig }: { go: (s: Screen) => void
   const [verified, setVerified] = useState(false)
   const breakdown = calculatePaymentBreakdown(config.monthlyDues)
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('estate-profile')} /><h2 className="font-black text-xl">Payment Setup</h2></div>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => go('estate-profile')} /><h2 className="font-black text-xl">Payment Setup</h2></div>
     <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-4 pb-8">
-      <div className="bg-white rounded-2xl p-5 shadow-sm">
+      <div className="rounded-2xl p-5 shadow-sm" style={{ backgroundColor: "white", border: "1px solid " + config.color + "18" }}>
         <p className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-3">Estate Settlement Account</p>
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: config.color + '15' }}><Icon icon="mdi:bank" width="24" height="24" style={{ color: config.color }} /></div>
@@ -507,7 +507,7 @@ function PaymentSetupScreen({ go, config, setConfig }: { go: (s: Screen) => void
           {verified ? '✓ Account Verified' : 'Verify Account'}
         </button>
       </div>
-      <div className="bg-white rounded-2xl p-5 shadow-sm">
+      <div className="rounded-2xl p-5 shadow-sm" style={{ backgroundColor: "white", border: "1px solid " + config.color + "18" }}>
         <p className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-3">Payment Flow</p>
         <div className="space-y-3">
           <div className="flex items-start gap-3"><div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm" style={{ backgroundColor: config.color }}>1</div><div><p className="font-bold text-sm text-gray-800">Tenant receives invoice</p><p className="text-xs text-gray-500">Estate dues + {SERVICE_FEE_PERCENT}% EstateFlow service fee</p></div></div>
@@ -515,7 +515,7 @@ function PaymentSetupScreen({ go, config, setConfig }: { go: (s: Screen) => void
           <div className="flex items-start gap-3"><div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm" style={{ backgroundColor: config.color }}>3</div><div><p className="font-bold text-sm text-gray-800">Automatic split settlement</p><p className="text-xs text-gray-500">₦{breakdown.estateSettlement.toLocaleString()} → Estate | ₦{breakdown.estateflowShare.toLocaleString()} → EstateFlow</p></div></div>
         </div>
       </div>
-      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+      <div className="rounded-xl p-4" style={{ backgroundColor: "#10b98115", border: "1px solid #10b98140" }}>
         <p className="text-sm text-green-800 font-bold">Your estate pays nothing</p>
         <p className="text-xs text-green-700 mt-1">EstateFlow is free for estates. We earn through the transparent service fee on payments.</p>
       </div>
@@ -661,8 +661,8 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
       </div>
     </div>
     {/* Side Menu */}
-    {menuOpen && <div className="absolute inset-0 z-50 flex"><div className="w-3/4 h-full bg-white flex flex-col pt-16 px-6 pb-8 shadow-2xl" style={{ animation: 'slideInLeft 0.3s ease' }}>
-      <div className="flex items-center gap-3 mb-8"><div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ backgroundColor: config.color }}><HouseIcon stroke="white" size={24} /></div><div><p className="font-black text-gray-900">{config.estateName}</p><p className="text-gray-400 text-xs">Estate Manager</p></div></div>
+    {menuOpen && <div className="absolute inset-0 z-50 flex"><div className="w-3/4 h-full flex flex-col pt-16 px-6 pb-8 shadow-2xl" style={{ animation: 'slideInLeft 0.3s ease', background: 'linear-gradient(180deg, ' + config.color + 'ee, ' + config.color + 'cc)', backdropFilter: 'blur(24px)' }}>
+      <div className="flex items-center gap-3 mb-8"><div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ backgroundColor: config.color }}><HouseIcon stroke="white" size={24} /></div><div><p className="font-black text-white">{config.estateName}</p><p className="text-white/60 text-xs">Estate Manager</p></div></div>
       <div className="flex flex-col gap-1 flex-1">
         {[
           { label: 'Search Tenant', icon: 'mdi:account-search', s: 'search-tenant' as Screen },
@@ -671,13 +671,13 @@ function ManagerHomeScreen({ go, config, menuOpen, setMenuOpen, notifications, i
           { label: 'Reports', icon: 'mdi:chart-bar', s: 'management' as Screen },
           { label: 'Customize Estate', icon: 'mdi:palette', s: 'theme-customizer' as Screen },
         ].map((item) => (
-          <button key={item.label} onClick={() => { setMenuOpen(false); go(item.s) }} className="flex items-center gap-4 py-4 px-4 rounded-2xl hover:bg-gray-50 active:scale-[0.98] transition-all text-left">
-            <Icon icon={item.icon} width="24" height="24" style={{ color: '#6b7280' }} /><span className="font-bold text-gray-800">{item.label}</span>
+          <button key={item.label} onClick={() => { setMenuOpen(false); go(item.s) }} className="flex items-center gap-4 py-4 px-4 rounded-2xl active:scale-[0.98] transition-all text-left" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
+            <Icon icon={item.icon} width="24" height="24" style={{ color: 'white' }} /><span className="font-bold text-white">{item.label}</span>
           </button>
         ))}
       </div>
-      <button onClick={() => { setMenuOpen(false); clearSession(); go('role-select') }} className="flex items-center gap-3 py-3 px-4 rounded-xl text-red-500 font-bold mt-4">Sign Out</button>
-    </div><div className="flex-1 bg-black/40" onClick={() => setMenuOpen(false)} /></div>}
+      <button onClick={() => { setMenuOpen(false); clearSession(); go('role-select') }} className="flex items-center gap-3 py-3 px-4 rounded-xl text-white/80 font-bold mt-4 bg-white/10"><Icon icon="mdi:logout" width="18" height="18" />Sign Out</button>
+    </div><div className="flex-1 bg-black/50 backdrop-blur-sm" onClick={() => setMenuOpen(false)} /></div>}
   </div>
 }
 
@@ -726,21 +726,21 @@ function ManagementScreen({ go, config, invoices, complaints, setComplaints }: {
   }, [])
 
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Management</h2></div>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Management</h2></div>
     <div className="flex-1 overflow-y-auto px-5 py-4 pb-8">
       <div className="bg-gray-200 rounded-xl p-1 flex relative mb-5"><div className="absolute top-1 bottom-1 rounded-lg transition-all duration-300 shadow-sm" style={{ width: 'calc(33.33% - 3px)', left: 'calc(' + (activeTab * 33.33) + '% + 2px)', backgroundColor: config.color }} />{tabs.map((t, i) => (<button key={t} onClick={() => setActiveTab(i)} className="flex-1 py-2.5 text-sm font-bold relative z-10 rounded-lg transition-colors" style={{ color: activeTab === i ? 'white' : '#6b7280' }}>{t}</button>))}</div>
       {/* Financial Summary */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm mb-5">
+      <div className="rounded-2xl p-5 shadow-sm mb-5" style={{ backgroundColor: config.color + "10", border: "1px solid " + config.color + "20" }}>
         <p className="font-bold text-gray-700 text-sm mb-4">Financial Summary</p>
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-green-50 rounded-xl p-3"><p className="text-xs text-green-600 font-bold">Collected</p><p className="font-black text-lg text-green-800">₦{totalCollected.toLocaleString()}</p></div>
-          <div className="bg-yellow-50 rounded-xl p-3"><p className="text-xs text-yellow-600 font-bold">Outstanding</p><p className="font-black text-lg text-yellow-800">₦{totalOutstanding.toLocaleString()}</p></div>
-          <div className="bg-blue-50 rounded-xl p-3"><p className="text-xs text-blue-600 font-bold">Estate Settlement</p><p className="font-black text-lg text-blue-800">₦{totalCollected.toLocaleString()}</p></div>
-          <div className="bg-purple-50 rounded-xl p-3"><p className="text-xs text-purple-600 font-bold">Service Fees</p><p className="font-black text-lg text-purple-800">₦{totalFees.toLocaleString()}</p></div>
+          <div className="rounded-xl p-3" style={{ backgroundColor: "#10b98112" }}><p className="text-xs text-green-600 font-bold">Collected</p><p className="font-black text-lg text-green-800">₦{totalCollected.toLocaleString()}</p></div>
+          <div className="rounded-xl p-3" style={{ backgroundColor: "#f59e0b12" }}><p className="text-xs text-yellow-600 font-bold">Outstanding</p><p className="font-black text-lg text-yellow-800">₦{totalOutstanding.toLocaleString()}</p></div>
+          <div className="rounded-xl p-3" style={{ backgroundColor: "#3b82f612" }}><p className="text-xs text-blue-600 font-bold">Estate Settlement</p><p className="font-black text-lg text-blue-800">₦{totalCollected.toLocaleString()}</p></div>
+          <div className="rounded-xl p-3" style={{ backgroundColor: "#8b5cf612" }}><p className="text-xs text-purple-600 font-bold">Service Fees</p><p className="font-black text-lg text-purple-800">₦{totalFees.toLocaleString()}</p></div>
         </div>
       </div>
       {/* Chart */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm mb-5">
+      <div className="rounded-2xl p-5 shadow-sm mb-5" style={{ backgroundColor: config.color + "10", border: "1px solid " + config.color + "20" }}>
         <p className="font-bold text-gray-700 text-sm mb-4">{activeTab === 0 ? 'Monthly Collection' : activeTab === 1 ? 'Maintenance Requests' : 'Overview'}</p>
         <div className="flex items-end gap-2" style={{ height: 140 }}>
           {(activeTab === 0 ? monthlyCollected : complaintData).map((v, i) => (
@@ -806,7 +806,7 @@ function AnnouncementEditorScreen({ go, config, setNotifications, notifications 
     setTitle(''); setBody(''); setSent(true); setTimeout(() => setSent(false), 2000)
   }
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Announcements</h2></div>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Announcements</h2></div>
     <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5">
       {!sent ? <>
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3"><p className="text-xs text-blue-800 font-bold">Announcements reach all tenants</p><p className="text-xs text-blue-700 mt-1">Appears on tenant home screen notification area.</p></div>
@@ -904,11 +904,11 @@ function InvoicesScreen({ go, config, invoices, setInvoices, setNotifications, n
   const pendingCount = invoices.filter(i => i.status === 'pending').length
 
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Invoices</h2>{pendingCount > 0 && <span className="ml-auto text-xs font-bold text-white bg-red-500 px-2 py-1 rounded-full">{pendingCount} pending</span>}</div>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Invoices</h2>{pendingCount > 0 && <span className="ml-auto text-xs font-bold text-white bg-red-500 px-2 py-1 rounded-full">{pendingCount} pending</span>}</div>
     <div className="flex-1 overflow-y-auto px-5 py-4 pb-8">
       <div className="flex bg-gray-200 rounded-xl p-1 gap-1 mb-4">{(['all', 'pending', 'verified'] as const).map((f) => (<button key={f} onClick={() => setFilter(f)} className="flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all" style={{ backgroundColor: filter === f ? 'white' : 'transparent', color: filter === f ? '#111' : '#6b7280' }}>{f}</button>))}</div>
       {loading ? <div className="text-center py-16"><p className="text-gray-400">Loading invoices...</p></div> : filtered.length === 0 ? <EmptyState icon="mdi:receipt" title="No invoices" message="Invoices will appear here when tenants make payments." /> :
-      filtered.map((inv) => <div key={inv.id} className="bg-white rounded-2xl p-4 shadow-sm mb-3">
+      filtered.map((inv) => <div key={inv.id} className="rounded-2xl p-4 shadow-sm mb-3" style={{ backgroundColor: "white", borderLeft: "4px solid " + config.color }}>
         <div className="flex items-start justify-between mb-2"><div><p className="font-bold text-gray-900">{inv.tenantName}</p><p className="text-gray-400 text-xs">{inv.houseNumber} — {inv.date}</p></div><StatusBadge status={inv.status} /></div>
         <div className="border-t pt-2 mt-2">
           <div className="flex justify-between text-sm mb-1"><span className="text-gray-500">Estate Dues</span><span className="font-bold">₦{inv.baseAmount.toLocaleString()}</span></div>
@@ -1318,18 +1318,18 @@ function ThemeCustomizerScreen({ go, config, setConfig, userEmail }: { go: (s: S
 // QR SHARE SCREEN
 // ============================================
 function QRShareScreen({ go, config }: { go: (s: Screen) => void; config: EstateConfig }) {
-  return <div className="flex flex-col h-full bg-gray-50">
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Share Access</h2></div>
+  return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + "10" }}>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Share Access</h2></div>
     <div className="flex-1 overflow-y-auto px-5 py-6 flex flex-col items-center gap-5">
-      <div className="bg-white rounded-3xl p-5 shadow-lg w-full flex flex-col items-center gap-4">
+      <div className="rounded-3xl p-5 shadow-lg w-full flex flex-col items-center gap-4" style={{ backgroundColor: "white", border: "1px solid " + config.color + "20" }}>
         <p className="text-sm text-gray-500 font-medium">Share with tenants to join {config.estateName}</p>
-        <div className="p-4 bg-white rounded-2xl border-2 border-gray-100 shadow-inner"><QRCodeSVG value={config.joinCode} size={200} bgColor="#ffffff" fgColor={config.color} level="H" includeMargin={true} /></div>
+        <div className="p-4 rounded-2xl shadow-inner" style={{ backgroundColor: "white", border: "2px solid " + config.color + "20" }}><QRCodeSVG value={config.joinCode} size={200} bgColor="#ffffff" fgColor={config.color} level="H" includeMargin={true} /></div>
         <div className="bg-gray-50 rounded-2xl px-6 py-3 border border-gray-200 w-full text-center"><p className="text-xs text-gray-400 font-bold uppercase mb-1">Join Code</p><p className="text-2xl font-black tracking-widest" style={{ color: config.color }}>{config.joinCode}</p></div>
         <div className="flex items-center gap-2 text-xs text-gray-400"><Icon icon="mdi:shield-check" width="16" height="16" style={{ color: config.color }} /><span>Secure and unique to your estate</span></div>
       </div>
       <div className="w-full"><p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Share via</p>
         <div className="grid grid-cols-3 gap-3">{[{label:'WhatsApp',icon:'mdi:whatsapp'},{label:'Messages',icon:'mdi:message-text'},{label:'Copy',icon:'mdi:content-copy'}].map((a) => (
-          <button key={a.label} className="flex flex-col items-center gap-2 bg-white rounded-2xl py-4 shadow-sm active:scale-95 transition-transform"><Icon icon={a.icon} width="24" height="24" style={{ color: config.color }} /><span className="text-xs font-bold text-gray-700">{a.label}</span></button>
+          <button key={a.label} className="flex flex-col items-center gap-2 rounded-2xl py-4 shadow-sm active:scale-95 transition-transform" style={{ backgroundColor: "white", border: "1px solid " + config.color + "18" }}><Icon icon={a.icon} width="24" height="24" style={{ color: config.color }} /><span className="text-xs font-bold text-gray-700">{a.label}</span></button>
         ))}</div></div>
     </div>
   </div>
@@ -1555,7 +1555,7 @@ function TenantHomeScreen({ go, config, tenant, notifications, setNotifications,
         <button onClick={() => go('tenant-bills')} className="w-full py-3 rounded-xl font-bold text-sm active:scale-[0.98] transition-transform" style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}>Pay Now →</button>
       </div>
       {/* Notifications */}
-      {unread > 0 && <div className="bg-red-50 border border-red-200 rounded-2xl p-3 mb-4 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white font-bold">{unread}</div><div><p className="font-bold text-red-800 text-sm">{unread} new notification{unread > 1 ? 's' : ''}</p></div></div>}
+      {unread > 0 && <div className="rounded-2xl p-3 mb-4 flex items-center gap-3" style={{ backgroundColor: "#ef444412", border: "1px solid #ef444430" }}><div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white font-bold">{unread}</div><div><p className="font-bold text-red-800 text-sm">{unread} new notification{unread > 1 ? 's' : ''}</p></div></div>}
       {notifications.slice(0, 8).map((n) => {
         // Calculate expiry display
         let expiryLabel = ''
@@ -1593,15 +1593,15 @@ function TenantHomeScreen({ go, config, tenant, notifications, setNotifications,
         { label: 'Guest', icon: 'mdi:account-group', s: 'guest' as Screen },
       ].map((item, i) => (<button key={i} onClick={() => go(item.s)} className="flex-1 py-3 flex flex-col items-center gap-1 transition-colors"><Icon icon={item.icon} width="20" height="20" style={{ color: 'rgba(255,255,255,0.9)' }} /><span className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.9)' }}>{item.label}</span></button>))}</div></div>
     {/* Side Menu */}
-    {menuOpen && <div className="absolute inset-0 z-50 flex"><div className="w-3/4 h-full bg-white flex flex-col pt-16 px-6 pb-8 shadow-2xl" style={{ animation: 'slideInLeft 0.3s ease' }}>
+    {menuOpen && <div className="absolute inset-0 z-50 flex"><div className="w-3/4 h-full flex flex-col pt-16 px-6 pb-8 shadow-2xl" style={{ animation: 'slideInLeft 0.3s ease', background: 'linear-gradient(180deg, ' + config.color + 'ee, ' + config.color + 'cc)', backdropFilter: 'blur(24px)' }}>
       <div className="flex items-center gap-3 mb-8"><div className="w-11 h-11 rounded-full overflow-hidden flex items-center justify-center" style={{ backgroundColor: config.color }}><div style={{width:'100%',height:'100%'}} dangerouslySetInnerHTML={{__html: tenant?.avatar || AVATAR_SVGS[0]}} /></div><div><p className="font-black text-gray-900">{tenant?.name || 'Tenant'}</p><p className="text-gray-400 text-xs">{tenant?.houseNumber || 'Not set'}</p></div></div>
       <div className="flex flex-col gap-1 flex-1">
         {[{ label: 'My Profile', icon: 'mdi:account', s: 'tenant-profile' as Screen }, { label: 'Notifications', icon: 'mdi:bell', s: 'tenant-home' as Screen }, { label: 'Receipts', icon: 'mdi:receipt', s: 'tenant-receipts' as Screen }, { label: 'Settings', icon: 'mdi:cog', s: 'tenant-settings' as Screen }].map((item) => (
-          <button key={item.label} onClick={() => { setMenuOpen(false); go(item.s) }} className="flex items-center gap-4 py-4 px-4 rounded-2xl hover:bg-gray-50 active:scale-[0.98] transition-all text-left"><Icon icon={item.icon} width="24" height="24" style={{ color: '#6b7280' }} /><span className="font-bold text-gray-800">{item.label}</span></button>
+          <button key={item.label} onClick={() => { setMenuOpen(false); go(item.s) }} className="flex items-center gap-4 py-4 px-4 rounded-2xl active:scale-[0.98] transition-all text-left" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}><Icon icon={item.icon} width="24" height="24" style={{ color: 'white' }} /><span className="font-bold text-white">{item.label}</span></button>
         ))}
       </div>
-      <button onClick={() => { setMenuOpen(false); go('role-select') }} className="flex items-center gap-3 py-3 px-4 rounded-xl text-red-500 font-bold mt-4">Sign Out</button>
-    </div><div className="flex-1 bg-black/40" onClick={() => setMenuOpen(false)} /></div>}
+      <button onClick={() => { setMenuOpen(false); go('role-select') }} className="flex items-center gap-3 py-3 px-4 rounded-xl text-white/80 font-bold mt-4 bg-white/10"><Icon icon="mdi:logout" width="18" height="18" />Sign Out</button>
+    </div><div className="flex-1 bg-black/50 backdrop-blur-sm" onClick={() => setMenuOpen(false)} /></div>}
   </div>
 }
 
@@ -1612,7 +1612,7 @@ function TenantBillsScreen({ go, config, tenant, invoices, setInvoices, setNotif
   const myInvoices = invoices.filter(i => i.houseNumber === tenant?.houseNumber)
   const pending = myInvoices.find(i => i.status === 'pending')
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('tenant-home')} /><h2 className="font-black text-xl">My Bills</h2></div>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => go('tenant-home')} /><h2 className="font-black text-xl">My Bills</h2></div>
     <div className="flex-1 overflow-y-auto px-5 py-4 pb-32">
       <div className="rounded-2xl p-5 mb-5 text-white" style={{ background: 'linear-gradient(135deg, ' + config.color + ', ' + config.color + 'bb)' }}>
         <p className="text-white/80 text-sm font-medium mb-1">Total to Pay</p>
@@ -1620,10 +1620,10 @@ function TenantBillsScreen({ go, config, tenant, invoices, setInvoices, setNotif
         <p className="text-white/70 text-xs mt-1">{tenant?.houseNumber} — {tenant?.name}</p>
       </div>
       <PaymentBreakdown baseAmount={config.monthlyDues} color={config.color} />
-      {pending && <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mt-3"><p className="text-yellow-800 text-sm font-bold">Payment pending verification</p><p className="text-yellow-600 text-xs mt-1">Manager will verify your payment shortly.</p></div>}
+      {pending && <div className="rounded-2xl p-4 mt-3" style={{ backgroundColor: "#f59e0b15", border: "1px solid #f59e0b40" }}><p className="text-yellow-800 text-sm font-bold">Payment pending verification</p><p className="text-yellow-600 text-xs mt-1">Manager will verify your payment shortly.</p></div>}
       <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-5 mb-3">Payment History</p>
       {myInvoices.filter(i => i.status === 'verified').length === 0 ? <p className="text-gray-400 text-sm text-center py-8">No payments yet.</p> :
-      myInvoices.filter(i => i.status === 'verified').map((inv) => <div key={inv.id} className="bg-white rounded-2xl p-4 shadow-sm mb-3"><div className="flex justify-between mb-1"><span className="font-bold text-sm">{inv.date}</span><StatusBadge status="verified" /></div><p className="font-black text-gray-900">₦{inv.totalAmount.toLocaleString()}</p><p className="text-xs text-gray-400 mt-1">Estate: ₦{inv.estateSettlement.toLocaleString()} | Fee: ₦{inv.serviceFee.toLocaleString()}</p></div>)}
+      myInvoices.filter(i => i.status === 'verified').map((inv) => <div key={inv.id} className="rounded-2xl p-4 shadow-sm mb-3" style={{ backgroundColor: "white", borderLeft: "4px solid " + config.color }}><div className="flex justify-between mb-1"><span className="font-bold text-sm">{inv.date}</span><StatusBadge status="verified" /></div><p className="font-black text-gray-900">₦{inv.totalAmount.toLocaleString()}</p><p className="text-xs text-gray-400 mt-1">Estate: ₦{inv.estateSettlement.toLocaleString()} | Fee: ₦{inv.serviceFee.toLocaleString()}</p></div>)}
     </div>
     <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-4 flex gap-3" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}>
       <ThemedBtn onClick={() => {
@@ -1673,7 +1673,7 @@ function TenantPayScreen({ go, config, invoices, setInvoices, setNotifications, 
   }
   if (paid && pending) return <div className="flex flex-col h-full items-center justify-center px-8 gap-4" style={{ backgroundColor: config.color + '18' }}>
     <SuccessAnimation message="Payment Submitted" subtext="Awaiting verification" color={config.color} />
-    <div className="bg-white rounded-2xl p-5 shadow-sm w-full">
+    <div className="rounded-2xl p-5 shadow-sm w-full" style={{ backgroundColor: "white", border: "1px solid " + config.color + "18" }}>
       <div className="flex justify-between mb-1"><span className="text-gray-500 text-sm">Estate Dues</span><span className="font-bold">₦{pending.baseAmount.toLocaleString()}</span></div>
       <div className="flex justify-between mb-1"><span className="text-gray-500 text-sm">Service Fee</span><span className="font-bold text-green-600">₦{pending.serviceFee.toLocaleString()}</span></div>
       <div className="border-t my-2" /><div className="flex justify-between"><span className="font-black">Total Paid</span><span className="font-black text-lg" style={{ color: config.color }}>₦{pending.totalAmount.toLocaleString()}</span></div>
@@ -1682,10 +1682,10 @@ function TenantPayScreen({ go, config, invoices, setInvoices, setNotifications, 
     <ThemedBtn onClick={() => go('tenant-home')} color={config.color}>Back to Home</ThemedBtn>
   </div>
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('tenant-bills')} /><h2 className="font-black text-xl">Pay Bill</h2></div>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => go('tenant-bills')} /><h2 className="font-black text-xl">Pay Bill</h2></div>
     <div className="flex-1 flex flex-col items-center justify-center px-8 gap-5">
       <PaymentBreakdown baseAmount={config.monthlyDues} color={config.color} />
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 w-full"><p className="text-xs text-blue-800 font-bold">Secure payment via Paystack</p><p className="text-xs text-blue-700">Estate dues → {config.estateAccountName}</p><p className="text-xs text-blue-700">Service fee → EstateFlow platform</p></div>
+      <div className="rounded-xl p-3 w-full" style={{ backgroundColor: "#3b82f612", border: "1px solid #3b82f635" }}><p className="text-xs text-blue-800 font-bold">Secure payment via Paystack</p><p className="text-xs text-blue-700">Estate dues → {config.estateAccountName}</p><p className="text-xs text-blue-700">Service fee → EstateFlow platform</p></div>
       <ThemedBtn onClick={handlePay} color={processing ? '#d1d5db' : config.color}>{processing ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Processing...</> : 'Pay ₦' + breakdown.totalAmount.toLocaleString() + ' →'}</ThemedBtn>
     </div>
   </div>
@@ -1694,10 +1694,10 @@ function TenantPayScreen({ go, config, invoices, setInvoices, setNotifications, 
 function TenantReceiptsScreen({ go, config, invoices, tenant }: { go: (s: Screen) => void; config: EstateConfig; invoices: Invoice[]; tenant: TenantInfo | null }) {
   const myReceipts = invoices.filter(i => i.houseNumber === tenant?.houseNumber && i.status === 'verified')
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('tenant-bills')} /><h2 className="font-black text-xl">Receipts</h2></div>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => go('tenant-bills')} /><h2 className="font-black text-xl">Receipts</h2></div>
     <div className="flex-1 overflow-y-auto px-5 py-5">
       {myReceipts.length === 0 ? <EmptyState icon="mdi:receipt" title="No receipts yet" message="Your payment receipts will appear here." /> :
-      myReceipts.map((inv) => <div key={inv.id} className="bg-white rounded-2xl p-5 shadow-sm mb-3">
+      myReceipts.map((inv) => <div key={inv.id} className="rounded-2xl p-5 shadow-sm mb-3" style={{ backgroundColor: "white", border: "1px solid " + config.color + "18" }}>
         <div className="flex justify-between mb-3"><span className="font-black text-gray-900 text-lg">₦{inv.totalAmount.toLocaleString()}</span><StatusBadge status="verified" /></div>
         <div className="text-xs text-gray-500 space-y-1">
           <div className="flex justify-between"><span>Estate Dues</span><span className="font-bold">₦{inv.baseAmount.toLocaleString()}</span></div>
@@ -1724,12 +1724,12 @@ function TenantComplaintsScreen({ go, config, tenant, complaints, setComplaints,
   }
   if (submitted) return <div className="flex flex-col h-full items-center justify-center px-8 gap-5" style={{ backgroundColor: config.color + '18' }}><SuccessAnimation message="Report Submitted!" subtext="Management has been notified." color={config.color} /><ThemedBtn onClick={() => go('tenant-home')} color={config.color}>Back to Home</ThemedBtn></div>
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('tenant-home')} /><h2 className="font-black text-xl">Report Issue</h2></div>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => go('tenant-home')} /><h2 className="font-black text-xl">Report Issue</h2></div>
     <div className="flex-1 overflow-y-auto px-5 py-4 pb-8">
       <p className="text-sm text-gray-500 mb-4">Select issue type:</p>
       <div className="grid grid-cols-3 gap-3 mb-5">{MAINTENANCE_CATEGORIES.map((c) => (<button key={c.label} onClick={() => setSelected(c.label)} className="flex flex-col items-center gap-2 py-4 rounded-2xl border-2 bg-white active:scale-[0.98]" style={{ borderColor: selected === c.label ? config.color : 'transparent', backgroundColor: selected === c.label ? config.color + '18' : 'white' }}><Icon icon={c.icon} width="28" height="28" style={{ color: config.color }} /><span className="text-xs font-bold">{c.label}</span></button>))}</div>
       {selected && <div className="flex flex-col gap-3" style={{ animation: 'fade-up 0.3s ease both' }}><textarea placeholder={'Describe the ' + selected + ' issue...'} value={desc} onChange={(e) => setDesc(e.target.value)} rows={4} className="w-full py-4 px-5 bg-white rounded-xl border-2 border-black/10 font-semibold text-black placeholder-gray-400 text-base outline-none resize-none shadow-sm" /><ThemedBtn onClick={handleSubmit} color={desc.trim() ? config.color : '#d1d5db'} className={desc.trim() ? '' : 'opacity-50'}>Submit Report</ThemedBtn></div>}
-      {complaints.filter(c => c.houseNumber === tenant?.houseNumber).length > 0 && <div className="mt-6"><p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">My Reports</p>{complaints.filter(c => c.houseNumber === tenant?.houseNumber).map((c) => <div key={c.id} className="bg-white rounded-2xl p-4 shadow-sm mb-2"><div className="flex justify-between mb-1"><span className="font-bold text-sm">{c.category}</span><StatusBadge status={c.status} /></div><p className="text-gray-500 text-xs">{c.description}</p><p className="text-gray-400 text-xs mt-1">{c.date}</p></div>)}</div>}
+      {complaints.filter(c => c.houseNumber === tenant?.houseNumber).length > 0 && <div className="mt-6"><p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">My Reports</p>{complaints.filter(c => c.houseNumber === tenant?.houseNumber).map((c) => <div key={c.id} className="rounded-2xl p-4 shadow-sm mb-2" style={{ backgroundColor: "white", border: "1px solid " + config.color + "18" }}><div className="flex justify-between mb-1"><span className="font-bold text-sm">{c.category}</span><StatusBadge status={c.status} /></div><p className="text-gray-500 text-xs">{c.description}</p><p className="text-gray-400 text-xs mt-1">{c.date}</p></div>)}</div>}
     </div>
   </div>
 }
@@ -1738,11 +1738,11 @@ function TenantProfileScreen({ go, config, tenant, setTenant }: { go: (s: Screen
   const [name, setName] = useState(tenant?.name || ''); const [house, setHouse] = useState(tenant?.houseNumber || ''); const [avatar, setAvatar] = useState(tenant?.avatar || ''); const [saved, setSaved] = useState(false)
   const handleSave = () => { setTenant({ ...tenant!, name, houseNumber: house, avatar }); setSaved(true); setTimeout(() => setSaved(false), 2000) }
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
-    <div className="flex items-center justify-between px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('tenant-home')} /><h2 className="font-black text-xl">Profile</h2><button onClick={handleSave} className="text-sm font-bold" style={{ color: config.color }}>{saved ? '✓ Saved' : 'Save'}</button></div>
+    <div className="flex items-center justify-between px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => go('tenant-home')} /><h2 className="font-black text-xl">Profile</h2><button onClick={handleSave} className="text-sm font-bold" style={{ color: config.color }}>{saved ? '✓ Saved' : 'Save'}</button></div>
     <div className="flex-1 overflow-y-auto px-5 py-6 flex flex-col gap-5">
       <div className="flex justify-center"><div className="flex gap-2 flex-wrap justify-center">{AVATARS.map((a, i) => (<button key={i} onClick={() => setAvatar(a)} className={'w-12 h-12 rounded-full bg-white overflow-hidden ' + (avatar === a ? 'ring-4' : '')} style={{ borderColor: avatar === a ? config.color : 'transparent', borderWidth: avatar === a ? '3px' : '0' }}><div style={{width:'100%',height:'100%'}} dangerouslySetInnerHTML={{__html: a}} /></button>))}</div></div>
       <Field placeholder="Full Name" value={name} onChange={setName} /><Field placeholder="House / Unit Number" value={house} onChange={setHouse} />
-      <div className="bg-white rounded-2xl p-5 shadow-sm"><p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Estate Info</p><div className="text-sm text-gray-600 space-y-2"><div className="flex justify-between"><span>Estate</span><span className="font-bold">{config.estateName}</span></div><div className="flex justify-between"><span>Joined</span><span className="font-bold">{tenant?.joinedDate || 'Today'}</span></div></div></div>
+      <div className="rounded-2xl p-5 shadow-sm" style={{ backgroundColor: "white", border: "1px solid " + config.color + "18" }}><p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Estate Info</p><div className="text-sm text-gray-600 space-y-2"><div className="flex justify-between"><span>Estate</span><span className="font-bold">{config.estateName}</span></div><div className="flex justify-between"><span>Joined</span><span className="font-bold">{tenant?.joinedDate || 'Today'}</span></div></div></div>
     </div>
   </div>
 }
@@ -1750,12 +1750,12 @@ function TenantProfileScreen({ go, config, tenant, setTenant }: { go: (s: Screen
 function TenantSettingsScreen({ go, config, clearSession }: { go: (s: Screen) => void; config: EstateConfig; clearSession: () => void }) {
   const [notifOn, setNotifOn] = useState(true)
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('tenant-home')} /><h2 className="font-black text-xl">Settings</h2></div>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => go('tenant-home')} /><h2 className="font-black text-xl">Settings</h2></div>
     <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-4">
-      <div className="bg-white rounded-2xl p-5 shadow-sm"><p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Notifications</p>
+      <div className="rounded-2xl p-5 shadow-sm" style={{ backgroundColor: "white", border: "1px solid " + config.color + "18" }}><p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Notifications</p>
         <div className="flex items-center justify-between"><span className="font-bold text-gray-800">Enable Notifications</span><button onClick={() => setNotifOn(!notifOn)} className="w-12 h-7 rounded-full p-0.5 transition-colors" style={{ backgroundColor: notifOn ? '#1B873F' : '#d1d5db' }}><div className="w-6 h-6 rounded-full bg-white shadow-sm transition-transform" style={{ transform: notifOn ? 'translateX(20px)' : 'translateX(0)' }} /></button></div>
       </div>
-      <div className="bg-white rounded-2xl p-5 shadow-sm">
+      <div className="rounded-2xl p-5 shadow-sm" style={{ backgroundColor: "white", border: "1px solid " + config.color + "18" }}>
         <p className="text-xs font-bold text-red-400 uppercase tracking-wide mb-3">Account</p>
         <div className="flex flex-col gap-2">
           <button onClick={() => { if (confirm('Leave this estate?')) { clearSession(); go('role-select') } }} className="w-full py-3 rounded-xl font-bold text-red-600 bg-red-50 active:scale-[0.98] transition-transform text-left px-4">
@@ -1827,14 +1827,14 @@ function EmergencyScreen({ go, config, tenant, alerts, setAlerts }: { go: (s: Sc
 // ============================================
 function GuestScreen({ go, config, tenant, guestCodes, setGuestCodes }: { go: (s: Screen) => void; config: EstateConfig; tenant: TenantInfo | null; guestCodes: GuestCode[]; setGuestCodes: (g: GuestCode[]) => void }) {
   const [step, setStep] = useState<'choose' | 'details' | 'code'>('choose'); const [guestType, setGuestType] = useState<string | null>(null); const [guestName, setGuestName] = useState(''); const [code, setCode] = useState('')
-  if (step === 'code') return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}><div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => setStep('details')} /><h2 className="font-black text-xl">Access Code</h2></div><div className="flex-1 px-5 py-6 flex flex-col items-center gap-5"><div className="bg-white rounded-3xl p-5 shadow-lg w-full flex flex-col items-center gap-4"><div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: config.color + '15' }}><Icon icon={(GUEST_TYPES.find(t => t.label === guestType) || { icon: 'mdi:account' }).icon} width="28" height="28" style={{ color: config.color }} /></div><p className="font-bold text-gray-900">{guestName || 'Guest'}</p><div className="bg-gray-50 border-2 border-gray-200 rounded-2xl px-8 py-4 w-full text-center"><p className="text-xs text-gray-400 font-bold uppercase mb-1">Access Code</p><p className="text-3xl font-black tracking-widest">{code}</p></div><p className="text-xs text-gray-400 text-center">{tenant?.houseNumber} — Valid 2 hours</p></div><div className="grid grid-cols-2 gap-3 w-full">{[
+  if (step === 'code') return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}><div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => setStep('details')} /><h2 className="font-black text-xl">Access Code</h2></div><div className="flex-1 px-5 py-6 flex flex-col items-center gap-5"><div className="rounded-3xl p-5 shadow-lg w-full flex flex-col items-center gap-4" style={{ backgroundColor: "white", border: "1px solid " + config.color + "20" }}><div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: config.color + '15' }}><Icon icon={(GUEST_TYPES.find(t => t.label === guestType) || { icon: 'mdi:account' }).icon} width="28" height="28" style={{ color: config.color }} /></div><p className="font-bold text-gray-900">{guestName || 'Guest'}</p><div className="bg-gray-50 border-2 border-gray-200 rounded-2xl px-8 py-4 w-full text-center"><p className="text-xs text-gray-400 font-bold uppercase mb-1">Access Code</p><p className="text-3xl font-black tracking-widest">{code}</p></div><p className="text-xs text-gray-400 text-center">{tenant?.houseNumber} — Valid 2 hours</p></div><div className="grid grid-cols-2 gap-3 w-full">{[
             { label: 'WhatsApp', action: () => { window.open('https://wa.me/?text=' + encodeURIComponent('Guest access code for ' + config.estateName + ': ' + code + ' at ' + tenant?.houseNumber), '_blank') } },
             { label: 'Messages', action: () => { if (navigator.share) { navigator.share({ text: 'Guest access code: ' + code }) } else { window.open('sms:?body=' + encodeURIComponent('Guest access code: ' + code)) } } },
             { label: 'Email', action: () => { window.open('mailto:?subject=Guest Access Code&body=' + encodeURIComponent('Code: ' + code + ' for ' + config.estateName)) } },
             { label: 'Copy', action: async () => { try { await navigator.clipboard.writeText(code); alert('Code copied: ' + code) } catch { alert('Copy failed. Code: ' + code) } } }
-          ].map((a) => (<button key={a.label} onClick={a.action} className="py-3 bg-white rounded-xl font-bold text-sm text-gray-700 shadow-sm active:scale-[0.98]">{a.label}</button>))}</div></div></div>
-  if (step === 'details') return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}><div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => setStep('choose')} /><h2 className="font-black text-xl">{guestType} Details</h2></div><div className="flex-1 px-5 py-5 flex flex-col gap-4"><Field placeholder="Guest name" value={guestName} onChange={setGuestName} /><ThemedBtn onClick={() => { const c = 'G-' + Math.floor(1000 + Math.random() * 9000); setCode(c); setGuestCodes([{ code: c, type: guestType || '', name: guestName, house: tenant?.houseNumber || '', date: new Date().toLocaleString() }, ...guestCodes]); setStep('code') }} color={guestName.trim() ? config.color : '#d1d5db'} className={guestName.trim() ? '' : 'opacity-50'}>Generate Code →</ThemedBtn></div></div>
-  return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}><div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('tenant-home')} /><h2 className="font-black text-xl">Guest Access</h2></div><div className="flex-1 px-5 py-6 flex flex-col gap-3"><p className="text-sm text-gray-500 text-center mb-3">Who are you expecting?</p>{GUEST_TYPES.map((t) => (<button key={t.label} onClick={() => { setGuestType(t.label); setStep('details') }} className="flex items-center gap-4 bg-white rounded-2xl p-4 shadow-sm active:scale-[0.98] text-left"><div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: config.color + '15' }}><Icon icon={t.icon} width="28" height="28" style={{ color: config.color }} /></div><div><p className="font-bold text-gray-900">{t.label}</p></div><svg className="ml-auto" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2.5"><path d="M9 18l6-6-6-6" /></svg></button>))}</div></div>
+          ].map((a) => (<button key={a.label} onClick={a.action} className="py-3 rounded-xl font-bold text-sm shadow-sm active:scale-[0.98]" style={{ backgroundColor: "white", border: "1px solid " + config.color + "20", color: config.color }}>{a.label}</button>))}</div></div></div>
+  if (step === 'details') return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}><div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => setStep('choose')} /><h2 className="font-black text-xl">{guestType} Details</h2></div><div className="flex-1 px-5 py-5 flex flex-col gap-4"><Field placeholder="Guest name" value={guestName} onChange={setGuestName} /><ThemedBtn onClick={() => { const c = 'G-' + Math.floor(1000 + Math.random() * 9000); setCode(c); setGuestCodes([{ code: c, type: guestType || '', name: guestName, house: tenant?.houseNumber || '', date: new Date().toLocaleString() }, ...guestCodes]); setStep('code') }} color={guestName.trim() ? config.color : '#d1d5db'} className={guestName.trim() ? '' : 'opacity-50'}>Generate Code →</ThemedBtn></div></div>
+  return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}><div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => go('tenant-home')} /><h2 className="font-black text-xl">Guest Access</h2></div><div className="flex-1 px-5 py-6 flex flex-col gap-3"><p className="text-sm text-gray-500 text-center mb-3">Who are you expecting?</p>{GUEST_TYPES.map((t) => (<button key={t.label} onClick={() => { setGuestType(t.label); setStep('details') }} className="flex items-center gap-4 rounded-2xl p-4 shadow-sm active:scale-[0.98] text-left" style={{ backgroundColor: "white", border: "1px solid " + config.color + "18" }}><div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: config.color + '15' }}><Icon icon={t.icon} width="28" height="28" style={{ color: config.color }} /></div><div><p className="font-bold text-gray-900">{t.label}</p></div><svg className="ml-auto" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2.5"><path d="M9 18l6-6-6-6" /></svg></button>))}</div></div>
 }
 
 // ============================================
@@ -2005,7 +2005,7 @@ function ServiceSecurityScreen({ go, config, alerts, guestCodes }: { go: (s: Scr
       {alerts.filter(a => a.status === 'active').length > 0 && (
         <div className="rounded-2xl p-4" style={{ backgroundColor: '#ef444415', border: '2px solid #ef444440' }}>
           <p className="text-red-800 text-sm font-bold mb-2">Active Emergency ({alerts.filter(a => a.status === 'active').length})</p>
-          {alerts.filter(a => a.status === 'active').map((a) => <div key={a.id} className="bg-white rounded-xl p-3 mb-2 shadow-sm"><p className="font-bold text-red-600">{a.type} — {a.houseNumber}</p><p className="text-gray-500 text-xs">{a.date}</p></div>)}
+          {alerts.filter(a => a.status === 'active').map((a) => <div key={a.id} className="rounded-xl p-3 mb-2 shadow-sm" style={{ backgroundColor: "white", border: "1px solid " + config.color + "18" }}><p className="font-bold text-red-600">{a.type} — {a.houseNumber}</p><p className="text-gray-500 text-xs">{a.date}</p></div>)}
         </div>
       )}
       <div className="rounded-2xl p-5 shadow-sm" style={{ backgroundColor: 'white', border: '1px solid ' + config.color + '20' }}>
@@ -2078,7 +2078,7 @@ function TenantsScreen({ go, config, tenantLogins, invoices }: { go: (s: Screen)
   }
 
   return <div className="flex flex-col h-full" style={{ backgroundColor: bgColor }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100"><PageBack onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Tenants</h2><span className="ml-auto text-xs font-bold px-2 py-1 rounded-full" style={{ backgroundColor: config.color + '15', color: config.color }}>{loading ? '...' : uniqueTenants.length + ' joined'}</span></div>
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}><PageBack light onClick={() => go('manager-home')} /><h2 className="font-black text-xl">Tenants</h2><span className="ml-auto text-xs font-bold px-2 py-1 rounded-full" style={{ backgroundColor: config.color + '15', color: config.color }}>{loading ? '...' : uniqueTenants.length + ' joined'}</span></div>
     <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-3">
       {loading ? <div className="text-center py-16"><p className="text-gray-400">Loading tenants...</p></div> :
       uniqueTenants.length === 0 ? <div className="text-center py-16"><Icon icon="mdi:account-group" width="64" height="64" style={{ color: '#d1d5db' }} /><p className="font-bold text-gray-700 mt-3">No tenants yet</p><p className="text-gray-400 text-sm mt-1">Share your join code to onboard tenants</p><button onClick={() => go('qr-share')} className="mt-4 px-6 py-2.5 rounded-xl font-bold text-white text-sm" style={{ backgroundColor: config.color }}>Share Join Code</button></div> :
@@ -2136,7 +2136,7 @@ function SearchTenantScreen({ go, config, tenantLogins, invoices }: {
     return { paid, outstanding, totalPayments: tenantInvoices.filter(i => i.status === 'verified').length }
   }
   return <div className="flex flex-col h-full" style={{ backgroundColor: config.color + '18' }}>
-    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-white border-b border-gray-100">
+    <div className="flex items-center gap-3 px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4 border-b" style={{ backgroundColor: config.color, borderColor: config.color + '30' }}>
       <PageBack onClick={() => go('manager-home')} />
       <h2 className="font-black text-xl">Search Tenant</h2>
     </div>
@@ -2173,7 +2173,7 @@ function SearchTenantScreen({ go, config, tenantLogins, invoices }: {
           {results.map((t, i) => {
             const fin = getTenantFinance(t.house)
             return (
-              <div key={i} className="bg-white rounded-2xl p-4 shadow-sm">
+              <div key={i} className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: "white", border: "1px solid " + config.color + "18" }}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg" style={{ backgroundColor: config.color }}>
                     {t.name[0]?.toUpperCase() || '?'}
